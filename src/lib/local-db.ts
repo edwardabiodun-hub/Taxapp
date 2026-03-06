@@ -7,6 +7,10 @@ export interface LocalProfile {
   phone: string;
   taxId: string;
   country: string;
+  dateOfBirth?: string;
+  countryOfBirth?: string;
+  gender?: string;
+  nationality?: string;
   lastSynced?: string;
 }
 
@@ -38,7 +42,7 @@ class TaxEaseDB extends Dexie {
 
   constructor() {
     super("TaxEaseAfrica");
-    this.version(1).stores({
+    this.version(2).stores({
       profiles: "id, email, country",
       declarations: "id, taxYear, country, status, pendingSync, createdAt",
       referenceData: "key",

@@ -18,6 +18,10 @@ export async function fetchProfileFromServer(): Promise<LocalProfile> {
     phone: "+234 812 345 6789",
     taxId: "A012345678Z",
     country: "ng",
+    dateOfBirth: "1990-05-15",
+    countryOfBirth: "ng",
+    gender: "Female",
+    nationality: "Nigerian",
   };
 }
 
