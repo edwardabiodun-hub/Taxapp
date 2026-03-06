@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { africanCountries, type NigeriaDeclarationForm } from "@/types/declaration";
 import { Lock } from "lucide-react";
+import { useCountryTheme } from "@/contexts/CountryThemeContext";
 
 interface CountryStepProps {
   form: NigeriaDeclarationForm;
@@ -11,8 +12,14 @@ interface CountryStepProps {
 }
 
 const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
+  const { setCountry } = useCountryTheme();
   const hasTaxYearError = errors.some((e) => e.toLowerCase().includes("tax year"));
   const hasCountryError = errors.some((e) => e.toLowerCase().includes("country"));
+
+  const handleCountrySelect = (code: string) => {
+    update("country", code);
+    setCountry(code);
+  };
 
   return (
     <div className="space-y-5">
@@ -38,7 +45,7 @@ const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
             <button
               key={country.code}
               disabled={!country.active}
-              onClick={() => country.active && update("country", country.code)}
+              onClick={() => country.active && handleCountrySelect(country.code)}
               className={cn(
                 "relative flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
                 country.active && form.country === country.code
