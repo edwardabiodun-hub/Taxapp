@@ -35,17 +35,31 @@ export interface LocalReferenceData {
   lastSynced: string;
 }
 
+export type ActivityType = "status_change" | "document_upload" | "created" | "note";
+
+export interface LocalActivity {
+  id: string;
+  declarationId: string;
+  type: ActivityType;
+  title: string;
+  description?: string;
+  timestamp: string;
+  meta?: Record<string, any>;
+}
+
 class TaxEaseDB extends Dexie {
   profiles!: Table<LocalProfile, string>;
   declarations!: Table<LocalDeclaration, string>;
   referenceData!: Table<LocalReferenceData, string>;
+  activities!: Table<LocalActivity, string>;
 
   constructor() {
     super("TaxEaseAfrica");
-    this.version(2).stores({
+    this.version(3).stores({
       profiles: "id, email, country",
       declarations: "id, taxYear, country, status, pendingSync, createdAt",
       referenceData: "key",
+      activities: "id, declarationId, timestamp",
     });
   }
 }
