@@ -158,6 +158,7 @@ const Dashboard = () => {
                 date: new Date(sub.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
                 amount: sub.amount || "—",
               }}
+              onClick={() => navigate(`/submissions/${sub.id}`)}
             />
           ))}
         </div>

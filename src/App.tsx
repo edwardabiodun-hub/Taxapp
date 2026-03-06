@@ -9,6 +9,7 @@ import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import NewDeclaration from "./pages/NewDeclaration";
 import Submissions from "./pages/Submissions";
+import SubmissionDetail from "./pages/SubmissionDetail";
 import Profile from "./pages/Profile";
 import TaxCalculator from "./pages/TaxCalculator";
 import Onboarding from "./pages/Onboarding";
@@ -43,6 +44,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/declare" element={<NewDeclaration />} />
         <Route path="/submissions" element={<Submissions />} />
+        <Route path="/submissions/:id" element={<SubmissionDetail />} />
         <Route path="/calculator" element={<TaxCalculator />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
