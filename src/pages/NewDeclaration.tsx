@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { declarationSteps, defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 import { validateStep } from "@/lib/validation";
+import { db } from "@/lib/local-db";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import CountryStep from "@/components/declaration/CountryStep";
 import EarnedIncomeStep from "@/components/declaration/EarnedIncomeStep";
