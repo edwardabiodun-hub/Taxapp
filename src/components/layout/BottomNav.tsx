@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, FilePlus, FileText, User } from "lucide-react";
+import { Home, FilePlus, Calculator, FileText, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/declare", icon: FilePlus, label: "Declare" },
+  { to: "/calculator", icon: Calculator, label: "Estimate" },
   { to: "/submissions", icon: FileText, label: "History" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
