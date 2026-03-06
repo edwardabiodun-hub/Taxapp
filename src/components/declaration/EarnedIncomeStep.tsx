@@ -15,6 +15,7 @@ const tabs = [
 interface EarnedIncomeStepProps {
   form: NigeriaDeclarationForm;
   update: (key: string, value: string) => void;
+  errors?: string[];
 }
 
 const Field = ({ label, hint, value, onChange, prefix = "₦" }: {

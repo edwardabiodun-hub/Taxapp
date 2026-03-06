@@ -7,9 +7,14 @@ import { Lock } from "lucide-react";
 interface CountryStepProps {
   form: NigeriaDeclarationForm;
   update: (key: string, value: string) => void;
+  errors?: string[];
 }
 
-const CountryStep = ({ form, update }: CountryStepProps) => (
+const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
+  const hasTaxYearError = errors.some((e) => e.toLowerCase().includes("tax year"));
+  const hasCountryError = errors.some((e) => e.toLowerCase().includes("country"));
+
+  return (
   <div className="space-y-5">
     <div className="space-y-2">
       <Label className="text-sm font-semibold">Tax Year</Label>
@@ -23,10 +28,11 @@ const CountryStep = ({ form, update }: CountryStepProps) => (
           <SelectItem value="2023">2023</SelectItem>
         </SelectContent>
       </Select>
+      {hasTaxYearError && <p className="text-[10px] text-destructive font-medium">Please select a tax year</p>}
     </div>
 
     <div className="space-y-3">
-      <Label className="text-sm font-semibold">Select Country</Label>
+      <Label className={cn("text-sm font-semibold", hasCountryError && "text-destructive")}>Select Country *</Label>
       <div className="grid grid-cols-2 gap-2">
         {africanCountries.map((country) => (
           <button
@@ -60,8 +66,10 @@ const CountryStep = ({ form, update }: CountryStepProps) => (
           </button>
         ))}
       </div>
+      {hasCountryError && <p className="text-[10px] text-destructive font-medium">Please select a country</p>}
     </div>
   </div>
-);
+  );
+};
 
 export default CountryStep;
