@@ -52,6 +52,22 @@ const Dashboard = () => {
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </motion.button>
 
+      {/* Tax Calculator */}
+      <motion.button
+        variants={item}
+        onClick={() => navigate("/calculator")}
+        className="w-full gradient-accent rounded-2xl p-4 flex items-center gap-4 shadow-card text-accent-foreground group"
+      >
+        <div className="p-2.5 rounded-xl bg-background/15">
+          <Calculator className="w-5 h-5" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="font-display font-bold">Tax Estimator</p>
+          <p className="text-xs opacity-80">Calculate your liability before filing</p>
+        </div>
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
+
       {/* Stats */}
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
         <StatCard icon={FileCheck} label="Filed" value="12" subtitle="Total submissions" variant="default" />
