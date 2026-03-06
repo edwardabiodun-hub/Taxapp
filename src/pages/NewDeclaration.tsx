@@ -47,10 +47,23 @@ const NewDeclaration = () => {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const id = `decl-${Date.now()}`;
+    await db.declarations.add({
+      id,
+      taxYear: form.taxYear || "2025",
+      country: form.country || "ng",
+      type: "Income Tax",
+      status: "submitted",
+      formData: { ...form },
+      documents: documents.map((d) => ({ name: d.name, size: d.size, type: d.type })),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      pendingSync: true,
+    });
     toast({
       title: "Declaration Submitted!",
-      description: `Your Nigerian tax declaration with ${documents.length} document(s) has been submitted for processing.`,
+      description: `Your tax declaration with ${documents.length} document(s) has been saved and queued for sync.`,
     });
     navigate("/submissions");
   };
