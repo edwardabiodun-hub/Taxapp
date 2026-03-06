@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useDeclarations } from "@/hooks/use-local-data";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
@@ -8,6 +9,7 @@ const filters = ["All", "Draft", "Submitted", "Processing", "Audit Request", "Ap
 
 const Submissions = () => {
   const [active, setActive] = useState<string>("All");
+  const navigate = useNavigate();
   const allDeclarations = useDeclarations();
 
   const filtered =
@@ -64,6 +66,7 @@ const Submissions = () => {
                 }),
                 amount: sub.amount || "—",
               }}
+              onClick={() => navigate(`/submissions/${sub.id}`)}
             />
           </motion.div>
         ))}
