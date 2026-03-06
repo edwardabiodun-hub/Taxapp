@@ -285,9 +285,6 @@ const Onboarding = () => {
                       </button>
                     ))}
                   </div>
-                  {errors.country && (
-                    <p className="text-xs text-destructive mt-1">{errors.country}</p>
-                  )}
                 </Field>
 
                 <Field label="Tax Identification Number (TIN)" icon={Building2} error={errors.taxId}>
