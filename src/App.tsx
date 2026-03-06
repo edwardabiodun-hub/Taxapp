@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import NewDeclaration from "./pages/NewDeclaration";
 import Submissions from "./pages/Submissions";
 import Profile from "./pages/Profile";
+import TaxCalculator from "./pages/TaxCalculator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/declare" element={<NewDeclaration />} />
             <Route path="/submissions" element={<Submissions />} />
+            <Route path="/calculator" element={<TaxCalculator />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />

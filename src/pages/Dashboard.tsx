@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard, { SubmissionItem } from "@/components/submissions/SubmissionCard";
 
