@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard, { SubmissionItem } from "@/components/submissions/SubmissionCard";
 
@@ -48,6 +48,22 @@ const Dashboard = () => {
         <div className="flex-1 text-left">
           <p className="font-display font-bold text-lg">New Tax Declaration</p>
           <p className="text-sm opacity-80">File your taxes quickly & easily</p>
+        </div>
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
+
+      {/* Tax Calculator */}
+      <motion.button
+        variants={item}
+        onClick={() => navigate("/calculator")}
+        className="w-full gradient-accent rounded-2xl p-4 flex items-center gap-4 shadow-card text-accent-foreground group"
+      >
+        <div className="p-2.5 rounded-xl bg-background/15">
+          <Calculator className="w-5 h-5" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="font-display font-bold">Tax Estimator</p>
+          <p className="text-xs opacity-80">Calculate your liability before filing</p>
         </div>
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </motion.button>
