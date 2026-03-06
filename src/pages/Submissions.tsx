@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useDeclarations } from "@/hooks/use-local-data";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 
-const filters = ["All", "Submitted", "Processing", "Approved", "Rejected"] as const;
+const filters = ["All", "Draft", "Submitted", "Processing", "Audit Request", "Approved"] as const;
 
 const Submissions = () => {
   const [active, setActive] = useState<string>("All");
@@ -13,7 +13,7 @@ const Submissions = () => {
   const filtered =
     active === "All"
       ? allDeclarations
-      : allDeclarations.filter((d) => d.status === active.toLowerCase());
+      : allDeclarations.filter((d) => d.status === active.toLowerCase().replace(" ", "_"));
 
   return (
     <motion.div

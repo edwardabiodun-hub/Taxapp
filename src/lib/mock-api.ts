@@ -67,7 +67,7 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
       taxYear: "2024",
       country: "ng",
       type: "Income Tax",
-      status: "submitted",
+      status: "audit_request",
       formData: {},
       documents: [],
       amount: "NGN 8,500",

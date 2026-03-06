@@ -23,7 +23,7 @@ const Dashboard = () => {
   const { status: syncStatus, runSync } = useSync();
 
   const approved = declarations.filter((d) => d.status === "approved").length;
-  const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing").length;
+  const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing" || d.status === "audit_request").length;
   const recentSubmissions = declarations.slice(0, 3);
 
   return (
