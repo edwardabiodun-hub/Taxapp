@@ -1,14 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
-import SubmissionCard, { SubmissionItem } from "@/components/submissions/SubmissionCard";
-
-const mockSubmissions: SubmissionItem[] = [
-  { id: "1", taxYear: "2025", type: "Income Tax", status: "approved", date: "15 Jan 2026", amount: "KES 45,200" },
-  { id: "2", taxYear: "2025", type: "VAT Return", status: "processing", date: "28 Feb 2026", amount: "NGN 120,000" },
-  { id: "3", taxYear: "2024", type: "Income Tax", status: "submitted", date: "10 Feb 2026", amount: "GHS 8,500" },
-];
+import SubmissionCard from "@/components/submissions/SubmissionCard";
+import { useProfile, useDeclarations } from "@/hooks/use-local-data";
+import { useSync } from "@/hooks/use-sync";
 
 const container = {
   hidden: {},
@@ -22,6 +18,13 @@ const item = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const profile = useProfile();
+  const declarations = useDeclarations();
+  const { status: syncStatus, runSync } = useSync();
+
+  const approved = declarations.filter((d) => d.status === "approved").length;
+  const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing").length;
+  const recentSubmissions = declarations.slice(0, 3);
 
   return (
     <motion.div
@@ -31,10 +34,31 @@ const Dashboard = () => {
       className="px-4 py-6 max-w-lg mx-auto space-y-6"
     >
       {/* Welcome */}
-      <motion.div variants={item}>
-        <p className="text-muted-foreground text-sm">Welcome back,</p>
-        <h2 className="text-2xl font-display font-bold text-foreground">Amara Okafor</h2>
+      <motion.div variants={item} className="flex items-center justify-between">
+        <div>
+          <p className="text-muted-foreground text-sm">Welcome back,</p>
+          <h2 className="text-2xl font-display font-bold text-foreground">
+            {profile?.name || "Loading..."}
+          </h2>
+        </div>
+        <button
+          onClick={runSync}
+          disabled={syncStatus === "syncing"}
+          className="p-2 rounded-full hover:bg-muted transition-colors"
+          title="Sync data"
+        >
+          <RefreshCw
+            className={`w-5 h-5 text-muted-foreground ${syncStatus === "syncing" ? "animate-spin" : ""}`}
+          />
+        </button>
       </motion.div>
+
+      {/* Sync indicator */}
+      {syncStatus === "syncing" && (
+        <motion.div variants={item} className="text-xs text-muted-foreground text-center">
+          Syncing data…
+        </motion.div>
+      )}
 
       {/* Quick Action */}
       <motion.button
@@ -70,10 +94,10 @@ const Dashboard = () => {
 
       {/* Stats */}
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
-        <StatCard icon={FileCheck} label="Filed" value="12" subtitle="Total submissions" variant="default" />
-        <StatCard icon={TrendingUp} label="Approved" value="10" subtitle="83% success" variant="primary" />
-        <StatCard icon={DollarSign} label="Tax Paid" value="KES 320K" subtitle="This year" variant="default" />
-        <StatCard icon={FilePlus} label="Pending" value="2" subtitle="Awaiting review" variant="accent" />
+        <StatCard icon={FileCheck} label="Filed" value={String(declarations.length)} subtitle="Total submissions" variant="default" />
+        <StatCard icon={TrendingUp} label="Approved" value={String(approved)} subtitle={`${declarations.length ? Math.round((approved / declarations.length) * 100) : 0}% success`} variant="primary" />
+        <StatCard icon={DollarSign} label="Tax Paid" value="—" subtitle="This year" variant="default" />
+        <StatCard icon={FilePlus} label="Pending" value={String(pending)} subtitle="Awaiting review" variant="accent" />
       </motion.div>
 
       {/* Recent */}
@@ -88,8 +112,21 @@ const Dashboard = () => {
           </button>
         </div>
         <div className="space-y-2">
-          {mockSubmissions.map((sub) => (
-            <SubmissionCard key={sub.id} submission={sub} />
+          {recentSubmissions.length === 0 && (
+            <p className="text-center text-muted-foreground py-6 text-sm">No declarations yet.</p>
+          )}
+          {recentSubmissions.map((sub) => (
+            <SubmissionCard
+              key={sub.id}
+              submission={{
+                id: sub.id,
+                taxYear: sub.taxYear,
+                type: sub.type,
+                status: sub.status as any,
+                date: new Date(sub.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+                amount: sub.amount || "—",
+              }}
+            />
           ))}
         </div>
       </motion.div>

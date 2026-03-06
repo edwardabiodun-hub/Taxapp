@@ -3,13 +3,7 @@ import { User, Mail, Phone, MapPin, Building2, ChevronRight, LogOut, Lock } from
 import { cn } from "@/lib/utils";
 import { useCountryTheme } from "@/contexts/CountryThemeContext";
 import { africanCountries } from "@/types/declaration";
-
-const profileData = {
-  name: "Amara Okafor",
-  email: "amara@example.com",
-  phone: "+234 812 345 6789",
-  taxId: "A012345678Z",
-};
+import { useProfile } from "@/hooks/use-local-data";
 
 const menuItems = [
   { icon: User, label: "Personal Details" },
@@ -20,6 +14,12 @@ const menuItems = [
 const Profile = () => {
   const { country, setCountry } = useCountryTheme();
   const selectedCountry = africanCountries.find((c) => c.code === country);
+  const profile = useProfile();
+
+  const displayName = profile?.name || "Loading...";
+  const displayEmail = profile?.email || "—";
+  const displayPhone = profile?.phone || "—";
+  const displayTaxId = profile?.taxId || "—";
 
   return (
     <motion.div
@@ -32,18 +32,18 @@ const Profile = () => {
         <div className="w-20 h-20 rounded-full bg-background/20 mx-auto flex items-center justify-center mb-3">
           <User className="w-10 h-10" />
         </div>
-        <h2 className="font-display font-bold text-xl">{profileData.name}</h2>
-        <p className="text-sm opacity-80">{profileData.email}</p>
+        <h2 className="font-display font-bold text-xl">{displayName}</h2>
+        <p className="text-sm opacity-80">{displayEmail}</p>
         <div className="mt-3 inline-flex items-center gap-2 bg-background/15 rounded-full px-4 py-1.5">
-          <span className="text-xs font-medium">Tax ID: {profileData.taxId}</span>
+          <span className="text-xs font-medium">Tax ID: {displayTaxId}</span>
         </div>
       </div>
 
       {/* Info */}
       <div className="bg-card rounded-xl shadow-card p-4 space-y-3">
-        <InfoRow icon={Phone} label="Phone" value={profileData.phone} />
+        <InfoRow icon={Phone} label="Phone" value={displayPhone} />
         <InfoRow icon={MapPin} label="Country" value={`${selectedCountry?.flag || ""} ${selectedCountry?.name || country}`} />
-        <InfoRow icon={Building2} label="Tax ID" value={profileData.taxId} />
+        <InfoRow icon={Building2} label="Tax ID" value={displayTaxId} />
       </div>
 
       {/* Country Selector */}
