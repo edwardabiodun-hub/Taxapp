@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 import { useProfile, useDeclarations } from "@/hooks/use-local-data";
@@ -24,6 +24,7 @@ const Dashboard = () => {
 
   const approved = declarations.filter((d) => d.status === "approved").length;
   const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing" || d.status === "audit_request").length;
+  const auditRequests = declarations.filter((d) => d.status === "audit_request");
   const recentSubmissions = declarations.slice(0, 3);
 
   return (
@@ -57,6 +58,37 @@ const Dashboard = () => {
       {syncStatus === "syncing" && (
         <motion.div variants={item} className="text-xs text-muted-foreground text-center">
           Syncing data…
+        </motion.div>
+      )}
+
+      {/* Audit Request Banner */}
+      {auditRequests.length > 0 && (
+        <motion.div
+          variants={item}
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-3"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-destructive/10">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-bold text-sm text-foreground">
+                Action Required — Audit Request
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {auditRequests.length === 1
+                  ? `Your ${auditRequests[0].type} (${auditRequests[0].taxYear}) needs additional documents.`
+                  : `${auditRequests.length} declarations need additional documents from tax authorities.`}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/submissions")}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive text-xs font-semibold py-2.5 transition-colors"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Respond with Documents
+          </button>
         </motion.div>
       )}
 
