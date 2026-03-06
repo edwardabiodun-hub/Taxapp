@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, Building2, ChevronRight, LogOut, Lock } from "lucide-react";
+import { User, Phone, MapPin, Building2, ChevronRight, LogOut, Lock, Calendar, Globe, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCountryTheme } from "@/contexts/CountryThemeContext";
 import { africanCountries } from "@/types/declaration";
 import { useProfile } from "@/hooks/use-local-data";
+import { format } from "date-fns";
 
 const menuItems = [
   { icon: User, label: "Personal Details" },
   { icon: Building2, label: "Business Details" },
-  { icon: Mail, label: "Notifications" },
 ];
 
 const Profile = () => {
@@ -20,6 +20,11 @@ const Profile = () => {
   const displayEmail = profile?.email || "—";
   const displayPhone = profile?.phone || "—";
   const displayTaxId = profile?.taxId || "—";
+
+  const birthCountry = africanCountries.find((c) => c.code === profile?.countryOfBirth);
+  const displayDob = profile?.dateOfBirth
+    ? format(new Date(profile.dateOfBirth), "dd MMM yyyy")
+    : "—";
 
   return (
     <motion.div
@@ -39,10 +44,22 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Info */}
+      {/* Personal Info */}
       <div className="bg-card rounded-xl shadow-card p-4 space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <User className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-card-foreground">Personal Information</p>
+        </div>
         <InfoRow icon={Phone} label="Phone" value={displayPhone} />
-        <InfoRow icon={MapPin} label="Country" value={`${selectedCountry?.flag || ""} ${selectedCountry?.name || country}`} />
+        <InfoRow icon={Calendar} label="Date of Birth" value={displayDob} />
+        <InfoRow icon={Users} label="Gender" value={profile?.gender || "—"} />
+        <InfoRow
+          icon={Globe}
+          label="Country of Birth"
+          value={birthCountry ? `${birthCountry.flag} ${birthCountry.name}` : profile?.countryOfBirth || "—"}
+        />
+        <InfoRow icon={Globe} label="Nationality" value={profile?.nationality || "—"} />
+        <InfoRow icon={MapPin} label="Tax Residence" value={`${selectedCountry?.flag || ""} ${selectedCountry?.name || country}`} />
         <InfoRow icon={Building2} label="Tax ID" value={displayTaxId} />
       </div>
 
