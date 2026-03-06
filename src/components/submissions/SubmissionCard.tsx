@@ -5,16 +5,17 @@ export interface SubmissionItem {
   id: string;
   taxYear: string;
   type: string;
-  status: "submitted" | "processing" | "approved" | "rejected";
+  status: "draft" | "submitted" | "processing" | "audit_request" | "approved";
   date: string;
   amount: string;
 }
 
 const statusConfig = {
+  draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
   submitted: { icon: Clock, label: "Submitted", className: "bg-info/10 text-info" },
   processing: { icon: Clock, label: "Processing", className: "bg-warning/10 text-warning" },
+  audit_request: { icon: AlertCircle, label: "Audit Request", className: "bg-destructive/10 text-destructive" },
   approved: { icon: CheckCircle2, label: "Approved", className: "bg-success/10 text-success" },
-  rejected: { icon: AlertCircle, label: "Rejected", className: "bg-destructive/10 text-destructive" },
 };
 
 interface SubmissionCardProps {

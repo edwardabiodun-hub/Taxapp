@@ -19,7 +19,7 @@ export interface LocalDeclaration {
   taxYear: string;
   country: string;
   type: string;
-  status: "draft" | "submitted" | "processing" | "approved" | "rejected";
+  status: "draft" | "submitted" | "processing" | "audit_request" | "approved";
   formData: Record<string, string>;
   documents: { name: string; size: number; type: string }[];
   amount?: string;
