@@ -32,7 +32,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const fmt = (v: string) => v ? `₦${v}` : "—";
 
-const ReviewStep = ({ form }: ReviewStepProps) => (
+const ReviewStep = ({ form, documents }: ReviewStepProps) => (
   <div className="space-y-4">
     <div>
       <h3 className="font-display font-bold text-foreground text-sm">Review & Submit</h3>
