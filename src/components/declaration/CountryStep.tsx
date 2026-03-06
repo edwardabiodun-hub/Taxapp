@@ -45,7 +45,7 @@ const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
             <button
               key={country.code}
               disabled={!country.active}
-              onClick={() => country.active && update("country", country.code)}
+              onClick={() => country.active && handleCountrySelect(country.code)}
               className={cn(
                 "relative flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
                 country.active && form.country === country.code
