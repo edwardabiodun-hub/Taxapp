@@ -15,6 +15,7 @@ const tabs = [
 interface EarnedIncomeStepProps {
   form: NigeriaDeclarationForm;
   update: (key: string, value: string) => void;
+  errors?: string[];
 }
 
 const Field = ({ label, hint, value, onChange, prefix = "₦" }: {
@@ -44,14 +45,18 @@ const TextField = ({ label, hint, value, onChange }: {
   </div>
 );
 
-const EarnedIncomeStep = ({ form, update }: EarnedIncomeStepProps) => {
+const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) => {
   const [activeTab, setActiveTab] = useState<string>("employment");
+  const hasIncomeError = errors.some((e) => e.toLowerCase().includes("income source"));
 
   return (
     <div className="space-y-4">
       <div>
         <h3 className="font-display font-bold text-foreground text-sm">Earned Income</h3>
         <p className="text-[11px] text-muted-foreground">Per the Personal Income Tax Act 2025</p>
+        {hasIncomeError && (
+          <p className="text-[11px] text-destructive font-medium mt-1">⚠ At least one income source is required</p>
+        )}
       </div>
 
       {/* Sub-tabs */}

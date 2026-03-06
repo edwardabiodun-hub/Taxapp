@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { declarationSteps, defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
+import { validateStep } from "@/lib/validation";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import CountryStep from "@/components/declaration/CountryStep";
 import EarnedIncomeStep from "@/components/declaration/EarnedIncomeStep";
@@ -19,14 +20,29 @@ const NewDeclaration = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const next = () => {
+    const result = validateStep(currentStep, form);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      toast({
+        title: "Please complete required fields",
+        description: result.errors.join(". "),
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (currentStep < declarationSteps.length - 1) setCurrentStep((s) => s + 1);
   };
+
   const prev = () => {
+    setErrors([]);
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
@@ -40,8 +56,8 @@ const NewDeclaration = () => {
 
   const renderStep = () => {
     switch (currentStep) {
-      case 0: return <CountryStep form={form} update={update} />;
-      case 1: return <EarnedIncomeStep form={form} update={update} />;
+      case 0: return <CountryStep form={form} update={update} errors={errors} />;
+      case 1: return <EarnedIncomeStep form={form} update={update} errors={errors} />;
       case 2: return <InvestmentIncomeStep form={form} update={update} />;
       case 3: return <BenefitsStep form={form} update={update} />;
       case 4: return <DeductionsStep form={form} update={update} />;
