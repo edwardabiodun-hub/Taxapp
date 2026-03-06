@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/local-db";
+import { useActivities } from "@/hooks/use-local-data";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,6 +16,8 @@ import {
   Image,
   X,
   Paperclip,
+  FilePlus,
+  CircleDot,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -70,7 +73,7 @@ const SubmissionDetail = () => {
   const [newDocs, setNewDocs] = useState<UploadedFile[]>([]);
 
   const declaration = useLiveQuery(() => (id ? db.declarations.get(id) : undefined), [id]);
-
+  const activities = useActivities(id || "");
   if (declaration === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -132,6 +135,16 @@ const SubmissionDetail = () => {
       documents: updatedDocs,
       pendingSync: true,
       updatedAt: new Date().toISOString(),
+    });
+
+    // Record activity
+    await db.activities.put({
+      id: crypto.randomUUID(),
+      declarationId: declaration.id,
+      type: "document_upload",
+      title: `${newDocs.length} document${newDocs.length > 1 ? "s" : ""} uploaded`,
+      description: newDocs.map((d) => d.name).join(", "),
+      timestamp: new Date().toISOString(),
     });
 
     setNewDocs([]);
@@ -219,6 +232,66 @@ const SubmissionDetail = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Activity Timeline */}
+      <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+        <h3 className="font-display font-bold text-sm text-card-foreground">Activity Timeline</h3>
+        {activities.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground py-2">No activity recorded yet.</p>
+        ) : (
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />
+
+            <div className="space-y-0">
+              {[...activities].reverse().map((activity, i) => {
+                const iconMap = {
+                  created: { icon: FilePlus, color: "text-primary bg-primary/10" },
+                  status_change: activity.meta?.to === "audit_request"
+                    ? { icon: AlertTriangle, color: "text-destructive bg-destructive/10" }
+                    : activity.meta?.to === "approved"
+                    ? { icon: CheckCircle2, color: "text-success bg-success/10" }
+                    : { icon: CircleDot, color: "text-info bg-info/10" },
+                  document_upload: { icon: Upload, color: "text-primary bg-primary/10" },
+                  note: { icon: FileText, color: "text-muted-foreground bg-muted" },
+                };
+                const cfg = iconMap[activity.type] || iconMap.note;
+                const Icon = cfg.icon;
+                const dateStr = new Date(activity.timestamp).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+                const timeStr = new Date(activity.timestamp).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="relative flex gap-3 py-3"
+                  >
+                    <div className={cn("w-[30px] h-[30px] rounded-lg flex items-center justify-center shrink-0 z-10", cfg.color)}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-card-foreground">{activity.title}</p>
+                      {activity.description && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{activity.description}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">{dateStr} · {timeStr}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
