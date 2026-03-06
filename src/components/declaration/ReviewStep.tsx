@@ -84,6 +84,32 @@ const ReviewStep = ({ form }: ReviewStepProps) => (
         <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
         <SummaryRow label="Rent Relief" value={fmt(form.annualRentPaid)} />
       </Section>
+
+      {documents && documents.length > 0 && (
+        <>
+          <div className="border-t border-border" />
+          <Section title={`Documents (${documents.length})`}>
+            {documents.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-xs text-foreground truncate flex-1">{doc.file.name}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium shrink-0">
+                  {doc.category.replace("_", " ")}
+                </span>
+              </div>
+            ))}
+          </Section>
+        </>
+      )}
+      {(!documents || documents.length === 0) && (
+        <>
+          <div className="border-t border-border" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Paperclip className="w-3.5 h-3.5" />
+            <span className="text-xs">No documents attached</span>
+          </div>
+        </>
+      )}
     </div>
 
     <p className="text-[10px] text-muted-foreground text-center">
