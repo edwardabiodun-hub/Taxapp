@@ -5,6 +5,7 @@ import {
   fetchDeclarationsFromServer,
   pushDeclarationsToServer,
   fetchReferenceDataFromServer,
+  fetchActivitiesFromServer,
 } from "./mock-api";
 
 /**
@@ -35,10 +36,11 @@ export async function syncAll(): Promise<{ success: boolean; error?: string }> {
     }
 
     // ── Pull from server ──
-    const [serverProfile, serverDeclarations, refData] = await Promise.all([
+    const [serverProfile, serverDeclarations, refData, serverActivities] = await Promise.all([
       fetchProfileFromServer(),
       fetchDeclarationsFromServer(),
       fetchReferenceDataFromServer(),
+      fetchActivitiesFromServer(),
     ]);
 
     // Upsert profile
@@ -59,6 +61,11 @@ export async function syncAll(): Promise<{ success: boolean; error?: string }> {
     const now = new Date().toISOString();
     for (const [key, value] of Object.entries(refData)) {
       await db.referenceData.put({ key, value, lastSynced: now });
+    }
+
+    // Upsert activities
+    for (const activity of serverActivities) {
+      await db.activities.put(activity);
     }
 
     console.log("[sync] Completed successfully");

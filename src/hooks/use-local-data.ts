@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type LocalDeclaration, type LocalProfile } from "@/lib/local-db";
+import { db, type LocalActivity, type LocalDeclaration, type LocalProfile } from "@/lib/local-db";
 
 export function useProfile(): LocalProfile | undefined {
   return useLiveQuery(() => db.profiles.toCollection().first());
@@ -24,4 +24,17 @@ export function useReferenceData<T = any>(key: string): T | undefined {
     const row = await db.referenceData.get(key);
     return row?.value as T | undefined;
   }, [key]);
+}
+
+export function useActivities(declarationId: string): LocalActivity[] {
+  return (
+    useLiveQuery(
+      () =>
+        db.activities
+          .where("declarationId")
+          .equals(declarationId)
+          .sortBy("timestamp"),
+      [declarationId]
+    ) ?? []
+  );
 }
