@@ -1,7 +1,10 @@
+import { FileText, Paperclip } from "lucide-react";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
+import type { UploadedDoc } from "./DocumentsStep";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
+  documents?: UploadedDoc[];
 }
 
 const SummaryRow = ({ label, value, badge }: { label: string; value: string; badge?: string }) => (
