@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { syncAll } from "@/lib/sync-service";
+import { toast } from "@/hooks/use-toast";
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 
@@ -9,6 +11,13 @@ export function useSync() {
   const [online, setOnline] = useState(navigator.onLine);
   const retryTimer = useRef<ReturnType<typeof setTimeout>>();
   const retryCount = useRef(0);
+  const navigateRef = useRef<ReturnType<typeof useNavigate>>();
+
+  try {
+    navigateRef.current = useNavigate();
+  } catch {
+    // useNavigate may fail outside Router context
+  }
 
   const runSync = useCallback(async () => {
     if (!navigator.onLine) {
@@ -22,17 +31,29 @@ export function useSync() {
     if (result.success) {
       setStatus("success");
       retryCount.current = 0;
+
+      // Show notification for new audit requests
+      if (result.auditRequests && result.auditRequests.length > 0) {
+        for (const req of result.auditRequests) {
+          toast({
+            title: "⚠️ Audit Request",
+            description: `Your ${req.type} (${req.taxYear}) requires additional documents from tax authorities.`,
+            variant: "destructive",
+            action: navigateRef.current
+              ? undefined
+              : undefined,
+          });
+        }
+      }
     } else {
       setStatus("error");
       setError(result.error);
-      // Exponential backoff retry: 5s, 10s, 20s, max 60s
       const delay = Math.min(5000 * Math.pow(2, retryCount.current), 60000);
       retryCount.current += 1;
       retryTimer.current = setTimeout(() => runSync(), delay);
     }
   }, []);
 
-  // Online/offline listeners
   useEffect(() => {
     const goOnline = () => {
       setOnline(true);
@@ -55,7 +76,6 @@ export function useSync() {
     };
   }, [runSync]);
 
-  // Sync on mount
   useEffect(() => {
     runSync();
   }, [runSync]);
