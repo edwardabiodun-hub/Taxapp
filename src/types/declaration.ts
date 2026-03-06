@@ -97,6 +97,7 @@ export const declarationSteps = [
   "Investment",
   "Benefits",
   "Deductions",
+  "Documents",
   "Review",
 ];
 

@@ -11,12 +11,14 @@ import EarnedIncomeStep from "@/components/declaration/EarnedIncomeStep";
 import InvestmentIncomeStep from "@/components/declaration/InvestmentIncomeStep";
 import BenefitsStep from "@/components/declaration/BenefitsStep";
 import DeductionsStep from "@/components/declaration/DeductionsStep";
+import DocumentsStep, { type UploadedDoc } from "@/components/declaration/DocumentsStep";
 import ReviewStep from "@/components/declaration/ReviewStep";
 
 const NewDeclaration = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
+  const [documents, setDocuments] = useState<UploadedDoc[]>([]);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -31,7 +33,7 @@ const NewDeclaration = () => {
   const handleSubmit = () => {
     toast({
       title: "Declaration Submitted!",
-      description: "Your Nigerian tax declaration has been submitted for processing.",
+      description: `Your Nigerian tax declaration with ${documents.length} document(s) has been submitted for processing.`,
     });
     navigate("/submissions");
   };
@@ -43,7 +45,8 @@ const NewDeclaration = () => {
       case 2: return <InvestmentIncomeStep form={form} update={update} />;
       case 3: return <BenefitsStep form={form} update={update} />;
       case 4: return <DeductionsStep form={form} update={update} />;
-      case 5: return <ReviewStep form={form} />;
+      case 5: return <DocumentsStep documents={documents} onDocumentsChange={setDocuments} />;
+      case 6: return <ReviewStep form={form} documents={documents} />;
       default: return null;
     }
   };
