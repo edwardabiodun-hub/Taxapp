@@ -98,9 +98,17 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
             <p className="text-[10px] opacity-70 mt-0.5">Effective rate: {tax.effectiveRate.toFixed(1)}%</p>
           </div>
 
-          <p className="text-[9px] opacity-60 text-center">
-            * Includes Consolidated Relief Allowance (CRA). This is an estimate only — final assessment by FIRS may differ.
-          </p>
+          <div className="bg-background/15 border border-primary-foreground/20 rounded-xl p-3 space-y-1.5">
+            <p className="text-[11px] font-semibold flex items-center gap-1.5">
+              ⚠️ Disclaimer
+            </p>
+            <p className="text-[10px] opacity-80 leading-relaxed">
+              This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. 
+              The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) 
+              or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, 
+              audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
+            </p>
+          </div>
         </div>
       )}
 
