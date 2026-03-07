@@ -348,13 +348,14 @@ const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value
   </div>
 );
 
-const EditField = ({ label, icon: Icon, children }: { label: string; icon: any; children: React.ReactNode }) => (
+const EditField = ({ label, icon: Icon, error, required, children }: { label: string; icon: any; error?: string; required?: boolean; children: React.ReactNode }) => (
   <div className="space-y-1.5">
-    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <Label className={cn("flex items-center gap-1.5 text-xs", error ? "text-destructive" : "text-muted-foreground")}>
       <Icon className="w-3.5 h-3.5" />
-      {label}
+      {label} {required && <span className="text-destructive">*</span>}
     </Label>
     {children}
+    {error && <p className="text-xs text-destructive">{error}</p>}
   </div>
 );
 
