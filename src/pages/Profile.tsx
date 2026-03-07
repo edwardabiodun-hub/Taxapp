@@ -248,7 +248,7 @@ const Profile = () => {
                 onChange={(e) => updateField("taxId", e.target.value)}
                 placeholder="Tax ID number"
                 className={cn(errors.taxId && "border-destructive")}
-            </EditField>
+              />
             </EditField>
           </div>
         ) : (
