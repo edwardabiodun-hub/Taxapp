@@ -152,7 +152,7 @@ const Profile = () => {
           ) : (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setEditing(false)}
+                onClick={() => { setEditing(false); setErrors({}); }}
                 className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
@@ -168,34 +168,38 @@ const Profile = () => {
 
         {editing ? (
           <div className="space-y-4 pt-1">
-            <EditField label="Full Name" icon={User}>
+            <EditField label="Full Name" icon={User} error={errors.name} required>
               <Input
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => updateField("name", e.target.value)}
                 placeholder="Full name"
+                className={cn(errors.name && "border-destructive")}
               />
             </EditField>
-            <EditField label="Email" icon={Globe}>
+            <EditField label="Email" icon={Globe} error={errors.email} required>
               <Input
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => updateField("email", e.target.value)}
                 placeholder="Email address"
+                className={cn(errors.email && "border-destructive")}
               />
             </EditField>
-            <EditField label="Phone" icon={Phone}>
+            <EditField label="Phone" icon={Phone} error={errors.phone} required>
               <Input
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(e) => updateField("phone", e.target.value)}
                 placeholder="Phone number"
+                className={cn(errors.phone && "border-destructive")}
               />
             </EditField>
-            <EditField label="Date of Birth" icon={Calendar}>
+            <EditField label="Date of Birth" icon={Calendar} error={errors.dateOfBirth} required>
               <Popover>
                 <PopoverTrigger asChild>
                   <button className={cn(
                     "flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm",
-                    !form.dateOfBirth && "text-muted-foreground"
+                    !form.dateOfBirth && "text-muted-foreground",
+                    errors.dateOfBirth && "border-destructive"
                   )}>
                     {form.dateOfBirth ? format(form.dateOfBirth, "dd MMM yyyy") : "Select date"}
                   </button>
@@ -204,7 +208,7 @@ const Profile = () => {
                   <CalendarComponent
                     mode="single"
                     selected={form.dateOfBirth}
-                    onSelect={(d) => setForm({ ...form, dateOfBirth: d })}
+                    onSelect={(d) => updateField("dateOfBirth", d)}
                     captionLayout="dropdown-buttons"
                     fromYear={1930}
                     toYear={new Date().getFullYear() - 16}
@@ -212,17 +216,17 @@ const Profile = () => {
                 </PopoverContent>
               </Popover>
             </EditField>
-            <EditField label="Gender" icon={Users}>
-              <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+            <EditField label="Gender" icon={Users} error={errors.gender} required>
+              <Select value={form.gender} onValueChange={(v) => updateField("gender", v)}>
+                <SelectTrigger className={cn(errors.gender && "border-destructive")}><SelectValue placeholder="Select gender" /></SelectTrigger>
                 <SelectContent>
                   {genders.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
                 </SelectContent>
               </Select>
             </EditField>
-            <EditField label="Country of Birth" icon={Globe}>
-              <Select value={form.countryOfBirth} onValueChange={(v) => setForm({ ...form, countryOfBirth: v })}>
-                <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+            <EditField label="Country of Birth" icon={Globe} error={errors.countryOfBirth} required>
+              <Select value={form.countryOfBirth} onValueChange={(v) => updateField("countryOfBirth", v)}>
+                <SelectTrigger className={cn(errors.countryOfBirth && "border-destructive")}><SelectValue placeholder="Select country" /></SelectTrigger>
                 <SelectContent>
                   {africanCountries.map((c) => (
                     <SelectItem key={c.code} value={c.code}>{c.flag} {c.name}</SelectItem>
@@ -230,19 +234,21 @@ const Profile = () => {
                 </SelectContent>
               </Select>
             </EditField>
-            <EditField label="Nationality" icon={Globe}>
-              <Select value={form.nationality} onValueChange={(v) => setForm({ ...form, nationality: v })}>
-                <SelectTrigger><SelectValue placeholder="Select nationality" /></SelectTrigger>
+            <EditField label="Nationality" icon={Globe} error={errors.nationality} required>
+              <Select value={form.nationality} onValueChange={(v) => updateField("nationality", v)}>
+                <SelectTrigger className={cn(errors.nationality && "border-destructive")}><SelectValue placeholder="Select nationality" /></SelectTrigger>
                 <SelectContent>
                   {nationalities.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                 </SelectContent>
               </Select>
             </EditField>
-            <EditField label="Tax ID" icon={Building2}>
+            <EditField label="Tax ID" icon={Building2} error={errors.taxId} required>
               <Input
                 value={form.taxId}
-                onChange={(e) => setForm({ ...form, taxId: e.target.value })}
+                onChange={(e) => updateField("taxId", e.target.value)}
                 placeholder="Tax ID number"
+                className={cn(errors.taxId && "border-destructive")}
+              />
               />
             </EditField>
           </div>
