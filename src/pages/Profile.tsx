@@ -43,6 +43,7 @@ const Profile = () => {
     dateOfBirth: undefined, gender: "",
     countryOfBirth: "", nationality: "", taxId: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (profile) {
@@ -59,10 +60,30 @@ const Profile = () => {
     }
   }, [profile, editing]);
 
+  const validateForm = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = "Full name is required";
+    if (!form.email.trim()) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Invalid email format";
+    if (!form.phone.trim()) errs.phone = "Phone number is required";
+    if (!form.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
+    if (!form.gender) errs.gender = "Gender is required";
+    if (!form.countryOfBirth) errs.countryOfBirth = "Country of birth is required";
+    if (!form.nationality) errs.nationality = "Nationality is required";
+    if (!form.taxId.trim()) errs.taxId = "Tax ID is required";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const updateField = (key: keyof EditForm, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => { const next = { ...prev }; delete next[key]; return next; });
+  };
+
   const handleSave = async () => {
     if (!profile) return;
-    if (!form.name.trim() || !form.email.trim()) {
-      toast({ title: "Name and email are required", variant: "destructive" });
+    if (!validateForm()) {
+      toast({ title: "Please fill all required fields", variant: "destructive" });
       return;
     }
     setSaving(true);
