@@ -1,9 +1,14 @@
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 
 /**
- * Nigerian PIT bands (Personal Income Tax Act)
- * Based on current rates from PWC/FIRS
+ * Nigerian PIT bands (Personal Income Tax Act, as amended 2011 s.37/6th Schedule).
+ * Source: FIRS / PwC Nigeria Tax Facts and Figures.
+ * Effective: 2011-06-14. No changes confirmed as of this citation — re-verify
+ * against a current FIRS/PwC publication before relying on this for a live filing,
+ * and bump TAX_BANDS_EFFECTIVE_DATE below whenever the rates are updated so a rate
+ * change shows up as an explicit, reviewable diff rather than a silent edit.
  */
+const TAX_BANDS_EFFECTIVE_DATE = "2011-06-14";
 const TAX_BANDS = [
   { limit: 300_000, rate: 0.07 },
   { limit: 300_000, rate: 0.11 },
@@ -14,6 +19,12 @@ const TAX_BANDS = [
 ];
 
 const MINIMUM_TAX_RATE = 0.01; // 1% of gross income
+
+/** Rounds to 2 decimal places (kobo precision) to avoid returning currency
+ * values like 1234.5678 that can't exist in Naira/kobo. */
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
 
 export interface TaxBreakdown {
   grossIncome: number;
@@ -108,13 +119,13 @@ export function calculateNigeriaTax(form: NigeriaDeclarationForm): TaxBreakdown 
   const effectiveRate = grossIncome > 0 ? (finalTax / grossIncome) * 100 : 0;
 
   return {
-    grossIncome,
-    totalDeductions,
-    taxableIncome,
-    bands,
-    computedTax,
-    minimumTax,
-    finalTax,
-    effectiveRate,
+    grossIncome: round2(grossIncome),
+    totalDeductions: round2(totalDeductions),
+    taxableIncome: round2(taxableIncome),
+    bands: bands.map((b) => ({ ...b, income: round2(b.income), tax: round2(b.tax) })),
+    computedTax: round2(computedTax),
+    minimumTax: round2(minimumTax),
+    finalTax: round2(finalTax),
+    effectiveRate: round2(effectiveRate),
   };
 }
