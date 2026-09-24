@@ -26,6 +26,13 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+/** Formats a Naira amount for display/storage: "NGN 45,200". Rounds to the
+ * nearest whole naira — kobo precision matters for calculation (round2
+ * above), not for a summary display or filing amount string. */
+export function formatNaira(amount: number): string {
+  return `NGN ${Math.round(amount).toLocaleString("en-NG")}`;
+}
+
 export interface TaxBreakdown {
   grossIncome: number;
   totalDeductions: number;

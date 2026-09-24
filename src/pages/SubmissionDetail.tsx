@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/local-db";
-import { useActivities } from "@/hooks/use-local-data";
+import { useActivities, useProfile } from "@/hooks/use-local-data";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   FileText,
   Upload,
+  Download,
   Calendar,
   MapPin,
   DollarSign,
@@ -23,6 +24,8 @@ import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
+import { buildFilingSummary } from "@/lib/filing-summary";
+import { renderFilingSummaryPdf } from "@/lib/filing-summary-pdf";
 
 const statusConfig = {
   draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -76,6 +79,7 @@ const SubmissionDetail = () => {
 
   const declaration = useLiveQuery(() => (id ? db.declarations.get(id) : undefined), [id]);
   const activities = useActivities(id || "");
+  const profile = useProfile();
   if (declaration === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -166,6 +170,22 @@ const SubmissionDetail = () => {
     toast({ title: "Documents submitted", description: "Your documents have been attached and will sync shortly." });
   };
 
+  const handleExportSummary = () => {
+    if (!profile) {
+      toast({ title: "Can't export yet", description: "Your profile hasn't finished loading.", variant: "destructive" });
+      return;
+    }
+
+    const summary = buildFilingSummary(declaration, profile);
+    const blob = renderFilingSummaryPdf(summary);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `taxease-filing-summary-${declaration.taxYear}-${declaration.id}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 py-6 max-w-lg mx-auto space-y-5">
       {/* Header */}
@@ -219,6 +239,23 @@ const SubmissionDetail = () => {
           <DetailRow icon={DollarSign} label="Amount" value={declaration.amount || "—"} />
         </div>
       </div>
+
+      {/* Manual filing export — no direct FIRS/SIRS integration exists yet,
+          so this is the actual filing path today, not a fallback. */}
+      <button
+        onClick={handleExportSummary}
+        className="w-full flex items-center gap-3 p-4 bg-card rounded-2xl shadow-card hover:shadow-elevated transition-shadow text-left"
+      >
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <Download className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">Download Filing Summary</p>
+          <p className="text-[11px] text-muted-foreground">
+            PDF to file directly with FIRS/SIRS or bring to your accountant
+          </p>
+        </div>
+      </button>
 
       {/* Existing Documents */}
       <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
