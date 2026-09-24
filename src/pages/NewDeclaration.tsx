@@ -22,6 +22,10 @@ const NewDeclaration = () => {
   const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  // Generated up front (not at submit time) so DocumentsStep can persist
+  // uploaded files as soon as they're attached, using the same id this
+  // declaration will be saved under.
+  const [declarationId] = useState(() => `decl-${crypto.randomUUID()}`);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -48,15 +52,14 @@ const NewDeclaration = () => {
   };
 
   const handleSubmit = async () => {
-    const id = `decl-${Date.now()}`;
     await db.declarations.add({
-      id,
+      id: declarationId,
       taxYear: form.taxYear || "2025",
       country: form.country || "ng",
       type: "Income Tax",
       status: "submitted",
       formData: { ...form },
-      documents: documents.map((d) => ({ name: d.name, size: d.size, type: d.type })),
+      documents: documents.map((d) => ({ id: d.id, name: d.file.name, size: d.file.size, type: d.file.type })),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       pendingSync: 1,
@@ -75,7 +78,7 @@ const NewDeclaration = () => {
       case 2: return <InvestmentIncomeStep form={form} update={update} />;
       case 3: return <BenefitsStep form={form} update={update} />;
       case 4: return <DeductionsStep form={form} update={update} />;
-      case 5: return <DocumentsStep documents={documents} onDocumentsChange={setDocuments} />;
+      case 5: return <DocumentsStep declarationId={declarationId} documents={documents} onDocumentsChange={setDocuments} />;
       case 6: return <ReviewStep form={form} documents={documents} />;
       default: return null;
     }

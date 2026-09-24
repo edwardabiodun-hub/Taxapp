@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -24,6 +25,7 @@ interface ProfileForm {
   nationality: string;
   country: string;
   taxId: string;
+  consentAccepted: boolean;
 }
 
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
@@ -52,6 +54,7 @@ const Onboarding = () => {
     nationality: "",
     country: "",
     taxId: "",
+    consentAccepted: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -72,6 +75,7 @@ const Onboarding = () => {
       if (!form.email.trim()) errs.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Invalid email format";
       if (!form.phone.trim()) errs.phone = "Phone number is required";
+      if (!form.consentAccepted) errs.consentAccepted = "You must accept the privacy notice to continue";
     } else if (step === 1) {
       if (!form.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
       if (!form.gender) errs.gender = "Gender is required";
@@ -116,6 +120,7 @@ const Onboarding = () => {
       nationality: form.nationality,
       country: form.country,
       taxId: form.taxId.trim(),
+      consentAcceptedAt: new Date().toISOString(),
     });
 
     toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
@@ -183,6 +188,40 @@ const Onboarding = () => {
                     className={cn(errors.phone && "border-destructive")}
                   />
                 </Field>
+
+                <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      <p className="font-semibold text-foreground text-xs">How we handle your data</p>
+                      <p>
+                        The details you enter — including your name, contact
+                        information, and tax identification number — are
+                        encrypted and stored only on this device. They are
+                        not uploaded or shared with anyone unless and until
+                        you submit a tax declaration for filing.
+                      </p>
+                      <p className="italic">
+                        Placeholder notice — pending final legal/compliance
+                        review before this app collects real user data.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 pl-1">
+                    <Checkbox
+                      id="consent"
+                      checked={form.consentAccepted}
+                      onCheckedChange={(checked) => update("consentAccepted", checked === true)}
+                      className={cn("mt-0.5", errors.consentAccepted && "border-destructive")}
+                    />
+                    <Label htmlFor="consent" className="text-xs font-normal leading-snug text-foreground">
+                      I have read and agree to how my data will be handled, as described above.
+                    </Label>
+                  </div>
+                  {errors.consentAccepted && (
+                    <p className="text-xs text-destructive pl-1">{errors.consentAccepted}</p>
+                  )}
+                </div>
               </>
             )}
 

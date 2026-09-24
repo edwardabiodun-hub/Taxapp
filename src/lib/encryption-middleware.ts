@@ -4,6 +4,7 @@ import Dexie, {
   type DBCoreGetManyRequest,
   type DBCoreQueryRequest,
 } from "dexie";
+import { toBase64, fromBase64, importAesKey, encryptBytes, decryptBytes } from "./crypto-primitives";
 
 const ENCRYPTED_PREFIX = "enc:v1:";
 
@@ -12,35 +13,17 @@ export interface EncryptionConfig {
   [tableName: string]: string[];
 }
 
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-function fromBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-function importKey(rawKey: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["encrypt", "decrypt"]);
-}
-
 async function encryptValue(key: CryptoKey, value: unknown): Promise<string> {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
   const plaintext = new TextEncoder().encode(JSON.stringify(value));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
-  return `${ENCRYPTED_PREFIX}${toBase64(iv)}:${toBase64(new Uint8Array(ciphertext))}`;
+  const { iv, ciphertext } = await encryptBytes(key, plaintext.buffer);
+  return `${ENCRYPTED_PREFIX}${toBase64(new Uint8Array(iv))}:${toBase64(new Uint8Array(ciphertext))}`;
 }
 
 async function decryptValue(key: CryptoKey, stored: string): Promise<unknown> {
   const [ivB64, ciphertextB64] = stored.slice(ENCRYPTED_PREFIX.length).split(":");
   const iv = fromBase64(ivB64);
   const ciphertext = fromBase64(ciphertextB64);
-  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  const plaintext = await decryptBytes(key, iv.buffer, ciphertext.buffer);
   return JSON.parse(new TextDecoder().decode(plaintext));
 }
 
@@ -98,7 +81,7 @@ export function applyFieldEncryption(
   keySource: Uint8Array | Promise<Uint8Array>,
   config: EncryptionConfig
 ): void {
-  const keyPromise = Promise.resolve(keySource).then(importKey);
+  const keyPromise = Promise.resolve(keySource).then(importAesKey);
 
   db.use({
     stack: "dbcore",

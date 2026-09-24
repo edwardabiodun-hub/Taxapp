@@ -1,19 +1,7 @@
 import { SecureStorage } from "@aparajita/capacitor-secure-storage";
+import { toBase64, fromBase64 } from "./crypto-primitives";
 
 const KEY_STORAGE_NAME = "db-encryption-key";
-
-function toBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-function fromBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
 
 let keyPromise: Promise<Uint8Array> | null = null;
 

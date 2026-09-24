@@ -14,6 +14,9 @@ export interface LocalProfile {
   gender?: string;
   nationality?: string;
   lastSynced?: string;
+  /** ISO timestamp of when the user accepted the privacy notice at
+   * onboarding — an auditable consent record, not just a UI checkbox. */
+  consentAcceptedAt?: string;
 }
 
 export interface LocalDeclaration {
@@ -23,7 +26,10 @@ export interface LocalDeclaration {
   type: string;
   status: "draft" | "submitted" | "processing" | "audit_request" | "approved";
   formData: Record<string, string>;
-  documents: { name: string; size: number; type: string }[];
+  /** `id` (when present) references a row in the documentFiles table holding
+   * the actual encrypted bytes — see document-storage.ts. Declarations
+   * created before that table existed may have entries with no `id`. */
+  documents: { id?: string; name: string; size: number; type: string }[];
   amount?: string;
   createdAt: string;
   updatedAt: string;
@@ -35,6 +41,25 @@ export interface LocalDeclaration {
    * would never match a single record. Always write 0 or 1.
    */
   pendingSync: 0 | 1;
+}
+
+/**
+ * Holds the actual encrypted bytes of an uploaded document. Kept in a
+ * separate table from LocalDeclaration.documents (which stays metadata-only)
+ * because this table's `ciphertext`/`iv` are encrypted directly by
+ * document-storage.ts (raw AES-GCM bytes) rather than through
+ * applyFieldEncryption, which encrypts JSON-stringifiable field values —
+ * not a natural fit for binary file content.
+ */
+export interface LocalDocumentFile {
+  id: string;
+  declarationId: string;
+  name: string;
+  size: number;
+  type: string;
+  iv: ArrayBuffer;
+  ciphertext: ArrayBuffer;
+  createdAt: string;
 }
 
 export interface LocalReferenceData {
@@ -58,6 +83,7 @@ export interface LocalActivity {
 class TaxEaseDB extends Dexie {
   profiles!: Table<LocalProfile, string>;
   declarations!: Table<LocalDeclaration, string>;
+  documentFiles!: Table<LocalDocumentFile, string>;
   referenceData!: Table<LocalReferenceData, string>;
   activities!: Table<LocalActivity, string>;
 
@@ -89,6 +115,17 @@ class TaxEaseDB extends Dexie {
     this.version(4).stores({
       profiles: "id, country",
       declarations: "id, taxYear, country, status, pendingSync, createdAt",
+      referenceData: "key",
+      activities: "id, declarationId, timestamp",
+    });
+
+    // v4 -> v5: added documentFiles, so uploaded document bytes are actually
+    // persisted (encrypted) instead of being discarded after the in-memory
+    // File object goes away — see document-storage.ts.
+    this.version(5).stores({
+      profiles: "id, country",
+      declarations: "id, taxYear, country, status, pendingSync, createdAt",
+      documentFiles: "id, declarationId",
       referenceData: "key",
       activities: "id, declarationId, timestamp",
     });
