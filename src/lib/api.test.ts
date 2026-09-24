@@ -153,6 +153,32 @@ describe("api", () => {
         pendingSync: 0,
       });
     });
+
+    it("maps a present state, and leaves it undefined when absent (e.g. a declaration created before this feature existed)", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: [
+            {
+              id: "decl-1", tax_year: "2025", country: "ng", type: "Income Tax", status: "submitted",
+              form_data: {}, documents: [], amount: null, state: "lagos",
+              created_at: "2026-01-01T00:00:00.000Z", updated_at: "2026-01-02T00:00:00.000Z",
+            },
+            {
+              id: "decl-2", tax_year: "2024", country: "ng", type: "Income Tax", status: "approved",
+              form_data: {}, documents: [], amount: null, state: null,
+              created_at: "2025-01-01T00:00:00.000Z", updated_at: "2025-01-02T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        })
+      );
+
+      const { fetchDeclarationsFromServer } = await import("./api");
+      const declarations = await fetchDeclarationsFromServer();
+
+      expect(declarations[0].state).toBe("lagos");
+      expect(declarations[1].state).toBeUndefined();
+    });
   });
 
   describe("pushDeclarationsToServer", () => {
@@ -187,6 +213,32 @@ describe("api", () => {
       // updated_at must NOT be sent — the DB trigger owns that column, and
       // it's a different clock than local updatedAt (see api.ts comment).
       expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("updated_at");
+    });
+
+    it("includes state in the upserted row when present", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { pushDeclarationsToServer } = await import("./api");
+      await pushDeclarationsToServer([
+        {
+          id: "decl-1",
+          taxYear: "2025",
+          country: "ng",
+          type: "Income Tax",
+          status: "submitted",
+          formData: {},
+          documents: [],
+          state: "lagos",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-02T00:00:00.000Z",
+          pendingSync: 1,
+        },
+      ]);
+
+      expect(builder.upsert).toHaveBeenCalledWith([
+        expect.objectContaining({ id: "decl-1", state: "lagos" }),
+      ]);
     });
   });
 

@@ -110,6 +110,7 @@ interface DeclarationRow {
   id: string;
   tax_year: string;
   country: string;
+  state: string | null;
   type: string;
   status: LocalDeclaration["status"];
   form_data: Record<string, string>;
@@ -124,6 +125,7 @@ function rowToDeclaration(row: DeclarationRow): LocalDeclaration {
     id: row.id,
     taxYear: row.tax_year,
     country: row.country,
+    state: row.state ?? undefined,
     type: row.type,
     status: row.status,
     formData: row.form_data,
@@ -169,6 +171,7 @@ export async function pushDeclarationsToServer(declarations: LocalDeclaration[])
     user_id: userId,
     tax_year: d.taxYear,
     country: d.country,
+    state: d.state ?? null,
     type: d.type,
     status: d.status,
     form_data: d.formData,

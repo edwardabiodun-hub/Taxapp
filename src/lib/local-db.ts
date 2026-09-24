@@ -28,6 +28,14 @@ export interface LocalDeclaration {
   id: string;
   taxYear: string;
   country: string;
+  /** State of residence for this filing (Nigerian states only today, e.g.
+   * "lagos") -- a per-filing fact, not a profile attribute, since state of
+   * residence as of Jan 1 determines which SIRS a filer files with and can
+   * change between tax years. Absent on declarations created before this
+   * field existed, or when country !== "ng"; calculateStateTax() and
+   * stateName() both treat a missing/unrecognized value as "no state
+   * selected" rather than an error. */
+  state?: string;
   type: string;
   status: "draft" | "submitted" | "processing" | "audit_request" | "approved";
   formData: Record<string, string>;
