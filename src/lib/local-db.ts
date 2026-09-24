@@ -17,6 +17,11 @@ export interface LocalProfile {
   /** ISO timestamp of when the user accepted the privacy notice at
    * onboarding — an auditable consent record, not just a UI checkbox. */
   consentAcceptedAt?: string;
+  /** Set when the user requested account deletion but at least one linked
+   * declaration was still under its NTAA retention hold, so the profile
+   * was pseudonymized (name/phone/etc. cleared) rather than removed — see
+   * account-deletion.ts and api.ts's pseudonymizeProfileOnServer(). */
+  pseudonymizedAt?: string;
 }
 
 export interface LocalDeclaration {

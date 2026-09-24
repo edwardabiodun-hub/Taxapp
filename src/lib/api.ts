@@ -78,6 +78,32 @@ export async function pushProfileToServer(profile: LocalProfile): Promise<void> 
   if (error) throw error;
 }
 
+/**
+ * Nulls out contact/identity fields on a deletion request, but deliberately
+ * leaves tax_id and country untouched: any declaration still inside its
+ * NTAA retention hold needs to remain attributable to a real taxpayer if
+ * FIRS ever asks for it, and tax_id is how that linkage stays meaningful.
+ * Full removal of even those fields is a separate step, only safe once
+ * every declaration referencing this profile has cleared its own hold —
+ * not attempted here (see account-deletion.ts and the retention research).
+ */
+export async function pseudonymizeProfileOnServer(): Promise<void> {
+  const userId = await getCurrentUserId();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: "Deleted user",
+      phone: "",
+      date_of_birth: null,
+      country_of_birth: null,
+      gender: null,
+      nationality: null,
+      pseudonymized_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+  if (error) throw error;
+}
+
 // ── Declarations ─────────────────────────────────────────
 
 interface DeclarationRow {
@@ -119,6 +145,21 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
     .returns<DeclarationRow[]>();
   if (error) throw error;
   return (data ?? []).map(rowToDeclaration);
+}
+
+/**
+ * Deletes a single declaration server-side. Scoped by both id and user_id,
+ * but the real enforcement boundary is the RLS delete policy itself
+ * ("delete own declarations outside retention hold"), which independently
+ * refuses this at the database level if the declaration is still inside
+ * its NTAA retention window — this call can safely be attempted even if
+ * the caller's own isUnderRetentionHold() check has a bug, since the
+ * database is the backstop, not this function.
+ */
+export async function deleteDeclarationFromServer(id: string): Promise<void> {
+  const userId = await getCurrentUserId();
+  const { error } = await supabase.from("declarations").delete().eq("id", id).eq("user_id", userId);
+  if (error) throw error;
 }
 
 export async function pushDeclarationsToServer(declarations: LocalDeclaration[]): Promise<void> {
