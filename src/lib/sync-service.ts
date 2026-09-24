@@ -4,14 +4,13 @@ import {
   pushProfileToServer,
   fetchDeclarationsFromServer,
   pushDeclarationsToServer,
-  fetchReferenceDataFromServer,
   fetchActivitiesFromServer,
-} from "./mock-api";
+} from "./api";
 
 /**
  * Full bidirectional sync:
  * 1. Push locally-changed declarations to server
- * 2. Pull latest profile, declarations, and reference data from server
+ * 2. Pull latest profile, declarations, and activities from server
  */
 export interface SyncResult {
   success: boolean;
@@ -50,22 +49,20 @@ export async function syncAll(): Promise<SyncResult> {
     }
 
     // ── Pull from server ──
-    const [serverProfile, serverDeclarations, refData, serverActivities] = await Promise.all([
+    const [serverProfile, serverDeclarations, serverActivities] = await Promise.all([
       fetchProfileFromServer(),
       fetchDeclarationsFromServer(),
-      fetchReferenceDataFromServer(),
       fetchActivitiesFromServer(),
     ]);
 
-    if (localProfile) {
-      // Merge server-provided fields onto the existing local profile by its
-      // real id — never by serverProfile.id. The mock (and likely a future
-      // real endpoint scoped to the authenticated session) doesn't
-      // necessarily echo back the same id our local record uses; blindly
-      // put()-ing serverProfile as-is created a second, permanent phantom
-      // profile record with the mock's hardcoded id instead of updating the
-      // real one, and later syncs would then push whichever profile
-      // happened to sort first — not necessarily the real one.
+    if (localProfile && serverProfile) {
+      // Merge server-provided fields by the existing local profile's own
+      // id, not serverProfile.id, even though the two are expected to
+      // match now (both are the authenticated user's real auth.users id).
+      // Keeping this explicit is cheap insurance against exactly the class
+      // of bug this used to have with the mock backend, whose fixture data
+      // returned an unrelated hardcoded id and silently created a second,
+      // permanent phantom profile record instead of updating the real one.
       await db.profiles.put({
         ...localProfile,
         ...serverProfile,
@@ -86,11 +83,6 @@ export async function syncAll(): Promise<SyncResult> {
         }
         await db.declarations.put(decl);
       }
-    }
-
-    const now = new Date().toISOString();
-    for (const [key, value] of Object.entries(refData)) {
-      await db.referenceData.put({ key, value, lastSynced: now });
     }
 
     for (const activity of serverActivities) {

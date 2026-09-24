@@ -12,8 +12,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { db } from "@/lib/local-db";
-import { createAccount } from "@/lib/auth";
-import { useAuth } from "@/contexts/AuthContext";
+import { signUp } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 import { africanCountries } from "@/types/declaration";
 
@@ -49,8 +48,8 @@ const steps = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { unlock } = useAuth();
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     email: "",
@@ -122,27 +121,48 @@ const Onboarding = () => {
       return;
     }
 
-    await createAccount(form.email.trim(), form.password);
+    setSubmitting(true);
+    try {
+      const result = await signUp(form.email.trim(), form.password);
+      if (!result.success) {
+        toast({ title: "Couldn't create your account", description: result.error, variant: "destructive" });
+        return;
+      }
+      if (!result.userId) {
+        // Shouldn't happen alongside success:true, but don't silently
+        // create a profile with no id to link it to if it somehow does.
+        toast({ title: "Something went wrong creating your account", variant: "destructive" });
+        return;
+      }
 
-    await db.profiles.put({
-      id: `user-${Date.now()}`,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      dateOfBirth: form.dateOfBirth ? format(form.dateOfBirth, "yyyy-MM-dd") : "",
-      gender: form.gender,
-      countryOfBirth: form.countryOfBirth,
-      nationality: form.nationality,
-      country: form.country,
-      taxId: form.taxId.trim(),
-      consentAcceptedAt: new Date().toISOString(),
-    });
+      await db.profiles.put({
+        id: result.userId,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        dateOfBirth: form.dateOfBirth ? format(form.dateOfBirth, "yyyy-MM-dd") : "",
+        gender: form.gender,
+        countryOfBirth: form.countryOfBirth,
+        nationality: form.nationality,
+        country: form.country,
+        taxId: form.taxId.trim(),
+        consentAcceptedAt: new Date().toISOString(),
+      });
 
-    // Already proved they know the password by typing it twice just now —
-    // no need to immediately re-prompt the login screen they haven't seen yet.
-    unlock();
-    toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
-    navigate("/");
+      if (result.needsEmailConfirmation) {
+        // AuthContext won't see a session until the link is confirmed —
+        // App.tsx will correctly show Login (not the main app) until then.
+        toast({
+          title: "Check your email",
+          description: "Confirm your email to finish signing in, then log in below.",
+        });
+      } else {
+        toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
+      }
+      navigate("/");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -391,8 +411,12 @@ const Onboarding = () => {
               Next <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90">
-              <Check className="w-4 h-4" /> Create Profile
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
+            >
+              <Check className="w-4 h-4" /> {submitting ? "Creating…" : "Create Profile"}
             </Button>
           )}
         </div>

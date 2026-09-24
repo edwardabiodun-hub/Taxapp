@@ -12,12 +12,11 @@ vi.mock("@aparajita/capacitor-secure-storage", () => {
   };
 });
 
-vi.mock("./mock-api", () => ({
+vi.mock("./api", () => ({
   fetchProfileFromServer: vi.fn(),
   pushProfileToServer: vi.fn(async () => {}),
   fetchDeclarationsFromServer: vi.fn(async () => []),
   pushDeclarationsToServer: vi.fn(async () => {}),
-  fetchReferenceDataFromServer: vi.fn(async () => ({})),
   fetchActivitiesFromServer: vi.fn(async () => []),
 }));
 
@@ -28,7 +27,7 @@ describe("syncAll", () => {
 
   it("merges server profile data into the existing local profile instead of creating a duplicate", async () => {
     const { db } = await import("./local-db");
-    const mockApi = await import("./mock-api");
+    const api = await import("./api");
     const { syncAll } = await import("./sync-service");
 
     await db.profiles.put({
@@ -40,9 +39,12 @@ describe("syncAll", () => {
       country: "ng",
     });
 
-    // The mock server fixture returns a fixed, unrelated id — this is the
-    // actual shape mock-api.ts ships with today.
-    vi.mocked(mockApi.fetchProfileFromServer).mockResolvedValue({
+    // Defensive case: even if the server ever returned a profile keyed by a
+    // different id than the local record's (it shouldn't — both are the
+    // authenticated user's real auth.users id — but this is exactly the
+    // failure mode that used to happen with the old mock backend's
+    // hardcoded fixture id, silently creating a permanent phantom profile).
+    vi.mocked(api.fetchProfileFromServer).mockResolvedValue({
       id: "user-001",
       name: "Amara Okafor",
       email: "amara@example.com",
@@ -61,7 +63,7 @@ describe("syncAll", () => {
 
   it("does not clear the pendingSync flag on an edit made after the push snapshot was taken", async () => {
     const { db } = await import("./local-db");
-    const mockApi = await import("./mock-api");
+    const api = await import("./api");
     const { syncAll } = await import("./sync-service");
 
     await db.declarations.put({
@@ -79,7 +81,7 @@ describe("syncAll", () => {
 
     // Simulate a new local edit landing while the push request is in flight —
     // the push call itself has already captured its snapshot by this point.
-    vi.mocked(mockApi.pushDeclarationsToServer).mockImplementation(async () => {
+    vi.mocked(api.pushDeclarationsToServer).mockImplementation(async () => {
       await db.declarations.update("decl-race", {
         formData: { annualSalary: "999999" },
         pendingSync: 1,
