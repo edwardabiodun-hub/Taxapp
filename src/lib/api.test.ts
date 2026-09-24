@@ -1,0 +1,195 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+interface FakeQueryBuilder {
+  select: () => FakeQueryBuilder;
+  eq: () => FakeQueryBuilder;
+  maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
+  returns: () => Promise<{ data: unknown; error: unknown }>;
+  upsert: () => Promise<{ error: unknown }>;
+}
+
+function makeQueryBuilder(result: { data: unknown; error: unknown }): FakeQueryBuilder {
+  const builder: FakeQueryBuilder = {
+    select: vi.fn(() => builder),
+    eq: vi.fn(() => builder),
+    maybeSingle: vi.fn(async () => result),
+    returns: vi.fn(async () => result),
+    upsert: vi.fn(async () => ({ error: result.error ?? null })),
+  };
+  return builder;
+}
+
+const fromMock = vi.fn();
+const getUserMock = vi.fn();
+
+vi.mock("./supabase-client", () => ({
+  supabase: {
+    auth: { getUser: (...args: unknown[]) => getUserMock(...args) },
+    from: (...args: unknown[]) => fromMock(...args),
+  },
+}));
+
+describe("api", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-uuid-1", email: "amara@example.com" } } });
+  });
+
+  describe("fetchProfileFromServer", () => {
+    it("maps a profile row to LocalProfile shape, pulling email from the auth user", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: {
+            id: "user-uuid-1",
+            name: "Amara Okafor",
+            phone: "+2348123456789",
+            tax_id: "A012345678Z",
+            country: "ng",
+            date_of_birth: "1990-05-15",
+            country_of_birth: "ng",
+            gender: "Female",
+            nationality: "Nigerian",
+            consent_accepted_at: "2026-01-01T00:00:00.000Z",
+          },
+          error: null,
+        })
+      );
+
+      const { fetchProfileFromServer } = await import("./api");
+      const profile = await fetchProfileFromServer();
+
+      expect(profile).toEqual({
+        id: "user-uuid-1",
+        name: "Amara Okafor",
+        email: "amara@example.com",
+        phone: "+2348123456789",
+        taxId: "A012345678Z",
+        country: "ng",
+        dateOfBirth: "1990-05-15",
+        countryOfBirth: "ng",
+        gender: "Female",
+        nationality: "Nigerian",
+        consentAcceptedAt: "2026-01-01T00:00:00.000Z",
+      });
+    });
+
+    it("returns null when no profile row exists yet (first sync, before any push)", async () => {
+      fromMock.mockReturnValue(makeQueryBuilder({ data: null, error: null }));
+
+      const { fetchProfileFromServer } = await import("./api");
+      const profile = await fetchProfileFromServer();
+
+      expect(profile).toBeNull();
+    });
+
+    it("converts null optional fields to undefined, not null", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: {
+            id: "user-uuid-1",
+            name: "Amara Okafor",
+            phone: "+2348123456789",
+            tax_id: "A012345678Z",
+            country: "ng",
+            date_of_birth: null,
+            country_of_birth: null,
+            gender: null,
+            nationality: null,
+            consent_accepted_at: null,
+          },
+          error: null,
+        })
+      );
+
+      const { fetchProfileFromServer } = await import("./api");
+      const profile = await fetchProfileFromServer();
+
+      expect(profile?.dateOfBirth).toBeUndefined();
+      expect(profile?.gender).toBeUndefined();
+    });
+  });
+
+  describe("fetchDeclarationsFromServer", () => {
+    it("maps declaration rows from snake_case to camelCase and marks them synced", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: [
+            {
+              id: "decl-1",
+              tax_year: "2025",
+              country: "ng",
+              type: "Income Tax",
+              status: "submitted",
+              form_data: { annualSalary: "900000" },
+              documents: [],
+              amount: "NGN 45,200",
+              created_at: "2026-01-01T00:00:00.000Z",
+              updated_at: "2026-01-02T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        })
+      );
+
+      const { fetchDeclarationsFromServer } = await import("./api");
+      const declarations = await fetchDeclarationsFromServer();
+
+      expect(declarations).toHaveLength(1);
+      expect(declarations[0]).toMatchObject({
+        id: "decl-1",
+        taxYear: "2025",
+        formData: { annualSalary: "900000" },
+        amount: "NGN 45,200",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+        pendingSync: 0,
+      });
+    });
+  });
+
+  describe("pushDeclarationsToServer", () => {
+    it("upserts declarations scoped to the current user, mapped to snake_case", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { pushDeclarationsToServer } = await import("./api");
+      await pushDeclarationsToServer([
+        {
+          id: "decl-1",
+          taxYear: "2025",
+          country: "ng",
+          type: "Income Tax",
+          status: "submitted",
+          formData: { annualSalary: "900000" },
+          documents: [],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-02T00:00:00.000Z",
+          pendingSync: 1,
+        },
+      ]);
+
+      expect(builder.upsert).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: "decl-1",
+          user_id: "user-uuid-1",
+          tax_year: "2025",
+          form_data: { annualSalary: "900000" },
+        }),
+      ]);
+      // updated_at must NOT be sent — the DB trigger owns that column, and
+      // it's a different clock than local updatedAt (see api.ts comment).
+      expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("updated_at");
+    });
+  });
+
+  describe("auth scoping", () => {
+    it("throws instead of silently querying with no user scope when there's no session", async () => {
+      getUserMock.mockResolvedValue({ data: { user: null } });
+      fromMock.mockReturnValue(makeQueryBuilder({ data: [], error: null }));
+
+      const { fetchDeclarationsFromServer } = await import("./api");
+
+      await expect(fetchDeclarationsFromServer()).rejects.toThrow("Not authenticated");
+    });
+  });
+});
