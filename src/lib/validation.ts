@@ -12,6 +12,7 @@ export function validateStep(step: number, form: NigeriaDeclarationForm): Valida
     case 0: // Country
       if (!form.taxYear) errors.push("Tax Year is required");
       if (!form.country) errors.push("Country is required");
+      if (form.country === "ng" && !form.state) errors.push("State is required");
       break;
 
     case 1: // Earned Income — at least one income source required
