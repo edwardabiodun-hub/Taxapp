@@ -16,9 +16,12 @@ vi.mock("@aparajita/capacitor-secure-storage", () => {
 
 async function renderOnboarding() {
   const { default: Onboarding } = await import("./Onboarding");
+  const { AuthProvider } = await import("@/contexts/AuthContext");
   render(
     <MemoryRouter>
-      <Onboarding />
+      <AuthProvider>
+        <Onboarding />
+      </AuthProvider>
     </MemoryRouter>
   );
 }
@@ -32,6 +35,12 @@ function fillRequiredFields() {
   });
   fireEvent.change(screen.getByPlaceholderText("+234 812 345 6789"), {
     target: { value: "+2348123456789" },
+  });
+  fireEvent.change(screen.getByPlaceholderText("At least 8 characters"), {
+    target: { value: "correct-password" },
+  });
+  fireEvent.change(screen.getByPlaceholderText("Re-enter your password"), {
+    target: { value: "correct-password" },
   });
 }
 

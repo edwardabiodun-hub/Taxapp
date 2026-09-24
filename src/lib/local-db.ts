@@ -62,6 +62,23 @@ export interface LocalDocumentFile {
   createdAt: string;
 }
 
+/**
+ * A single local account credential (login-gate only — see auth.ts). This
+ * does NOT protect data at rest: the passwordHash isn't derivable back into
+ * anything, so it isn't added to applyFieldEncryption's config. The
+ * encryption key from encryption-key.ts is independent of this password by
+ * deliberate choice (see PR discussion) — a forgotten password resets this
+ * table, not the encrypted tax data underneath.
+ */
+export interface LocalAuth {
+  id: "primary";
+  email: string;
+  passwordHash: string;
+  salt: string;
+  iterations: number;
+  createdAt: string;
+}
+
 export interface LocalReferenceData {
   key: string;
   value: any;
@@ -84,6 +101,7 @@ class TaxEaseDB extends Dexie {
   profiles!: Table<LocalProfile, string>;
   declarations!: Table<LocalDeclaration, string>;
   documentFiles!: Table<LocalDocumentFile, string>;
+  auth!: Table<LocalAuth, string>;
   referenceData!: Table<LocalReferenceData, string>;
   activities!: Table<LocalActivity, string>;
 
@@ -126,6 +144,16 @@ class TaxEaseDB extends Dexie {
       profiles: "id, country",
       declarations: "id, taxYear, country, status, pendingSync, createdAt",
       documentFiles: "id, declarationId",
+      referenceData: "key",
+      activities: "id, declarationId, timestamp",
+    });
+
+    // v5 -> v6: added `auth` — a single local login credential (see auth.ts).
+    this.version(6).stores({
+      profiles: "id, country",
+      declarations: "id, taxYear, country, status, pendingSync, createdAt",
+      documentFiles: "id, declarationId",
+      auth: "id",
       referenceData: "key",
       activities: "id, declarationId, timestamp",
     });
