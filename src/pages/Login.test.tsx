@@ -1,17 +1,40 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-vi.mock("@aparajita/capacitor-secure-storage", () => {
-  const store: Record<string, string> = {};
-  return {
-    SecureStorage: {
-      get: vi.fn(async (key: string) => store[key] ?? null),
-      set: vi.fn(async (key: string, value: string) => {
-        store[key] = value;
+const VALID_EMAIL = "amara@example.com";
+const VALID_PASSWORD = "correct-password";
+
+let currentSession: { access_token: string } | null = null;
+const listeners: ((session: typeof currentSession) => void)[] = [];
+
+function notify() {
+  for (const cb of listeners) cb(currentSession);
+}
+
+vi.mock("@/lib/supabase-client", () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(async () => ({ data: { session: currentSession } })),
+      onAuthStateChange: vi.fn((cb: (event: string, session: typeof currentSession) => void) => {
+        const wrapped = (session: typeof currentSession) => cb("SIGNED_IN", session);
+        listeners.push(wrapped);
+        return { data: { subscription: { unsubscribe: () => {} } } };
+      }),
+      signInWithPassword: vi.fn(async ({ email, password }: { email: string; password: string }) => {
+        if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+          currentSession = { access_token: "fake-token" };
+          notify();
+          return { data: { session: currentSession }, error: null };
+        }
+        return { data: { session: null }, error: { message: "Invalid login credentials" } };
+      }),
+      signOut: vi.fn(async () => {
+        currentSession = null;
+        notify();
       }),
     },
-  };
-});
+  },
+}));
 
 async function renderLogin() {
   const { AuthProvider, useAuth } = await import("@/contexts/AuthContext");
@@ -27,17 +50,23 @@ async function renderLogin() {
       <Harness />
     </AuthProvider>
   );
+
+  // Let AuthProvider's initial getSession() check settle before the test
+  // interacts with the form, so that resolution isn't an unwrapped act().
+  await waitFor(() => expect(screen.getByPlaceholderText("amara@example.com")).toBeInTheDocument());
 }
 
 describe("Login", () => {
-  it("rejects incorrect credentials and stays locked", async () => {
-    const { createAccount } = await import("@/lib/auth");
-    await createAccount("amara@example.com", "correct-password");
+  beforeEach(() => {
+    currentSession = null;
+    listeners.length = 0;
+  });
 
+  it("rejects incorrect credentials and stays locked", async () => {
     await renderLogin();
 
     fireEvent.change(screen.getByPlaceholderText("amara@example.com"), {
-      target: { value: "amara@example.com" },
+      target: { value: VALID_EMAIL },
     });
     fireEvent.change(screen.getByPlaceholderText("••••••••"), {
       target: { value: "wrong-password" },
@@ -51,16 +80,13 @@ describe("Login", () => {
   });
 
   it("unlocks the session with the correct credentials", async () => {
-    const { createAccount } = await import("@/lib/auth");
-    await createAccount("amara@example.com", "correct-password");
-
     await renderLogin();
 
     fireEvent.change(screen.getByPlaceholderText("amara@example.com"), {
-      target: { value: "amara@example.com" },
+      target: { value: VALID_EMAIL },
     });
     fireEvent.change(screen.getByPlaceholderText("••••••••"), {
-      target: { value: "correct-password" },
+      target: { value: VALID_PASSWORD },
     });
     fireEvent.click(screen.getByRole("button", { name: /unlock/i }));
 

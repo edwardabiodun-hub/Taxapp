@@ -1,61 +1,46 @@
-import { db } from "./local-db";
-import { toBase64, fromBase64 } from "./crypto-primitives";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "./supabase-client";
 
-// OWASP-recommended minimum for PBKDF2-HMAC-SHA256 (2023 guidance).
-const PBKDF2_ITERATIONS = 210_000;
-const SALT_LENGTH_BYTES = 16;
-const AUTH_RECORD_ID = "primary";
-
-async function derivePasswordHash(password: string, salt: Uint8Array, iterations: number): Promise<string> {
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"]
-  );
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
-    keyMaterial,
-    256
-  );
-  return toBase64(new Uint8Array(bits));
+export interface AuthResult {
+  success: boolean;
+  error?: string;
+  /** true when signUp succeeded but Supabase requires email confirmation
+   * before issuing a session — the project's "Confirm email" setting is on.
+   * The caller should not treat this as fully signed in. */
+  needsEmailConfirmation?: boolean;
+  /** The Supabase auth user's id (present on a successful signUp). Local
+   * records (e.g. the profile) should use this as their id, since the
+   * profiles table's primary key references auth.users(id). */
+  userId?: string;
 }
 
-/** Constant-time-ish string comparison to avoid leaking hash length/content via early-exit timing. */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-export async function hasAccount(): Promise<boolean> {
-  const record = await db.auth.get(AUTH_RECORD_ID);
-  return record !== undefined;
-}
-
-/** Creates (or replaces) the single local login credential. Login-gate only
- * — does not affect the data-at-rest encryption key (see local-db.ts). */
-export async function createAccount(email: string, password: string): Promise<void> {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH_BYTES));
-  const passwordHash = await derivePasswordHash(password, salt, PBKDF2_ITERATIONS);
-
-  await db.auth.put({
-    id: AUTH_RECORD_ID,
-    email: email.trim().toLowerCase(),
-    passwordHash,
-    salt: toBase64(salt),
-    iterations: PBKDF2_ITERATIONS,
-    createdAt: new Date().toISOString(),
+export async function signUp(email: string, password: string): Promise<AuthResult> {
+  const { data, error } = await supabase.auth.signUp({
+    email: normalizeEmail(email),
+    password,
   });
+  if (error) return { success: false, error: error.message };
+  return { success: true, needsEmailConfirmation: data.session === null, userId: data.user?.id };
 }
 
-export async function verifyCredentials(email: string, password: string): Promise<boolean> {
-  const record = await db.auth.get(AUTH_RECORD_ID);
-  if (!record) return false;
-  if (record.email !== email.trim().toLowerCase()) return false;
+export async function signIn(email: string, password: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password,
+  });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
 
-  const candidateHash = await derivePasswordHash(password, fromBase64(record.salt), record.iterations);
-  return timingSafeEqual(candidateHash, record.passwordHash);
+export async function signOut(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+export async function getSession(): Promise<Session | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session;
 }

@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { verifyCredentials } from "@/lib/auth";
-import { useAuth } from "@/contexts/AuthContext";
+import { signIn } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 
 const Login = () => {
-  const { unlock } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>();
@@ -20,10 +18,10 @@ const Login = () => {
     setError(undefined);
     setChecking(true);
     try {
-      const ok = await verifyCredentials(email, password);
-      if (ok) {
-        unlock();
-      } else {
+      const result = await signIn(email, password);
+      if (!result.success) {
+        // AuthContext picks up a successful sign-in automatically via
+        // Supabase's onAuthStateChange — nothing to do here on success.
         setError("Incorrect email or password.");
         toast({ title: "Incorrect email or password", variant: "destructive" });
       }

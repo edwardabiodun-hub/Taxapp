@@ -14,6 +14,21 @@ vi.mock("@aparajita/capacitor-secure-storage", () => {
   };
 });
 
+// Neither test here reaches handleSubmit (both stop at the step-0 consent
+// gate), so this just needs to keep Onboarding's import chain — which now
+// transitively touches supabase-client.ts — from depending on real
+// VITE_SUPABASE_* env vars being present.
+vi.mock("@/lib/supabase-client", () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(async () => ({ data: { session: null } })),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: () => {} } } })),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
+}));
+
 async function renderOnboarding() {
   const { default: Onboarding } = await import("./Onboarding");
   const { AuthProvider } = await import("@/contexts/AuthContext");
@@ -24,6 +39,10 @@ async function renderOnboarding() {
       </AuthProvider>
     </MemoryRouter>
   );
+
+  // Let AuthProvider's initial getSession() check settle before interacting
+  // with the form, so that resolution isn't an unwrapped act().
+  await waitFor(() => expect(screen.getByPlaceholderText("e.g. Amara Okafor")).toBeInTheDocument());
 }
 
 function fillRequiredFields() {

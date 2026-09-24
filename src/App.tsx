@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CountryThemeProvider } from "@/contexts/CountryThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useHasProfile } from "@/hooks/use-has-profile";
-import { useHasAccount } from "@/hooks/use-has-account";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import NewDeclaration from "./pages/NewDeclaration";
@@ -28,30 +27,16 @@ const LoadingScreen = () => (
 
 const AppRoutes = () => {
   const { loading: profileLoading, hasProfile } = useHasProfile();
-  const { loading: accountLoading, hasAccount } = useHasAccount();
-  const { isUnlocked } = useAuth();
+  const { loading: authLoading, isUnlocked } = useAuth();
 
-  if (profileLoading || accountLoading) {
+  if (profileLoading || authLoading) {
     return <LoadingScreen />;
   }
 
-  // No local login credential yet: either a first-time install, or (there
-  // are no production users on the pre-auth schema, so not specially
-  // handled) someone who created a profile before this login gate existed.
-  // Onboarding creates the account and profile together.
-  if (!hasAccount) {
-    return (
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="*" element={<Navigate to="/onboarding" replace />} />
-      </Routes>
-    );
-  }
-
-  if (!isUnlocked) {
-    return <Login />;
-  }
-
+  // No local profile yet: this device has never completed onboarding.
+  // Onboarding creates the Supabase account and the local profile together
+  // (using the account's real user id), so there's no separate "has an
+  // account" check — hasProfile doubles as that signal.
   if (!hasProfile) {
     return (
       <Routes>
@@ -59,6 +44,12 @@ const AppRoutes = () => {
         <Route path="*" element={<Navigate to="/onboarding" replace />} />
       </Routes>
     );
+  }
+
+  // A profile exists locally, but there's no active (or cached) session —
+  // either this is a fresh sign-in on a new device, or a session expired.
+  if (!isUnlocked) {
+    return <Login />;
   }
 
   return (
