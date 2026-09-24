@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { declarationSteps, defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 import { validateStep } from "@/lib/validation";
-import { calculateNigeriaTax, formatNaira } from "@/lib/tax-calculator";
+import { formatNaira } from "@/lib/tax-calculator";
+import { calculateStateTax } from "@/lib/tax/state-tax";
 import { db } from "@/lib/local-db";
 import { recordActivity } from "@/lib/activity-log";
 import StepIndicator from "@/components/declaration/StepIndicator";
@@ -58,12 +59,13 @@ const NewDeclaration = () => {
     // Dashboard/Submissions/SubmissionDetail have an amount to show at all —
     // previously never set, so every submission displayed "Amount: —"
     // forever regardless of the actual computed tax.
-    const tax = calculateNigeriaTax(form);
+    const tax = calculateStateTax(form, form.state);
 
     await db.declarations.add({
       id: declarationId,
       taxYear: form.taxYear || "2025",
       country: form.country || "ng",
+      state: form.state,
       type: "Income Tax",
       status: "submitted",
       formData: { ...form },
