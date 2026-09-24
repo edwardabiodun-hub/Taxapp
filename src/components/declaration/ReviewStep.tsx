@@ -1,7 +1,7 @@
 import { FileText, Paperclip, Calculator } from "lucide-react";
-import type { NigeriaDeclarationForm } from "@/types/declaration";
+import { stateName, type NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
-import { calculateNigeriaTax } from "@/lib/tax-calculator";
+import { calculateStateTax } from "@/lib/tax/state-tax";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
@@ -35,7 +35,7 @@ const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 const ReviewStep = ({ form, documents }: ReviewStepProps) => {
-  const tax = calculateNigeriaTax(form);
+  const tax = calculateStateTax(form, form.state);
 
   return (
     <div className="space-y-4">
@@ -117,6 +117,7 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
         <Section title="General">
           <SummaryRow label="Tax Year" value={form.taxYear} />
           <SummaryRow label="Country" value="Nigeria 🇳🇬" />
+          <SummaryRow label="State" value={stateName(form.state)} />
         </Section>
 
         <div className="border-t border-border" />
