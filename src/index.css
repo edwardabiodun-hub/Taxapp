@@ -1,84 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 40 20% 97%;
-    --foreground: 160 30% 10%;
+    --background: #F5F7F8;
+    --foreground: #1A2530;
 
-    --card: 0 0% 100%;
-    --card-foreground: 160 30% 10%;
+    --card: #FFFFFF;
+    --card-foreground: #1A2530;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 30% 10%;
+    --popover: #FFFFFF;
+    --popover-foreground: #1A2530;
 
-    --primary: 152 55% 28%;
-    --primary-foreground: 40 20% 97%;
+    --primary: #0A5C8A;
+    --primary-foreground: #FFFFFF;
+    /* Exact tint the template uses for an active nav item's background
+       (distinct from --primary itself) -- see BottomNav.tsx (Task 5). */
+    --primary-tint: #E7F1F6;
 
-    --secondary: 36 70% 55%;
-    --secondary-foreground: 40 20% 97%;
+    --secondary: oklch(58% 0.12 70);
+    --secondary-foreground: #FFFFFF;
 
-    --muted: 40 15% 92%;
-    --muted-foreground: 160 10% 45%;
+    --muted: #EEF1F3;
+    --muted-foreground: #5B6B76;
+    /* Lighter/tertiary muted text -- the template distinguishes this from
+       --muted-foreground (e.g. document upload dates vs. document names). */
+    --muted-foreground-2: #8B98A2;
 
-    --accent: 36 70% 55%;
-    --accent-foreground: 40 20% 97%;
+    --accent: oklch(58% 0.12 70);
+    --accent-foreground: #FFFFFF;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
 
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
-    --ring: 152 55% 28%;
+    --border: #E4E8EB;
+    --input: #D8DEE2;
+    --ring: #0A5C8A;
 
     --radius: 0.75rem;
 
-    --success: 152 60% 40%;
-    --success-foreground: 0 0% 100%;
-    --warning: 36 90% 55%;
-    --warning-foreground: 36 90% 15%;
-    --info: 200 70% 50%;
-    --info-foreground: 0 0% 100%;
+    --success: oklch(45% 0.09 150);
+    --success-foreground: #FFFFFF;
+    --success-bg: oklch(96% 0.02 150);
 
-    --sidebar-background: 152 30% 12%;
-    --sidebar-foreground: 40 20% 92%;
-    --sidebar-primary: 36 70% 55%;
-    --sidebar-primary-foreground: 40 20% 97%;
-    --sidebar-accent: 152 25% 18%;
-    --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 152 20% 20%;
-    --sidebar-ring: 36 70% 55%;
+    --warning: oklch(58% 0.12 70);
+    --warning-foreground: #FFFFFF;
+    --warning-bg: oklch(96% 0.02 70);
 
-    --gradient-primary: linear-gradient(135deg, hsl(152 55% 28%), hsl(152 45% 38%));
-    --gradient-accent: linear-gradient(135deg, hsl(36 70% 55%), hsl(36 80% 62%));
-    --gradient-hero: linear-gradient(160deg, hsl(152 30% 12%) 0%, hsl(152 55% 28%) 50%, hsl(36 70% 55%) 100%);
-    --shadow-card: 0 1px 3px hsl(160 30% 10% / 0.06), 0 4px 12px hsl(160 30% 10% / 0.04);
-    --shadow-elevated: 0 4px 16px hsl(160 30% 10% / 0.08), 0 12px 32px hsl(160 30% 10% / 0.06);
+    --info: oklch(45% 0.09 230);
+    --info-foreground: #FFFFFF;
+    --info-bg: oklch(96% 0.015 230);
+
+    --sidebar-background: #1A2530;
+    --sidebar-foreground: #F5F7F8;
+    --sidebar-primary: #0A5C8A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #23303D;
+    --sidebar-accent-foreground: #F5F7F8;
+    --sidebar-border: #2C3B4A;
+    --sidebar-ring: #0A5C8A;
+
+    /* No shadow anywhere on a standard card -- the template separates
+       surfaces with a 1px border only. */
+    --shadow-card: none;
+    --shadow-elevated: none;
   }
 
   .dark {
-    --background: 152 30% 6%;
-    --foreground: 40 20% 92%;
-    --card: 152 25% 10%;
-    --card-foreground: 40 20% 92%;
-    --popover: 152 25% 10%;
-    --popover-foreground: 40 20% 92%;
-    --primary: 152 55% 45%;
-    --primary-foreground: 152 30% 6%;
-    --secondary: 36 70% 55%;
-    --secondary-foreground: 152 30% 6%;
-    --muted: 152 20% 15%;
-    --muted-foreground: 40 10% 60%;
-    --accent: 36 70% 55%;
-    --accent-foreground: 152 30% 6%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 152 20% 18%;
-    --input: 152 20% 18%;
-    --ring: 152 55% 45%;
+    --background: #0F1721;
+    --foreground: #E7ECEF;
+
+    --card: #16202B;
+    --card-foreground: #E7ECEF;
+
+    --popover: #16202B;
+    --popover-foreground: #E7ECEF;
+
+    /* Lightened for AA contrast against the dark background -- the light
+       theme's #0A5C8A (L~29%) is too dark to read well on #0F1721. */
+    --primary: #3E92C4;
+    --primary-foreground: #0F1721;
+    --primary-tint: #1B2A38;
+
+    --secondary: oklch(65% 0.11 70);
+    --secondary-foreground: #0F1721;
+
+    --muted: #1C2733;
+    --muted-foreground: #9AA7B1;
+    --muted-foreground-2: #6E7B85;
+
+    --accent: oklch(65% 0.11 70);
+    --accent-foreground: #0F1721;
+
+    --destructive: #EF4444;
+    --destructive-foreground: #0F1721;
+
+    --border: #24313E;
+    --input: #24313E;
+    --ring: #3E92C4;
+
+    --success: oklch(70% 0.12 150);
+    --success-foreground: #0F1721;
+    --success-bg: oklch(25% 0.04 150);
+
+    --warning: oklch(70% 0.13 70);
+    --warning-foreground: #0F1721;
+    --warning-bg: oklch(25% 0.04 70);
+
+    --info: oklch(65% 0.11 230);
+    --info-foreground: #0F1721;
+    --info-bg: oklch(25% 0.04 230);
   }
 }
 
@@ -97,14 +129,17 @@
 }
 
 @layer utilities {
+  /* Named "gradient-*" for historical reasons -- these render flat colors
+     now (see the plan's Deviation note). Kept under their original names
+     so no component file needs editing to pick up the new flat look. */
   .gradient-primary {
-    background: var(--gradient-primary);
+    background: var(--primary);
   }
   .gradient-accent {
-    background: var(--gradient-accent);
+    background: var(--accent);
   }
   .gradient-hero {
-    background: var(--gradient-hero);
+    background: var(--info);
   }
   .shadow-card {
     box-shadow: var(--shadow-card);
