@@ -29,10 +29,19 @@ export async function syncAll(): Promise<SyncResult> {
 
     if (pending.length > 0) {
       await pushDeclarationsToServer(pending);
-      await db.declarations
-        .where("pendingSync")
-        .equals(1)
-        .modify({ pendingSync: 0, syncedAt: new Date().toISOString() });
+      // Only clear pendingSync for a declaration if it's unchanged since the
+      // snapshot we actually pushed — comparing by id alone isn't enough:
+      // if the user edits the SAME declaration again while this push is in
+      // flight (plausible; sync can run in the background), that edit's
+      // updatedAt won't match the snapshot's, so we leave pendingSync=1
+      // rather than wrongly clearing it for content the server never saw.
+      const syncedAt = new Date().toISOString();
+      for (const snapshot of pending) {
+        const current = await db.declarations.get(snapshot.id);
+        if (current && current.updatedAt === snapshot.updatedAt) {
+          await db.declarations.update(snapshot.id, { pendingSync: 0, syncedAt });
+        }
+      }
     }
 
     const localProfile = await db.profiles.toCollection().first();
@@ -48,10 +57,22 @@ export async function syncAll(): Promise<SyncResult> {
       fetchActivitiesFromServer(),
     ]);
 
-    await db.profiles.put({
-      ...serverProfile,
-      lastSynced: new Date().toISOString(),
-    });
+    if (localProfile) {
+      // Merge server-provided fields onto the existing local profile by its
+      // real id — never by serverProfile.id. The mock (and likely a future
+      // real endpoint scoped to the authenticated session) doesn't
+      // necessarily echo back the same id our local record uses; blindly
+      // put()-ing serverProfile as-is created a second, permanent phantom
+      // profile record with the mock's hardcoded id instead of updating the
+      // real one, and later syncs would then push whichever profile
+      // happened to sort first — not necessarily the real one.
+      await db.profiles.put({
+        ...localProfile,
+        ...serverProfile,
+        id: localProfile.id,
+        lastSynced: new Date().toISOString(),
+      });
+    }
 
     // Detect new audit_request status changes
     const newAuditRequests: SyncResult["auditRequests"] = [];
