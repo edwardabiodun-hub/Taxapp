@@ -32,7 +32,7 @@ export async function syncAll(): Promise<SyncResult> {
       await db.declarations
         .where("pendingSync")
         .equals(1)
-        .modify({ pendingSync: false, syncedAt: new Date().toISOString() });
+        .modify({ pendingSync: 0, syncedAt: new Date().toISOString() });
     }
 
     const localProfile = await db.profiles.toCollection().first();

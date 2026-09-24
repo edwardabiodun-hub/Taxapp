@@ -46,7 +46,7 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
       createdAt: "2026-01-15T00:00:00Z",
       updatedAt: "2026-01-20T00:00:00Z",
       syncedAt: new Date().toISOString(),
-      pendingSync: false,
+      pendingSync: 0,
     },
     {
       id: "decl-002",
@@ -60,7 +60,7 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
       createdAt: "2026-02-28T00:00:00Z",
       updatedAt: "2026-02-28T00:00:00Z",
       syncedAt: new Date().toISOString(),
-      pendingSync: false,
+      pendingSync: 0,
     },
     {
       id: "decl-003",
@@ -74,7 +74,7 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
       createdAt: "2026-02-10T00:00:00Z",
       updatedAt: "2026-02-10T00:00:00Z",
       syncedAt: new Date().toISOString(),
-      pendingSync: false,
+      pendingSync: 0,
     },
   ];
 }

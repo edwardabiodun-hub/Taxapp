@@ -133,7 +133,7 @@ const SubmissionDetail = () => {
 
     await db.declarations.update(declaration.id, {
       documents: updatedDocs,
-      pendingSync: true,
+      pendingSync: 1,
       updatedAt: new Date().toISOString(),
     });
 
