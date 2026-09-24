@@ -1,4 +1,6 @@
 import Dexie, { type Table } from "dexie";
+import { applyFieldEncryption } from "./encryption-middleware";
+import { getOrCreateDbKey } from "./encryption-key";
 
 export interface LocalProfile {
   id: string;
@@ -26,7 +28,13 @@ export interface LocalDeclaration {
   createdAt: string;
   updatedAt: string;
   syncedAt?: string;
-  pendingSync: boolean;
+  /**
+   * 0 | 1, not boolean: this field is IndexedDB-indexed (see stores() below),
+   * and boolean is not a valid IndexedDB key type — a boolean value here is
+   * silently never added to the index, so `.where("pendingSync").equals(...)`
+   * would never match a single record. Always write 0 or 1.
+   */
+  pendingSync: 0 | 1;
 }
 
 export interface LocalReferenceData {
@@ -55,8 +63,31 @@ class TaxEaseDB extends Dexie {
 
   constructor() {
     super("TaxEaseAfrica");
-    this.version(3).stores({
-      profiles: "id, email, country",
+
+    // PII and financial fields are encrypted at rest with a device-held
+    // AES-256 key (see encryption-key.ts). Encrypted fields cannot also be
+    // indexed, so `email` was dropped from the profiles index below — nothing
+    // in the app queries profiles by email today.
+    applyFieldEncryption(this, getOrCreateDbKey(), {
+      profiles: [
+        "name",
+        "email",
+        "phone",
+        "taxId",
+        "dateOfBirth",
+        "countryOfBirth",
+        "gender",
+        "nationality",
+      ],
+      declarations: ["formData", "amount"],
+    });
+
+    // v3 -> v4: dropped the `email` index from profiles so it can be
+    // encrypted (see above). Anyone with existing local test data from
+    // before this change will need to clear app storage once; there are no
+    // production users on v3 yet.
+    this.version(4).stores({
+      profiles: "id, country",
       declarations: "id, taxYear, country, status, pendingSync, createdAt",
       referenceData: "key",
       activities: "id, declarationId, timestamp",
