@@ -22,6 +22,7 @@ import {
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
 
 const statusConfig = {
   draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -71,6 +72,7 @@ const SubmissionDetail = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState("other");
   const [newDocs, setNewDocs] = useState<UploadedFile[]>([]);
+  const [savingDocs, setSavingDocs] = useState(false);
 
   const declaration = useLiveQuery(() => (id ? db.declarations.get(id) : undefined), [id]);
   const activities = useActivities(id || "");
@@ -97,27 +99,40 @@ const SubmissionDetail = () => {
   const StatusIcon = config.icon;
   const isAudit = declaration.status === "audit_request";
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const added: UploadedFile[] = [];
-
-    for (const file of files) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
-        continue;
-      }
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        toast({ title: "Unsupported format", description: `${file.name} is not supported.`, variant: "destructive" });
-        continue;
-      }
-      added.push({ id: crypto.randomUUID(), name: file.name, size: file.size, type: file.type });
-    }
-
-    if (added.length) setNewDocs((prev) => [...prev, ...added]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    setSavingDocs(true);
+    try {
+      const added: UploadedFile[] = [];
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
+          continue;
+        }
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          toast({ title: "Unsupported format", description: `${file.name} is not supported.`, variant: "destructive" });
+          continue;
+        }
+        // Persist the bytes now — previously only {name, size, type} was ever
+        // kept (the File object itself was discarded synchronously), so the
+        // actual document content was never saved anywhere, ever.
+        const id = await saveDocumentFile(declaration.id, file);
+        added.push({ id, name: file.name, size: file.size, type: file.type });
+      }
+      if (added.length) setNewDocs((prev) => [...prev, ...added]);
+    } catch {
+      toast({ title: "Couldn't save document", description: "Please try attaching it again.", variant: "destructive" });
+    } finally {
+      setSavingDocs(false);
+    }
   };
 
-  const removeNewDoc = (docId: string) => setNewDocs((prev) => prev.filter((d) => d.id !== docId));
+  const removeNewDoc = async (docId: string) => {
+    setNewDocs((prev) => prev.filter((d) => d.id !== docId));
+    await deleteDocumentFile(docId);
+  };
 
   const handleSubmitDocuments = async () => {
     if (newDocs.length === 0) {
@@ -128,7 +143,7 @@ const SubmissionDetail = () => {
     // Save new docs to the declaration's document list and mark for sync
     const updatedDocs = [
       ...declaration.documents,
-      ...newDocs.map((d) => ({ name: d.name, size: d.size, type: d.type })),
+      ...newDocs.map((d) => ({ id: d.id, name: d.name, size: d.size, type: d.type })),
     ];
 
     await db.declarations.update(declaration.id, {
@@ -338,12 +353,13 @@ const SubmissionDetail = () => {
         {/* Upload area */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="w-full border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center gap-2 hover:border-primary/40 hover:bg-primary/5 transition-all group"
+          disabled={savingDocs}
+          className="w-full border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center gap-2 hover:border-primary/40 hover:bg-primary/5 transition-all group disabled:opacity-60 disabled:pointer-events-none"
         >
           <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
             <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
-          <p className="text-xs font-semibold text-foreground">Tap to upload</p>
+          <p className="text-xs font-semibold text-foreground">{savingDocs ? "Saving…" : "Tap to upload"}</p>
           <p className="text-[10px] text-muted-foreground">PDF, Images, Word, Excel — Max 10MB</p>
         </button>
 
