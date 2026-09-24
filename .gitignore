@@ -18,6 +18,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# Supabase CLI's local link/session cache — machine-specific, not secrets
+# per se, but not something to commit either.
+supabase/.temp
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
