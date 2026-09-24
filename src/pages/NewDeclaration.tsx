@@ -59,7 +59,7 @@ const NewDeclaration = () => {
       documents: documents.map((d) => ({ name: d.name, size: d.size, type: d.type })),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      pendingSync: true,
+      pendingSync: 1,
     });
     toast({
       title: "Declaration Submitted!",
