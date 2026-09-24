@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-interface FakeQueryBuilder {
+interface FakeQueryBuilder extends PromiseLike<{ data: unknown; error: unknown }> {
   select: () => FakeQueryBuilder;
   eq: () => FakeQueryBuilder;
+  delete: () => FakeQueryBuilder;
+  update: () => FakeQueryBuilder;
   maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
   returns: () => Promise<{ data: unknown; error: unknown }>;
   upsert: () => Promise<{ error: unknown }>;
@@ -12,9 +14,15 @@ function makeQueryBuilder(result: { data: unknown; error: unknown }): FakeQueryB
   const builder: FakeQueryBuilder = {
     select: vi.fn(() => builder),
     eq: vi.fn(() => builder),
+    delete: vi.fn(() => builder),
+    update: vi.fn(() => builder),
     maybeSingle: vi.fn(async () => result),
     returns: vi.fn(async () => result),
     upsert: vi.fn(async () => ({ error: result.error ?? null })),
+    // Real Supabase query builders are themselves thenable, so a bare chain
+    // like .delete().eq().eq() can be awaited directly without a named
+    // terminal method — mirrored here so that pattern works in tests too.
+    then: (onfulfilled, onrejected) => Promise.resolve(result).then(onfulfilled, onrejected),
   };
   return builder;
 }
@@ -179,6 +187,54 @@ describe("api", () => {
       // updated_at must NOT be sent — the DB trigger owns that column, and
       // it's a different clock than local updatedAt (see api.ts comment).
       expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("updated_at");
+    });
+  });
+
+  describe("deleteDeclarationFromServer", () => {
+    it("deletes scoped to both the declaration id and the current user", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { deleteDeclarationFromServer } = await import("./api");
+      await deleteDeclarationFromServer("decl-1");
+
+      expect(builder.delete).toHaveBeenCalled();
+      expect(builder.eq).toHaveBeenCalledWith("id", "decl-1");
+      expect(builder.eq).toHaveBeenCalledWith("user_id", "user-uuid-1");
+    });
+
+    it("throws when the server reports an error (e.g. RLS refused a still-held declaration)", async () => {
+      fromMock.mockReturnValue(makeQueryBuilder({ data: null, error: { message: "permission denied" } }));
+
+      const { deleteDeclarationFromServer } = await import("./api");
+
+      await expect(deleteDeclarationFromServer("decl-1")).rejects.toBeTruthy();
+    });
+  });
+
+  describe("pseudonymizeProfileOnServer", () => {
+    it("nulls identifying fields but leaves tax_id and country untouched", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { pseudonymizeProfileOnServer } = await import("./api");
+      await pseudonymizeProfileOnServer();
+
+      expect(builder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: expect.any(String),
+          phone: "",
+          date_of_birth: null,
+          country_of_birth: null,
+          gender: null,
+          nationality: null,
+        })
+      );
+      const updatePayload = vi.mocked(builder.update).mock.calls[0][0] as Record<string, unknown>;
+      expect(updatePayload).not.toHaveProperty("tax_id");
+      expect(updatePayload).not.toHaveProperty("country");
+      expect(updatePayload.pseudonymized_at).toEqual(expect.any(String));
+      expect(builder.eq).toHaveBeenCalledWith("id", "user-uuid-1");
     });
   });
 
