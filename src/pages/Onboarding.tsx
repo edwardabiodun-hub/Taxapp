@@ -168,7 +168,7 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="gradient-hero px-6 pt-12 pb-8 text-primary-foreground safe-area-top">
+      <div className="gradient-primary px-6 pt-12 pb-8 text-primary-foreground safe-area-top">
         <p className="text-xs font-medium opacity-70 tracking-wider uppercase">Step {step + 1} of {steps.length}</p>
         <h1 className="font-display font-bold text-2xl mt-1">{steps[step].title}</h1>
         <p className="text-sm opacity-80 mt-1">{steps[step].subtitle}</p>

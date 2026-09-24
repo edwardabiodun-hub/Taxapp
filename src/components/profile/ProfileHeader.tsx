@@ -7,7 +7,7 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader = ({ name, email, taxId }: ProfileHeaderProps) => (
-  <div className="gradient-hero rounded-2xl p-6 text-center text-primary-foreground shadow-elevated">
+  <div className="gradient-primary rounded-xl p-6 text-center text-primary-foreground">
     <div className="w-20 h-20 rounded-full bg-background/20 mx-auto flex items-center justify-center mb-3">
       <User className="w-10 h-10" />
     </div>

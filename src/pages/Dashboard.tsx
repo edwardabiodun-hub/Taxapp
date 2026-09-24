@@ -96,7 +96,7 @@ const Dashboard = () => {
       <motion.button
         variants={item}
         onClick={() => navigate("/declare")}
-        className="w-full gradient-hero rounded-2xl p-5 flex items-center gap-4 shadow-elevated text-primary-foreground group"
+        className="w-full gradient-primary rounded-xl p-5 flex items-center gap-4 text-primary-foreground group"
       >
         <div className="p-3 rounded-xl bg-background/15">
           <FilePlus className="w-6 h-6" />
