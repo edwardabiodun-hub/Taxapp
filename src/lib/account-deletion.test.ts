@@ -54,6 +54,38 @@ describe("requestAccountDeletion", () => {
     expect(await db.declarations.get("decl-old")).toBeUndefined();
   });
 
+  it("deletes a declaration's documentFiles when the declaration itself is deleted outside its hold", async () => {
+    const { db } = await import("./local-db");
+    const { requestAccountDeletion } = await import("./account-deletion");
+
+    await db.declarations.put({
+      id: "decl-old-with-docs",
+      taxYear: "2015",
+      country: "ng",
+      type: "Income Tax",
+      status: "approved",
+      formData: {},
+      documents: [{ id: "doc-1", name: "payslip.pdf", size: 1024, type: "application/pdf" }],
+      createdAt: "2015-01-01T00:00:00.000Z",
+      updatedAt: "2015-01-01T00:00:00.000Z",
+      pendingSync: 0,
+    });
+    await db.documentFiles.put({
+      id: "doc-1",
+      declarationId: "decl-old-with-docs",
+      name: "payslip.pdf",
+      size: 1024,
+      type: "application/pdf",
+      iv: new ArrayBuffer(12),
+      ciphertext: new ArrayBuffer(32),
+      createdAt: "2015-01-01T00:00:00.000Z",
+    });
+
+    await requestAccountDeletion();
+
+    expect(await db.documentFiles.get("doc-1")).toBeUndefined();
+  });
+
   it("does not delete a declaration still inside its retention hold, locally or on the server", async () => {
     const { db } = await import("./local-db");
     const { requestAccountDeletion } = await import("./account-deletion");
@@ -76,6 +108,38 @@ describe("requestAccountDeletion", () => {
     expect(deleteDeclarationFromServerMock).not.toHaveBeenCalledWith("decl-held");
     expect(result.declarationsRetained).toContain("decl-held");
     expect(await db.declarations.get("decl-held")).toBeDefined();
+  });
+
+  it("preserves a retained declaration's documentFiles", async () => {
+    const { db } = await import("./local-db");
+    const { requestAccountDeletion } = await import("./account-deletion");
+
+    await db.declarations.put({
+      id: "decl-held-with-docs",
+      taxYear: String(new Date().getFullYear()),
+      country: "ng",
+      type: "Income Tax",
+      status: "approved",
+      formData: {},
+      documents: [{ id: "doc-held", name: "payslip.pdf", size: 1024, type: "application/pdf" }],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      pendingSync: 0,
+    });
+    await db.documentFiles.put({
+      id: "doc-held",
+      declarationId: "decl-held-with-docs",
+      name: "payslip.pdf",
+      size: 1024,
+      type: "application/pdf",
+      iv: new ArrayBuffer(12),
+      ciphertext: new ArrayBuffer(32),
+      createdAt: new Date().toISOString(),
+    });
+
+    await requestAccountDeletion();
+
+    expect(await db.documentFiles.get("doc-held")).toBeDefined();
   });
 
   it("never deletes locally when the server delete fails, to avoid drift a later sync could resurrect", async () => {

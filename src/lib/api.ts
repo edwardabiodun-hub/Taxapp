@@ -213,5 +213,24 @@ export async function fetchActivitiesFromServer(): Promise<LocalActivity[]> {
     description: row.description ?? undefined,
     meta: row.meta ?? undefined,
     timestamp: row.timestamp,
+    // Already on the server, so there's nothing pending about it — matches
+    // rowToDeclaration's own pendingSync: 0 for pulled rows.
+    pendingSync: 0,
   }));
+}
+
+export async function pushActivitiesToServer(activities: LocalActivity[]): Promise<void> {
+  const userId = await getCurrentUserId();
+  const rows = activities.map((a) => ({
+    id: a.id,
+    user_id: userId,
+    declaration_id: a.declarationId,
+    type: a.type,
+    title: a.title,
+    description: a.description ?? null,
+    meta: a.meta ?? null,
+    timestamp: a.timestamp,
+  }));
+  const { error } = await supabase.from("activities").upsert(rows);
+  if (error) throw error;
 }

@@ -24,6 +24,7 @@ import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
+import { recordActivity } from "@/lib/activity-log";
 import { buildFilingSummary } from "@/lib/filing-summary";
 import { renderFilingSummaryPdf } from "@/lib/filing-summary-pdf";
 
@@ -157,13 +158,11 @@ const SubmissionDetail = () => {
     });
 
     // Record activity
-    await db.activities.put({
-      id: crypto.randomUUID(),
+    await recordActivity({
       declarationId: declaration.id,
       type: "document_upload",
       title: `${newDocs.length} document${newDocs.length > 1 ? "s" : ""} uploaded`,
       description: newDocs.map((d) => d.name).join(", "),
-      timestamp: new Date().toISOString(),
     });
 
     setNewDocs([]);

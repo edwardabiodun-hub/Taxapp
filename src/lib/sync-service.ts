@@ -5,6 +5,7 @@ import {
   fetchDeclarationsFromServer,
   pushDeclarationsToServer,
   fetchActivitiesFromServer,
+  pushActivitiesToServer,
 } from "./api";
 
 /**
@@ -46,6 +47,17 @@ export async function syncAll(): Promise<SyncResult> {
     const localProfile = await db.profiles.toCollection().first();
     if (localProfile) {
       await pushProfileToServer(localProfile);
+    }
+
+    // Activities are append-only (never edited after creation), so unlike
+    // declarations' pendingSync clearing above, there's no need to guard
+    // against a concurrent edit invalidating the pushed snapshot.
+    const pendingActivities = await db.activities.where("pendingSync").equals(1).toArray();
+    if (pendingActivities.length > 0) {
+      await pushActivitiesToServer(pendingActivities);
+      for (const activity of pendingActivities) {
+        await db.activities.update(activity.id, { pendingSync: 0 });
+      }
     }
 
     // ── Pull from server ──
