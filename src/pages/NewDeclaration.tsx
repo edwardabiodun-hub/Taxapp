@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { declarationSteps, defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 import { validateStep } from "@/lib/validation";
+import { calculateNigeriaTax, formatNaira } from "@/lib/tax-calculator";
 import { db } from "@/lib/local-db";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import CountryStep from "@/components/declaration/CountryStep";
@@ -52,6 +53,12 @@ const NewDeclaration = () => {
   };
 
   const handleSubmit = async () => {
+    // Computed here (rather than left for a viewer to recompute later) so
+    // Dashboard/Submissions/SubmissionDetail have an amount to show at all —
+    // previously never set, so every submission displayed "Amount: —"
+    // forever regardless of the actual computed tax.
+    const tax = calculateNigeriaTax(form);
+
     await db.declarations.add({
       id: declarationId,
       taxYear: form.taxYear || "2025",
@@ -60,6 +67,7 @@ const NewDeclaration = () => {
       status: "submitted",
       formData: { ...form },
       documents: documents.map((d) => ({ id: d.id, name: d.file.name, size: d.file.size, type: d.file.type })),
+      amount: formatNaira(tax.finalTax),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       pendingSync: 1,
