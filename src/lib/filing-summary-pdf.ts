@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { FilingSummary } from "./filing-summary";
+import { stateName } from "@/types/declaration";
 
 const MARGIN = 20;
 const PAGE_WIDTH = 210; // A4, mm
@@ -57,6 +58,7 @@ export function renderFilingSummaryPdf(summary: FilingSummary): Blob {
   heading("Declaration");
   y += 2;
   row("Tax Year", summary.declaration.taxYear);
+  row("State", stateName(summary.declaration.state));
   row("Type", summary.declaration.type);
   row("Status", summary.declaration.status);
   y += 4;

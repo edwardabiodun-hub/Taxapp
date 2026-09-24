@@ -68,4 +68,23 @@ describe("buildFilingSummary", () => {
     expect(generatedAt).toBeGreaterThanOrEqual(before);
     expect(generatedAt).toBeLessThanOrEqual(Date.now());
   });
+
+  it("includes the declaration's filed state in the summary", () => {
+    const summary = buildFilingSummary(declaration({ state: "lagos" }), profile());
+
+    expect(summary.declaration.state).toBe("lagos");
+  });
+
+  it("computes tax via the state-aware engine, exposing a stateLevies breakdown", () => {
+    const summary = buildFilingSummary(declaration({ state: "lagos" }), profile());
+
+    expect(summary.tax.stateLevies).toEqual([]);
+  });
+
+  it("falls through cleanly for a declaration with no state selected (e.g. created before this feature existed)", () => {
+    const summary = buildFilingSummary(declaration(), profile());
+
+    expect(summary.declaration.state).toBeUndefined();
+    expect(summary.tax.finalTax).toBe(45200);
+  });
 });

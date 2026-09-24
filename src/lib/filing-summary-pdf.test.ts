@@ -6,7 +6,7 @@ function summary(overrides: Partial<FilingSummary> = {}): FilingSummary {
   return {
     generatedAt: "2026-01-15T00:00:00.000Z",
     taxpayer: { name: "Amara Okafor", taxId: "A012345678Z", country: "ng" },
-    declaration: { taxYear: "2025", type: "Income Tax", status: "submitted" },
+    declaration: { taxYear: "2025", type: "Income Tax", status: "submitted", state: "lagos" },
     tax: {
       grossIncome: 900000,
       totalDeductions: 380000,
@@ -19,6 +19,7 @@ function summary(overrides: Partial<FilingSummary> = {}): FilingSummary {
       minimumTax: 9000,
       finalTax: 45200,
       effectiveRate: 5.02,
+      stateLevies: [],
     },
     guidance: "File with FIRS or your state's Internal Revenue Service.",
     ...overrides,
