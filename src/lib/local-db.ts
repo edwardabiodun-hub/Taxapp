@@ -83,6 +83,10 @@ export interface LocalActivity {
   description?: string;
   timestamp: string;
   meta?: Record<string, any>;
+  /** 1 = written locally and not yet pushed to the server; 0 = synced (or
+   * pulled from the server, where it's already authoritative). See
+   * activity-log.ts and sync-service.ts's syncAll(). */
+  pendingSync?: 0 | 1;
 }
 
 class TaxEaseDB extends Dexie {
@@ -156,6 +160,20 @@ class TaxEaseDB extends Dexie {
       auth: null,
       referenceData: "key",
       activities: "id, declarationId, timestamp",
+    });
+
+    // v7 -> v8: added `pendingSync` to activities, so locally-recorded
+    // activities (declaration creation, document upload) can actually be
+    // pushed to the server — previously the activities table existed on
+    // both ends but nothing in api.ts ever wrote to it, so it only ever
+    // held whatever the pull side wrote after fetching from the server.
+    this.version(8).stores({
+      profiles: "id, country",
+      declarations: "id, taxYear, country, status, pendingSync, createdAt",
+      documentFiles: "id, declarationId",
+      auth: null,
+      referenceData: "key",
+      activities: "id, declarationId, timestamp, pendingSync",
     });
   }
 }

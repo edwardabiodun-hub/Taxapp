@@ -41,6 +41,7 @@ export async function requestAccountDeletion(): Promise<AccountDeletionResult> {
     }
 
     await db.activities.where("declarationId").equals(declaration.id).delete();
+    await db.documentFiles.where("declarationId").equals(declaration.id).delete();
     await db.declarations.delete(declaration.id);
     deleted.push(declaration.id);
   }

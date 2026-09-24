@@ -18,6 +18,7 @@ vi.mock("./api", () => ({
   fetchDeclarationsFromServer: vi.fn(async () => []),
   pushDeclarationsToServer: vi.fn(async () => {}),
   fetchActivitiesFromServer: vi.fn(async () => []),
+  pushActivitiesToServer: vi.fn(async () => {}),
 }));
 
 describe("syncAll", () => {
@@ -94,5 +95,28 @@ describe("syncAll", () => {
     const after = await db.declarations.get("decl-race");
     expect(after?.pendingSync).toBe(1);
     expect(after?.formData.annualSalary).toBe("999999");
+  });
+
+  it("pushes pending local activities to the server and clears their pendingSync flag", async () => {
+    const { db } = await import("./local-db");
+    const api = await import("./api");
+    const { syncAll } = await import("./sync-service");
+
+    await db.activities.put({
+      id: "act-pending",
+      declarationId: "decl-1",
+      type: "created",
+      title: "Declaration created",
+      timestamp: new Date().toISOString(),
+      pendingSync: 1,
+    });
+
+    await syncAll();
+
+    expect(api.pushActivitiesToServer).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "act-pending" }),
+    ]);
+    const after = await db.activities.get("act-pending");
+    expect(after?.pendingSync).toBe(0);
   });
 });

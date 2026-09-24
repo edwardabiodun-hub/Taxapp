@@ -190,6 +190,75 @@ describe("api", () => {
     });
   });
 
+  describe("fetchActivitiesFromServer", () => {
+    it("maps activity rows to LocalActivity shape with pendingSync 0", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: [
+            {
+              id: "act-1",
+              declaration_id: "decl-1",
+              type: "document_upload",
+              title: "1 document uploaded",
+              description: "payslip.pdf",
+              meta: null,
+              timestamp: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        })
+      );
+
+      const { fetchActivitiesFromServer } = await import("./api");
+      const activities = await fetchActivitiesFromServer();
+
+      expect(activities).toEqual([
+        {
+          id: "act-1",
+          declarationId: "decl-1",
+          type: "document_upload",
+          title: "1 document uploaded",
+          description: "payslip.pdf",
+          meta: undefined,
+          timestamp: "2026-01-01T00:00:00.000Z",
+          pendingSync: 0,
+        },
+      ]);
+    });
+  });
+
+  describe("pushActivitiesToServer", () => {
+    it("upserts activities scoped to the current user, mapped to snake_case", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { pushActivitiesToServer } = await import("./api");
+      await pushActivitiesToServer([
+        {
+          id: "act-1",
+          declarationId: "decl-1",
+          type: "created",
+          title: "Declaration created",
+          description: "Tax Year 2025",
+          timestamp: "2026-01-01T00:00:00.000Z",
+          pendingSync: 1,
+        },
+      ]);
+
+      expect(builder.upsert).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: "act-1",
+          user_id: "user-uuid-1",
+          declaration_id: "decl-1",
+          type: "created",
+          title: "Declaration created",
+          description: "Tax Year 2025",
+          timestamp: "2026-01-01T00:00:00.000Z",
+        }),
+      ]);
+    });
+  });
+
   describe("deleteDeclarationFromServer", () => {
     it("deletes scoped to both the declaration id and the current user", async () => {
       const builder = makeQueryBuilder({ data: null, error: null });

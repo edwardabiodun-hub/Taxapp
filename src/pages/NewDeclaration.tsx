@@ -8,6 +8,7 @@ import { declarationSteps, defaultNigeriaForm, type NigeriaDeclarationForm } fro
 import { validateStep } from "@/lib/validation";
 import { calculateNigeriaTax, formatNaira } from "@/lib/tax-calculator";
 import { db } from "@/lib/local-db";
+import { recordActivity } from "@/lib/activity-log";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import CountryStep from "@/components/declaration/CountryStep";
 import EarnedIncomeStep from "@/components/declaration/EarnedIncomeStep";
@@ -71,6 +72,12 @@ const NewDeclaration = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       pendingSync: 1,
+    });
+    await recordActivity({
+      declarationId,
+      type: "created",
+      title: "Declaration created",
+      description: `Tax Year ${form.taxYear || "2025"}`,
     });
     toast({
       title: "Declaration Submitted!",
