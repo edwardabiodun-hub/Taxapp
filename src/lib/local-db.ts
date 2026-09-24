@@ -14,6 +14,9 @@ export interface LocalProfile {
   gender?: string;
   nationality?: string;
   lastSynced?: string;
+  /** ISO timestamp of when the user accepted the privacy notice at
+   * onboarding — an auditable consent record, not just a UI checkbox. */
+  consentAcceptedAt?: string;
 }
 
 export interface LocalDeclaration {
