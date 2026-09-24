@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck } from "lucide-react";
+import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,19 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { db } from "@/lib/local-db";
+import { createAccount } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { africanCountries } from "@/types/declaration";
+
+const MIN_PASSWORD_LENGTH = 8;
 
 interface ProfileForm {
   name: string;
   email: string;
   phone: string;
+  password: string;
+  confirmPassword: string;
   dateOfBirth: Date | undefined;
   gender: string;
   countryOfBirth: string;
@@ -43,11 +49,14 @@ const steps = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { unlock } = useAuth();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
     dateOfBirth: undefined,
     gender: "",
     countryOfBirth: "",
@@ -75,6 +84,10 @@ const Onboarding = () => {
       if (!form.email.trim()) errs.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Invalid email format";
       if (!form.phone.trim()) errs.phone = "Phone number is required";
+      if (!form.password) errs.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+      else if (form.password.length < MIN_PASSWORD_LENGTH) errs.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+      if (!form.confirmPassword) errs.confirmPassword = "Please confirm your password";
+      else if (form.password !== form.confirmPassword) errs.confirmPassword = "Passwords don't match";
       if (!form.consentAccepted) errs.consentAccepted = "You must accept the privacy notice to continue";
     } else if (step === 1) {
       if (!form.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
@@ -109,6 +122,8 @@ const Onboarding = () => {
       return;
     }
 
+    await createAccount(form.email.trim(), form.password);
+
     await db.profiles.put({
       id: `user-${Date.now()}`,
       name: form.name.trim(),
@@ -123,6 +138,9 @@ const Onboarding = () => {
       consentAcceptedAt: new Date().toISOString(),
     });
 
+    // Already proved they know the password by typing it twice just now —
+    // no need to immediately re-prompt the login screen they haven't seen yet.
+    unlock();
     toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
     navigate("/");
   };
@@ -186,6 +204,26 @@ const Onboarding = () => {
                     value={form.phone}
                     onChange={(e) => update("phone", e.target.value)}
                     className={cn(errors.phone && "border-destructive")}
+                  />
+                </Field>
+                <Field label="Password" icon={KeyRound} error={errors.password}>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+                    value={form.password}
+                    onChange={(e) => update("password", e.target.value)}
+                    className={cn(errors.password && "border-destructive")}
+                  />
+                </Field>
+                <Field label="Confirm Password" icon={KeyRound} error={errors.confirmPassword}>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Re-enter your password"
+                    value={form.confirmPassword}
+                    onChange={(e) => update("confirmPassword", e.target.value)}
+                    className={cn(errors.confirmPassword && "border-destructive")}
                   />
                 </Field>
 
