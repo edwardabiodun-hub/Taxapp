@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Secrets — real values only ever go in .env, which is never committed.
+# .env.example is tracked and must only ever contain placeholder values.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
