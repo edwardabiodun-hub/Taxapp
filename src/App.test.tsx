@@ -83,4 +83,41 @@ describe("AppRoutes — unauthenticated routing", () => {
 
     expect(screen.getByText("Set a new password")).toBeInTheDocument();
   });
+
+  it.each([
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false],
+  ])(
+    "sends a PASSWORD_RECOVERY session to /reset-password regardless of hasProfile=%s / isUnlocked=%s",
+    async (profile, unlocked) => {
+      hasProfile = profile;
+      isUnlocked = unlocked;
+      isPasswordRecovery = true;
+      await renderAppRoutes("/");
+
+      expect(screen.getByText("Set a new password")).toBeInTheDocument();
+    }
+  );
+});
+
+describe("AppRoutes — authenticated routing", () => {
+  beforeEach(() => {
+    hasProfile = true;
+    profileLoading = false;
+    isUnlocked = true;
+    authLoading = false;
+    isPasswordRecovery = false;
+  });
+
+  it("renders the main app, not a 404, when a session lands on the stale unauthenticated-only /login URL", async () => {
+    // Regression test for the bug where signing in left the URL on /login —
+    // AppRoutes had no route for it in the authenticated table, so its `*`
+    // fallback rendered NotFound instead of redirecting to /.
+    await renderAppRoutes("/login");
+
+    expect(screen.queryByText(/page not found/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("404")).not.toBeInTheDocument();
+  });
 });

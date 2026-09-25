@@ -84,7 +84,12 @@ export const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/welcome" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/onboarding" element={<Navigate to="/" replace />} />
+      <Route path="/check-email" element={<Navigate to="/" replace />} />
+      <Route path="/forgot-password" element={<Navigate to="/" replace />} />
+      <Route path="/reset-password" element={<Navigate to="/" replace />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/declare" element={<NewDeclaration />} />
