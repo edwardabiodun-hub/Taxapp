@@ -44,3 +44,21 @@ export async function getSession(): Promise<Session | null> {
   const { data } = await supabase.auth.getSession();
   return data.session;
 }
+
+export async function resendConfirmationEmail(email: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resend({ type: "signup", email: normalizeEmail(email) });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function resetPasswordForEmail(email: string, redirectTo: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizeEmail(email), { redirectTo });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function updatePassword(password: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
