@@ -97,12 +97,35 @@ export interface LocalActivity {
   pendingSync?: 0 | 1;
 }
 
+export interface LocalMessage {
+  id: string;
+  /** References a declarations row — absent for a general, non-filing
+   * message. Set null server-side (not deleted) if the linked declaration
+   * is later removed; see the messages migration's `on delete set null`. */
+  declarationId?: string;
+  category: "refund_status" | "document_request" | "general";
+  subject: string;
+  body: string;
+  /** ISO timestamp of when the recipient opened this message; undefined
+   * means unread. Never cleared once set — "un-reading" a message isn't
+   * supported. */
+  readAt?: string;
+  createdAt: string;
+  /** 0 | 1, not boolean — see LocalDeclaration.pendingSync for why this
+   * codebase always uses 0/1 for an IndexedDB-indexed flag. 0 until the
+   * user marks the message read locally; set to 1 at that point so
+   * sync-service pushes just the read_at change, then cleared back to 0
+   * once pushed. */
+  pendingSync: 0 | 1;
+}
+
 class TaxEaseDB extends Dexie {
   profiles!: Table<LocalProfile, string>;
   declarations!: Table<LocalDeclaration, string>;
   documentFiles!: Table<LocalDocumentFile, string>;
   referenceData!: Table<LocalReferenceData, string>;
   activities!: Table<LocalActivity, string>;
+  messages!: Table<LocalMessage, string>;
 
   constructor() {
     super("TaxEaseAfrica");
@@ -123,6 +146,7 @@ class TaxEaseDB extends Dexie {
         "nationality",
       ],
       declarations: ["formData", "amount"],
+      messages: ["subject", "body"],
     });
 
     // v3 -> v4: dropped the `email` index from profiles so it can be
@@ -182,6 +206,21 @@ class TaxEaseDB extends Dexie {
       auth: null,
       referenceData: "key",
       activities: "id, declarationId, timestamp, pendingSync",
+    });
+
+    // v8 -> v9: added `messages` — admin-to-user notifications (refund
+    // status updates, requests for additional documents), pulled from the
+    // server; see api.ts's fetchMessagesFromServer/pushMessageReadStatus
+    // and sync-service.ts. `readAt` isn't indexed (see the LocalMessage
+    // doc comment) — the unread count filters the table directly instead.
+    this.version(9).stores({
+      profiles: "id, country",
+      declarations: "id, taxYear, country, status, pendingSync, createdAt",
+      documentFiles: "id, declarationId",
+      auth: null,
+      referenceData: "key",
+      activities: "id, declarationId, timestamp, pendingSync",
+      messages: "id, declarationId, pendingSync, createdAt",
     });
   }
 }

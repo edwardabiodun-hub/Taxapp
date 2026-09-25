@@ -26,6 +26,20 @@ async function readRawProfile(id: string): Promise<Record<string, unknown>> {
   });
 }
 
+async function readRawMessage(id: string): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const openReq = indexedDB.open("TaxEaseAfrica");
+    openReq.onsuccess = () => {
+      const idb = openReq.result;
+      const tx = idb.transaction("messages", "readonly");
+      const getReq = tx.objectStore("messages").get(id);
+      getReq.onsuccess = () => resolve(getReq.result);
+      getReq.onerror = () => reject(getReq.error);
+    };
+    openReq.onerror = () => reject(openReq.error);
+  });
+}
+
 describe("local-db (real app database)", () => {
   it("encrypts profile PII at rest but leaves id/country plaintext and queryable", async () => {
     const { db } = await import("./local-db");
@@ -77,5 +91,28 @@ describe("local-db (real app database)", () => {
     await db.declarations.where("pendingSync").equals(1).modify({ pendingSync: 0 });
     const stillPending = await db.declarations.where("pendingSync").equals(1).toArray();
     expect(stillPending.some((d) => d.id === "decl-test-1")).toBe(false);
+  });
+
+  it("encrypts message subject/body at rest but leaves category/pendingSync plaintext and queryable", async () => {
+    const { db } = await import("./local-db");
+
+    await db.messages.put({
+      id: "msg-test-1",
+      category: "refund_status",
+      subject: "Your refund is on its way",
+      body: "We've approved your 2025 refund of NGN 45,200.",
+      createdAt: new Date().toISOString(),
+      pendingSync: 0,
+    });
+
+    const raw = await readRawMessage("msg-test-1");
+    expect(raw.subject).toMatch(/^enc:v1:/);
+    expect(raw.body).toMatch(/^enc:v1:/);
+    expect(raw.category).toBe("refund_status");
+    expect(raw.pendingSync).toBe(0);
+
+    const decrypted = await db.messages.get("msg-test-1");
+    expect(decrypted?.subject).toBe("Your refund is on its way");
+    expect(decrypted?.body).toBe("We've approved your 2025 refund of NGN 45,200.");
   });
 });
