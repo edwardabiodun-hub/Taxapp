@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type LocalActivity, type LocalDeclaration, type LocalProfile } from "@/lib/local-db";
+import { db, type LocalActivity, type LocalDeclaration, type LocalMessage, type LocalProfile } from "@/lib/local-db";
 
 export function useProfile(): LocalProfile | undefined {
   return useLiveQuery(() => db.profiles.toCollection().first());
@@ -37,4 +37,12 @@ export function useActivities(declarationId: string): LocalActivity[] {
       [declarationId]
     ) ?? []
   );
+}
+
+export function useMessages(): LocalMessage[] {
+  return useLiveQuery(() => db.messages.orderBy("createdAt").reverse().toArray()) ?? [];
+}
+
+export function useUnreadMessageCount(): number {
+  return useLiveQuery(() => db.messages.filter((m) => m.readAt == null).count()) ?? 0;
 }
