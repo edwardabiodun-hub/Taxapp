@@ -46,7 +46,7 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
 
       {/* Tax Calculation Card */}
       {tax.grossIncome > 0 && (
-        <div className="gradient-hero rounded-2xl p-5 text-primary-foreground shadow-elevated space-y-4">
+        <div className="gradient-hero rounded-xl p-5 text-primary-foreground space-y-4">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />
             <h4 className="font-display font-bold text-sm">Tax Liability Estimate</h4>

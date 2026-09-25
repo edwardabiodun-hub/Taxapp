@@ -65,7 +65,7 @@ const Dashboard = () => {
       {auditRequests.length > 0 && (
         <motion.div
           variants={item}
-          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-3"
+          className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3"
         >
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-destructive/10">
