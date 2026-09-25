@@ -15,6 +15,11 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ loading: authLoading, isUnlocked, isPasswordRecovery, signOut: vi.fn() }),
 }));
 
+let restoringProfile = false;
+vi.mock("@/hooks/use-restore-profile", () => ({
+  useRestoreProfile: () => ({ checking: restoringProfile }),
+}));
+
 // AppRoutes' static import graph reaches Login.tsx, Onboarding.tsx,
 // CheckEmail.tsx, ForgotPassword.tsx, ResetPassword.tsx, and
 // ProfileMenu.tsx, every one of which imports a named export from
@@ -60,6 +65,7 @@ describe("AppRoutes — unauthenticated routing", () => {
     isUnlocked = false;
     authLoading = false;
     isPasswordRecovery = false;
+    restoringProfile = false;
   });
 
   it("sends a brand-new user (no profile, no session) to Welcome by default", async () => {
@@ -111,6 +117,26 @@ describe("AppRoutes — unauthenticated routing", () => {
       expect(screen.getByText("Set a new password")).toBeInTheDocument();
     }
   );
+
+  it("shows a restoring-profile screen instead of Onboarding while checking the server for an existing profile", async () => {
+    hasProfile = false;
+    isUnlocked = true;
+    restoringProfile = true;
+    await renderAppRoutes("/");
+
+    expect(screen.getByText(/restoring your profile/i)).toBeInTheDocument();
+    expect(screen.queryByText("Personal Details")).not.toBeInTheDocument();
+  });
+
+  it("falls back to Onboarding once the restore check finds nothing (a genuinely new account)", async () => {
+    hasProfile = false;
+    isUnlocked = true;
+    restoringProfile = false;
+    await renderAppRoutes("/");
+
+    expect(screen.getByText("Personal Details")).toBeInTheDocument();
+    expect(screen.queryByText(/restoring your profile/i)).not.toBeInTheDocument();
+  });
 });
 
 describe("AppRoutes — authenticated routing", () => {
@@ -120,6 +146,7 @@ describe("AppRoutes — authenticated routing", () => {
     isUnlocked = true;
     authLoading = false;
     isPasswordRecovery = false;
+    restoringProfile = false;
   });
 
   it("renders the main app, not a 404, when a session lands on the stale unauthenticated-only /login URL", async () => {

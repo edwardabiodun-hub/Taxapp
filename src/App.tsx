@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CountryThemeProvider } from "@/contexts/CountryThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useHasProfile } from "@/hooks/use-has-profile";
+import { useRestoreProfile } from "@/hooks/use-restore-profile";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import NewDeclaration from "./pages/NewDeclaration";
@@ -23,15 +24,20 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const LoadingScreen = () => (
+const LoadingScreen = ({ message = "Loading…" }: { message?: string }) => (
   <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="animate-pulse text-muted-foreground text-sm">Loading…</div>
+    <div className="animate-pulse text-muted-foreground text-sm">{message}</div>
   </div>
 );
 
 export const AppRoutes = () => {
   const { loading: profileLoading, hasProfile } = useHasProfile();
   const { loading: authLoading, isUnlocked, isPasswordRecovery } = useAuth();
+  // A session with no local profile isn't necessarily a brand-new account —
+  // it may be a reinstall or a fresh device for an account that already
+  // completed onboarding elsewhere. Check the server once before forcing
+  // onboarding again; see use-restore-profile.ts for the full rationale.
+  const { checking: restoringProfile } = useRestoreProfile(!hasProfile && isUnlocked && !isPasswordRecovery);
 
   if (profileLoading || authLoading) {
     return <LoadingScreen />;
@@ -56,6 +62,9 @@ export const AppRoutes = () => {
   // (using the account's real user id), so there's no separate "has an
   // account" check — hasProfile doubles as that signal.
   if (!hasProfile && isUnlocked) {
+    if (restoringProfile) {
+      return <LoadingScreen message="Restoring your profile…" />;
+    }
     return (
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
