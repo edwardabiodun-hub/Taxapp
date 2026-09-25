@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import NewDeclaration from "./pages/NewDeclaration";
 import Submissions from "./pages/Submissions";
 import SubmissionDetail from "./pages/SubmissionDetail";
+import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import TaxCalculator from "./pages/TaxCalculator";
 import Onboarding from "./pages/Onboarding";
@@ -104,6 +105,7 @@ export const AppRoutes = () => {
         <Route path="/declare" element={<NewDeclaration />} />
         <Route path="/submissions" element={<Submissions />} />
         <Route path="/submissions/:id" element={<SubmissionDetail />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/calculator" element={<TaxCalculator />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
