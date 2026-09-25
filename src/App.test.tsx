@@ -33,6 +33,17 @@ vi.mock("@/lib/auth", () => ({
   updatePassword: vi.fn(),
 }));
 
+// The authenticated-routing test below renders Dashboard for real, which
+// pulls in useSync() -> syncAll() -> real network calls via api.ts/
+// supabase-client.ts. Left unmocked, a failed sync schedules a retry via
+// setTimeout that outlives the test (and the render), producing an
+// "error caught after test environment was torn down" failure reported
+// against this file. Mock syncAll to resolve cleanly so no retry timer is
+// ever scheduled.
+vi.mock("@/lib/sync-service", () => ({
+  syncAll: vi.fn(async () => ({ success: true })),
+}));
+
 async function renderAppRoutes(initialPath: string) {
   const { AppRoutes } = await import("./App");
   render(
