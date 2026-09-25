@@ -359,6 +359,100 @@ describe("api", () => {
     });
   });
 
+  describe("fetchMessagesFromServer", () => {
+    it("maps message rows to LocalMessage shape", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: [
+            {
+              id: "msg-1",
+              declaration_id: "decl-1",
+              category: "refund_status",
+              subject: "Your refund is on its way",
+              body: "We've approved your 2025 refund.",
+              read_at: null,
+              created_at: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        })
+      );
+
+      const { fetchMessagesFromServer } = await import("./api");
+      const messages = await fetchMessagesFromServer();
+
+      expect(messages).toEqual([
+        {
+          id: "msg-1",
+          declarationId: "decl-1",
+          category: "refund_status",
+          subject: "Your refund is on its way",
+          body: "We've approved your 2025 refund.",
+          readAt: undefined,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          pendingSync: 0,
+        },
+      ]);
+    });
+
+    it("leaves declarationId undefined for a general message with no linked filing, and maps a present read_at", async () => {
+      fromMock.mockReturnValue(
+        makeQueryBuilder({
+          data: [
+            {
+              id: "msg-2",
+              declaration_id: null,
+              category: "general",
+              subject: "Welcome to FileSmart",
+              body: "Thanks for signing up.",
+              read_at: "2026-01-02T00:00:00.000Z",
+              created_at: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        })
+      );
+
+      const { fetchMessagesFromServer } = await import("./api");
+      const messages = await fetchMessagesFromServer();
+
+      expect(messages[0].declarationId).toBeUndefined();
+      expect(messages[0].readAt).toBe("2026-01-02T00:00:00.000Z");
+    });
+
+    it("scopes the query to the current user", async () => {
+      const builder = makeQueryBuilder({ data: [], error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { fetchMessagesFromServer } = await import("./api");
+      await fetchMessagesFromServer();
+
+      expect(fromMock).toHaveBeenCalledWith("messages");
+      expect(builder.eq).toHaveBeenCalledWith("recipient_user_id", "user-uuid-1");
+    });
+  });
+
+  describe("pushMessageReadStatus", () => {
+    it("updates only read_at for the given message id", async () => {
+      const builder = makeQueryBuilder({ data: null, error: null });
+      fromMock.mockReturnValue(builder);
+
+      const { pushMessageReadStatus } = await import("./api");
+      await pushMessageReadStatus("msg-1", "2026-01-03T00:00:00.000Z");
+
+      expect(builder.update).toHaveBeenCalledWith({ read_at: "2026-01-03T00:00:00.000Z" });
+      expect(builder.eq).toHaveBeenCalledWith("id", "msg-1");
+    });
+
+    it("throws when the server rejects the update", async () => {
+      fromMock.mockReturnValue(makeQueryBuilder({ data: null, error: { message: "permission denied" } }));
+
+      const { pushMessageReadStatus } = await import("./api");
+
+      await expect(pushMessageReadStatus("msg-1", "2026-01-03T00:00:00.000Z")).rejects.toBeTruthy();
+    });
+  });
+
   describe("auth scoping", () => {
     it("throws instead of silently querying with no user scope when there's no session", async () => {
       getUserMock.mockResolvedValue({ data: { user: null } });

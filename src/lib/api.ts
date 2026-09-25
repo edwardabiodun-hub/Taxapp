@@ -1,5 +1,5 @@
 import { supabase } from "./supabase-client";
-import type { LocalActivity, LocalDeclaration, LocalProfile } from "./local-db";
+import type { LocalActivity, LocalDeclaration, LocalMessage, LocalProfile } from "./local-db";
 
 /**
  * Real backend calls, replacing mock-api.ts. Every function here requires
@@ -235,5 +235,46 @@ export async function pushActivitiesToServer(activities: LocalActivity[]): Promi
     timestamp: a.timestamp,
   }));
   const { error } = await supabase.from("activities").upsert(rows);
+  if (error) throw error;
+}
+
+// ── Messages ─────────────────────────────────────────────
+
+interface MessageRow {
+  id: string;
+  declaration_id: string | null;
+  category: LocalMessage["category"];
+  subject: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export async function fetchMessagesFromServer(): Promise<LocalMessage[]> {
+  const userId = await getCurrentUserId();
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("recipient_user_id", userId)
+    .returns<MessageRow[]>();
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    declarationId: row.declaration_id ?? undefined,
+    category: row.category,
+    subject: row.subject,
+    body: row.body,
+    readAt: row.read_at ?? undefined,
+    createdAt: row.created_at,
+    pendingSync: 0,
+  }));
+}
+
+/** Pushes only the read_at change for one message. The server's column
+ * grant (see the messages migration) rejects anything beyond read_at, so
+ * this intentionally sends nothing else — no need to also scope by user
+ * id here, since RLS already restricts which row this can touch. */
+export async function pushMessageReadStatus(id: string, readAt: string): Promise<void> {
+  const { error } = await supabase.from("messages").update({ read_at: readAt }).eq("id", id);
   if (error) throw error;
 }
