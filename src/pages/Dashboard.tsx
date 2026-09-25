@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload, ShieldCheck } from "lucide-react";
+import { getGreeting } from "@/lib/greeting";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 import { useProfile, useDeclarations } from "@/hooks/use-local-data";
@@ -37,7 +38,7 @@ const Dashboard = () => {
       {/* Welcome */}
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
-          <p className="text-muted-foreground text-sm">Welcome back,</p>
+          <p className="text-muted-foreground text-sm">{getGreeting(new Date().getHours())},</p>
           <h2 className="text-2xl font-display font-bold text-foreground">
             {profile?.name || "Loading..."}
           </h2>
@@ -162,6 +163,21 @@ const Dashboard = () => {
             />
           ))}
         </div>
+      </motion.div>
+
+      {/* Tip */}
+      <motion.div variants={item} className="bg-[var(--info-bg)] rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary-foreground" />
+          </div>
+          <p className="text-xs font-semibold text-muted-foreground">Tip</p>
+        </div>
+        <p className="text-lg font-display font-bold text-foreground leading-tight">Documents matter</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Attaching payslips and financial statements to your filing helps avoid audit requests, and stays
+          securely encrypted on your device.
+        </p>
       </motion.div>
     </motion.div>
   );
