@@ -63,6 +63,22 @@ No fabricated "news" content (there's no backend source for real tax-news update
 
 **`StatCard.tsx`**: checked during implementation for whether its existing `variant` prop already supports a solid-fill treatment (template's "Approved"/"Pending" cards are solid-color-filled, not just colored icons on a white card) — extended if not.
 
+## App name change (added after initial spec approval)
+
+The user asked, mid-implementation-planning, to also rename the app's displayed name from "TaxEase Africa" to "FileSmart," matching the design template's own branding. Scope, decided by the same reversibility principle as the rest of this spec — safe/cosmetic changes proceed, anything that could silently affect existing users or store registration is called out rather than done quietly:
+
+**Renamed** (purely display text, zero data/registration risk):
+- `capacitor.config.ts`: `appName: 'TaxEase Africa'` → `'FileSmart'` (the OS-level app-switcher/home-screen label).
+- `src/components/layout/TopBar.tsx`: the eyebrow label `"TaxEase Africa"` and the fallback page title `"TaxEase"` → `"FileSmart"`.
+- `src/pages/Onboarding.tsx`: toast text `"Welcome to TaxEase Africa"` → `"Welcome to FileSmart"`.
+- `src/lib/filing-summary.ts`: the exported filing-summary guidance text's `"TaxEase does not yet have..."` → `"FileSmart does not yet have..."`.
+- `index.html`: `<title>` and `og:title` — these were never actually customized past the original Lovable scaffold placeholder (`"Lovable App"`), a pre-existing gap; setting them to `"FileSmart"` now completes the rebrand rather than leaving an inconsistent browser-tab title.
+- `package.json`: `"name": "vite_react_shadcn_ts"` (the original scaffold's internal package identifier, not user-facing, but worth completing) → `"filesmart"`.
+
+**Deliberately NOT renamed, and why:**
+- `src/lib/local-db.ts:108` — `super("TaxEaseAfrica")` is the literal Dexie/IndexedDB database name. Changing this string makes Dexie open a **new, empty** database on next launch — every existing user's locally-stored declarations, profile, and encrypted documents would appear to vanish (the old database would still physically exist on-device, just never opened again). This is a real, silent-data-loss risk with no plausible reading of "change the app name" implying "and also risk wiping local user data." Left untouched.
+- `capacitor.config.ts`'s `appId` (`'app.lovable.cfccb7e81e944850aec55d58ce74fa8e'`) — the app's bundle identifier, a distinct concern from its display name. It's still the original Lovable placeholder and was never registered to a real App Store/Play Console listing (per the file's own pre-existing TODO comment), so there's no store-continuity risk today — but choosing a real, owned bundle ID is its own deliberate decision for whenever the app is actually submitted, not implied by a display-name change. Left untouched.
+
 ## Out of scope
 
 - Navigation structure (bottom tabs stay; no sidebar, no drawer).
