@@ -110,4 +110,26 @@ describe("Messages", () => {
 
     await waitFor(() => expect(screen.getByText("A brand new kind of message")).toBeInTheDocument());
   });
+
+  it("falls back gracefully when category collides with an Object.prototype member name", async () => {
+    const { db } = await import("@/lib/local-db");
+    const { default: Messages } = await import("./Messages");
+
+    // "constructor" is inherited from Object.prototype, so a plain
+    // categoryConfig[message.category] lookup would resolve to that
+    // function instead of undefined, silently bypassing the ?? fallback
+    // and crashing when config.icon turns out to be undefined.
+    await db.messages.put({
+      id: "msg-5",
+      category: "constructor" as never,
+      subject: "Prototype pollution edge case",
+      body: "b",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      pendingSync: 0,
+    });
+
+    render(<Messages />);
+
+    await waitFor(() => expect(screen.getByText("Prototype pollution edge case")).toBeInTheDocument());
+  });
 });

@@ -36,7 +36,9 @@ const Messages = () => {
         <p className="text-center text-muted-foreground py-12 text-sm">No messages yet.</p>
       )}
       {messages.map((message, i) => {
-        const config = categoryConfig[message.category] ?? categoryConfig.general;
+        const config = Object.prototype.hasOwnProperty.call(categoryConfig, message.category)
+          ? categoryConfig[message.category]
+          : categoryConfig.general;
         const Icon = config.icon;
         const isExpanded = expandedId === message.id;
         const isUnread = !message.readAt;
