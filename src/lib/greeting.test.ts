@@ -4,6 +4,7 @@ import { getGreeting } from "./greeting";
 
 describe("getGreeting", () => {
   it("returns a morning greeting before noon", () => {
+    expect(getGreeting(5)).toBe("Good morning");
     expect(getGreeting(6)).toBe("Good morning");
     expect(getGreeting(11)).toBe("Good morning");
   });
