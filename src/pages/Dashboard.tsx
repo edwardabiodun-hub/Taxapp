@@ -112,7 +112,7 @@ const Dashboard = () => {
       <motion.button
         variants={item}
         onClick={() => navigate("/calculator")}
-        className="w-full gradient-accent rounded-2xl p-4 flex items-center gap-4 shadow-card text-accent-foreground group"
+        className="w-full gradient-accent rounded-xl p-4 flex items-center gap-4 text-accent-foreground group"
       >
         <div className="p-2.5 rounded-xl bg-background/15">
           <Calculator className="w-5 h-5" />
