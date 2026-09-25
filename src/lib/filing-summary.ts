@@ -23,7 +23,7 @@ export interface FilingSummary {
 }
 
 const GUIDANCE =
-  "TaxEase does not yet have a direct filing integration with the Federal " +
+  "FileSmart does not yet have a direct filing integration with the Federal " +
   "Inland Revenue Service (FIRS) or your state's Internal Revenue Service " +
   "(SIRS). Use the figures in this summary to file directly through the " +
   "appropriate government portal, or take it to your local tax office. " +

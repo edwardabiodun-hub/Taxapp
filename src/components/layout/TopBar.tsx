@@ -10,13 +10,13 @@ const pageTitles: Record<string, string> = {
 
 const TopBar = () => {
   const location = useLocation();
-  const title = pageTitles[location.pathname] || "TaxEase";
+  const title = pageTitles[location.pathname] || "FileSmart";
 
   return (
     <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border px-4 py-3 safe-area-top">
       <div className="flex items-center justify-between max-w-lg mx-auto">
         <div>
-          <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">TaxEase Africa</p>
+          <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">FileSmart</p>
           <h1 className="text-xl font-display font-bold text-foreground">{title}</h1>
         </div>
         <button className="relative p-2 rounded-full bg-muted hover:bg-primary/10 transition-colors">

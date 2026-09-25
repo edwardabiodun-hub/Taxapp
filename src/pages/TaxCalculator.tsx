@@ -86,7 +86,7 @@ const TaxCalculator = () => {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="gradient-hero rounded-2xl p-5 text-primary-foreground shadow-elevated space-y-4"
+          className="gradient-hero rounded-xl p-5 text-primary-foreground space-y-4"
         >
           <h4 className="font-display font-bold text-sm flex items-center gap-2">
             <Calculator className="w-5 h-5" /> Tax Estimate

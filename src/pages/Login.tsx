@@ -34,7 +34,7 @@ const Login = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
         <div className="text-center space-y-1.5">
-          <div className="mx-auto w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
             <Lock className="w-6 h-6 text-primary-foreground" />
           </div>
           <h1 className="font-display font-bold text-xl text-foreground">Welcome back</h1>

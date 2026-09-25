@@ -213,7 +213,7 @@ const SubmissionDetail = () => {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-2"
+          className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -230,7 +230,7 @@ const SubmissionDetail = () => {
       )}
 
       {/* Details */}
-      <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+      <div className="bg-card rounded-xl p-4 space-y-3">
         <h3 className="font-display font-bold text-sm text-card-foreground">Submission Details</h3>
         <div className="grid grid-cols-2 gap-3">
           <DetailRow icon={Calendar} label="Filed" value={new Date(declaration.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} />
@@ -245,7 +245,7 @@ const SubmissionDetail = () => {
           so this is the actual filing path today, not a fallback. */}
       <button
         onClick={handleExportSummary}
-        className="w-full flex items-center gap-3 p-4 bg-card rounded-2xl shadow-card hover:shadow-elevated transition-shadow text-left"
+        className="w-full flex items-center gap-3 p-4 bg-card rounded-xl border border-border transition-colors text-left"
       >
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <Download className="w-5 h-5 text-primary" />
@@ -259,7 +259,7 @@ const SubmissionDetail = () => {
       </button>
 
       {/* Existing Documents */}
-      <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+      <div className="bg-card rounded-xl p-4 space-y-3">
         <h3 className="font-display font-bold text-sm text-card-foreground">
           Attached Documents ({declaration.documents.length})
         </h3>
@@ -290,7 +290,7 @@ const SubmissionDetail = () => {
       </div>
 
       {/* Activity Timeline */}
-      <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
+      <div className="bg-card rounded-xl p-4 space-y-3">
         <h3 className="font-display font-bold text-sm text-card-foreground">Activity Timeline</h3>
         {activities.length === 0 ? (
           <p className="text-[11px] text-muted-foreground py-2">No activity recorded yet.</p>
@@ -351,7 +351,7 @@ const SubmissionDetail = () => {
 
       {/* Upload Section (always visible, highlighted for audit) */}
       <div className={cn(
-        "rounded-2xl p-4 space-y-4",
+        "rounded-xl p-4 space-y-4",
         isAudit
           ? "border-2 border-dashed border-destructive/30 bg-destructive/5"
           : "bg-card shadow-card"
