@@ -12,7 +12,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { db } from "@/lib/local-db";
-import { signUp } from "@/lib/auth";
+import { signUp, type AuthResult } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 import { africanCountries } from "@/types/declaration";
 
@@ -45,6 +45,25 @@ const steps = [
   { title: "Identity", subtitle: "Date of birth, gender & nationality" },
   { title: "Tax Information", subtitle: "Your tax residence & ID" },
 ];
+
+/** Decides where Onboarding sends the user once signUp() resolves.
+ * Exported and unit-tested directly (see Onboarding.test.tsx) rather than
+ * only through the full 3-step wizard UI, which Radix's Select/Calendar
+ * components make unreliable to drive in jsdom. */
+export function resolvePostSignUpRoute(
+  result: Pick<AuthResult, "needsEmailConfirmation">,
+  email: string
+): { path: string; state?: { email: string } } {
+  if (result.needsEmailConfirmation) {
+    // AuthContext won't see a session until the link is confirmed —
+    // App.tsx will correctly show the unauthenticated routes (not the
+    // main app) until then. Route to a dedicated screen rather than a
+    // toast so the "activate your email" message survives navigation
+    // and a page refresh.
+    return { path: "/check-email", state: { email } };
+  }
+  return { path: "/" };
+}
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -149,17 +168,11 @@ const Onboarding = () => {
         consentAcceptedAt: new Date().toISOString(),
       });
 
-      if (result.needsEmailConfirmation) {
-        // AuthContext won't see a session until the link is confirmed —
-        // App.tsx will correctly show Login (not the main app) until then.
-        toast({
-          title: "Check your email",
-          description: "Confirm your email to finish signing in, then log in below.",
-        });
-      } else {
+      const route = resolvePostSignUpRoute(result, form.email.trim());
+      if (route.path === "/") {
         toast({ title: "Profile created!", description: "Welcome to FileSmart" });
       }
-      navigate("/");
+      navigate(route.path, route.state ? { state: route.state } : undefined);
     } finally {
       setSubmitting(false);
     }

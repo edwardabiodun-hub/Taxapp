@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,15 @@ const Login = () => {
         >
           {checking ? "Checking…" : "Unlock"}
         </Button>
+
+        <div className="flex items-center justify-between text-sm">
+          <Link to="/onboarding" className="text-primary font-medium hover:underline">
+            Create account
+          </Link>
+          <Link to="/forgot-password" className="text-muted-foreground hover:underline">
+            Forgot password?
+          </Link>
+        </div>
       </form>
     </div>
   );

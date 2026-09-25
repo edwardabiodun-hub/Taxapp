@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 const VALID_EMAIL = "amara@example.com";
 const VALID_PASSWORD = "correct-password";
@@ -46,9 +47,11 @@ async function renderLogin() {
   }
 
   render(
-    <AuthProvider>
-      <Harness />
-    </AuthProvider>
+    <MemoryRouter>
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>
+    </MemoryRouter>
   );
 
   // Let AuthProvider's initial getSession() check settle before the test
@@ -93,5 +96,12 @@ describe("Login", () => {
     await waitFor(() => {
       expect(screen.getByText("UNLOCKED")).toBeInTheDocument();
     });
+  });
+
+  it("links to Create account and Forgot password", async () => {
+    await renderLogin();
+
+    expect(screen.getByRole("link", { name: /create account/i })).toHaveAttribute("href", "/onboarding");
+    expect(screen.getByRole("link", { name: /forgot password/i })).toHaveAttribute("href", "/forgot-password");
   });
 });

@@ -89,3 +89,28 @@ describe("Onboarding consent gate", () => {
     });
   });
 });
+
+describe("resolvePostSignUpRoute", () => {
+  it("routes to /check-email with the submitted address when confirmation is required", async () => {
+    const { resolvePostSignUpRoute } = await import("./Onboarding");
+
+    expect(resolvePostSignUpRoute({ needsEmailConfirmation: true }, "amara@example.com")).toEqual({
+      path: "/check-email",
+      state: { email: "amara@example.com" },
+    });
+  });
+
+  it("routes to / with no extra state when confirmation is not required", async () => {
+    const { resolvePostSignUpRoute } = await import("./Onboarding");
+
+    expect(resolvePostSignUpRoute({ needsEmailConfirmation: false }, "amara@example.com")).toEqual({
+      path: "/",
+    });
+  });
+
+  it("treats a missing needsEmailConfirmation as not required", async () => {
+    const { resolvePostSignUpRoute } = await import("./Onboarding");
+
+    expect(resolvePostSignUpRoute({}, "amara@example.com")).toEqual({ path: "/" });
+  });
+});
