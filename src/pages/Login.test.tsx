@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
+let hasProfile = false;
+vi.mock("@/hooks/use-has-profile", () => ({
+  useHasProfile: () => ({ loading: false, hasProfile }),
+}));
+
 const VALID_EMAIL = "amara@example.com";
 const VALID_PASSWORD = "correct-password";
 
@@ -63,6 +68,7 @@ describe("Login", () => {
   beforeEach(() => {
     currentSession = null;
     listeners.length = 0;
+    hasProfile = false;
   });
 
   it("rejects incorrect credentials and stays locked", async () => {
@@ -102,6 +108,21 @@ describe("Login", () => {
     await renderLogin();
 
     expect(screen.getByRole("link", { name: /create account/i })).toHaveAttribute("href", "/onboarding");
+    expect(screen.getByRole("link", { name: /forgot password/i })).toHaveAttribute("href", "/forgot-password");
+  });
+
+  it("shows the Create account link when no local profile exists on this device", async () => {
+    hasProfile = false;
+    await renderLogin();
+
+    expect(screen.getByRole("link", { name: /create account/i })).toHaveAttribute("href", "/onboarding");
+  });
+
+  it("hides the Create account link when a local profile already exists on this device", async () => {
+    hasProfile = true;
+    await renderLogin();
+
+    expect(screen.queryByRole("link", { name: /create account/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /forgot password/i })).toHaveAttribute("href", "/forgot-password");
   });
 });

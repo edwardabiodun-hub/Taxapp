@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signIn } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { useHasProfile } from "@/hooks/use-has-profile";
 import filesmartLockup from "@/assets/filesmart-lockup.png";
 
 const Login = () => {
+  const { hasProfile } = useHasProfile();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>();
@@ -80,10 +82,12 @@ const Login = () => {
           {checking ? "Checking…" : "Unlock"}
         </Button>
 
-        <div className="flex items-center justify-between text-sm">
-          <Link to="/onboarding" className="text-primary font-medium hover:underline">
-            Create account
-          </Link>
+        <div className={cn("flex items-center text-sm", hasProfile ? "justify-end" : "justify-between")}>
+          {!hasProfile && (
+            <Link to="/onboarding" className="text-primary font-medium hover:underline">
+              Create account
+            </Link>
+          )}
           <Link to="/forgot-password" className="text-muted-foreground hover:underline">
             Forgot password?
           </Link>
