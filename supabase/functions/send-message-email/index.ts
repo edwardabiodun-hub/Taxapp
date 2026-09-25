@@ -38,18 +38,28 @@ Deno.serve(async (req) => {
     return new Response("Server misconfigured", { status: 500 });
   }
 
-  let payload: MessageWebhookPayload;
+  let payload: unknown;
   try {
     payload = await req.json();
   } catch {
     return new Response("Invalid JSON payload", { status: 400 });
   }
 
-  const message = payload.record;
-  if (!message?.recipient_user_id || !message.subject || !message.body) {
-    console.error("[send-message-email] Payload missing required fields:", payload);
+  // Validate payload shape before any property access
+  const record = payload && typeof payload === "object" ? (payload as Record<string, unknown>).record : undefined;
+
+  if (
+    !record ||
+    typeof record !== "object" ||
+    typeof (record as any).recipient_user_id !== "string" ||
+    typeof (record as any).subject !== "string" ||
+    typeof (record as any).body !== "string"
+  ) {
+    console.error("[send-message-email] Payload missing or malformed required fields");
     return new Response("Missing required message fields", { status: 400 });
   }
+
+  const message = record as { id?: string; recipient_user_id: string; subject: string; body: string; category?: string };
 
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
