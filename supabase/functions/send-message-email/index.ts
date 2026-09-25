@@ -18,15 +18,6 @@ const APP_URL = Deno.env.get("APP_URL") ?? "https://filesmart-demo.netlify.app";
 // override via the RESEND_FROM_ADDRESS secret once one is set up.
 const FROM_ADDRESS = Deno.env.get("RESEND_FROM_ADDRESS") ?? "onboarding@resend.dev";
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 Deno.serve(async (req) => {
   if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !WEBHOOK_SECRET) {
     console.error("[send-message-email] Missing required environment secrets");
@@ -83,9 +74,17 @@ Deno.serve(async (req) => {
   // if the secret check above were somehow bypassed, an attacker could not
   // inject arbitrary email subject/body — only genuinely stored message
   // rows (created by staff via privileged Supabase access) are ever sent.
+  //
+  // The email itself is notify-only (no subject/body content) even though
+  // we already fetch the row: message content is encrypted at rest on the
+  // user's device precisely because it can carry sensitive detail (a tax
+  // ID, an address), and sending that same content in plaintext through a
+  // third-party mail provider to sit in the user's inbox indefinitely is a
+  // materially weaker threat model than the one the encryption assumes.
+  // The user reads the actual content only inside the app.
   const { data: messageRow, error: fetchError } = await supabaseAdmin
     .from("messages")
-    .select("recipient_user_id, subject, body")
+    .select("recipient_user_id")
     .eq("id", messageId)
     .single();
 
@@ -116,8 +115,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_ADDRESS,
         to: userData.user.email,
-        subject: messageRow.subject,
-        html: `<p>${escapeHtml(messageRow.body)}</p><p><a href="${APP_URL}/messages">View this message in FileSmart</a></p>`,
+        subject: "You have a new message from FileSmart",
+        html: `<p>You have a new message from FileSmart. Open the app to read it.</p><p><a href="${APP_URL}/messages">View your messages</a></p>`,
       }),
     });
   } catch (err) {
