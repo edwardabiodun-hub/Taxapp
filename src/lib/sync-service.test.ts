@@ -183,4 +183,55 @@ describe("syncAll", () => {
     const stored = await db.messages.get("msg-existing");
     expect(stored?.subject).toBe("We need a document from you");
   });
+
+  it("does not let a stale server pull clobber a mark-read that lands mid-sync", async () => {
+    const { db } = await import("./local-db");
+    const api = await import("./api");
+    const { syncAll } = await import("./sync-service");
+
+    // The message starts NOT pending, so this syncAll() call's push step
+    // (which runs first, and reads pendingSync=1 rows) finds nothing to
+    // push for it — mirroring "its push step already ran and found
+    // nothing pending" from the race scenario. The mark-read then lands
+    // while the pull's network fetch is in flight (simulated here by
+    // mutating local state inside fetchMessagesFromServer's own mock,
+    // before it resolves with a stale server row for the same message).
+    await db.messages.put({
+      id: "msg-race",
+      category: "general",
+      subject: "Welcome",
+      body: "Thanks for signing up.",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      pendingSync: 0,
+    });
+
+    vi.mocked(api.fetchMessagesFromServer).mockImplementation(async () => {
+      await db.messages.update("msg-race", {
+        readAt: "2026-01-05T00:00:00.000Z",
+        pendingSync: 1,
+      });
+      return [
+        {
+          id: "msg-race",
+          category: "general",
+          subject: "Welcome",
+          body: "Thanks for signing up.",
+          readAt: undefined,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          pendingSync: 0,
+        },
+      ];
+    });
+
+    await syncAll();
+
+    // The pull's guard must have skipped overwriting the row once it saw
+    // pendingSync: 1 — the local mark-read survives instead of being reset
+    // to the stale server value (readAt: undefined). The next sync cycle
+    // will push this pending change and then correctly pull the settled
+    // state.
+    const after = await db.messages.get("msg-race");
+    expect(after?.readAt).toBe("2026-01-05T00:00:00.000Z");
+    expect(after?.pendingSync).toBe(1);
+  });
 });

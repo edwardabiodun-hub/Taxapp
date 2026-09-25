@@ -118,7 +118,17 @@ export async function syncAll(): Promise<SyncResult> {
     }
 
     for (const message of serverMessages) {
-      await db.messages.put(message);
+      // Same guard as declarations above: skip overwriting a local row that
+      // has an unpushed mark-read pending (pendingSync: 1). Without this, a
+      // mark-read that lands locally while this pull is still resolving
+      // (its push step already ran and found nothing pending) would be
+      // silently clobbered by the stale server row (read_at: null) — the
+      // next sync cycle will push the pending change and then correctly
+      // pull the settled state.
+      const local = await db.messages.get(message.id);
+      if (!local || !local.pendingSync) {
+        await db.messages.put(message);
+      }
     }
 
     console.log("[sync] Completed successfully");
