@@ -72,6 +72,25 @@ describe("ResetPassword", () => {
     expect(signOutMock).toHaveBeenCalled();
   });
 
+  it("navigates to /login before signOut() resolves, so no stale ResetPassword instance can flash", async () => {
+    // Regression test for the reordering: navigate("/login") now happens
+    // BEFORE awaiting signOut(), so signOut() resolving late (or being slow)
+    // must not delay landing on /login.
+    let resolveSignOut: () => void = () => {};
+    signOutMock.mockReturnValue(new Promise<void>((resolve) => { resolveSignOut = resolve; }));
+    updatePasswordMock.mockResolvedValue({ success: true });
+    await renderResetPassword();
+
+    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: "correct-password" } });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "correct-password" } });
+    fireEvent.click(screen.getByRole("button", { name: /update password/i }));
+
+    await waitFor(() => expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument());
+    expect(signOutMock).toHaveBeenCalled();
+
+    resolveSignOut();
+  });
+
   it("shows an error state with no update form when the recovery link is invalid or expired", async () => {
     isPasswordRecovery = false;
     await renderResetPassword();
@@ -79,5 +98,15 @@ describe("ResetPassword", () => {
     expect(screen.queryByLabelText(/new password/i)).not.toBeInTheDocument();
     expect(screen.getByText(/link .* expired|invalid/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /request a new link/i })).toHaveAttribute("href", "/forgot-password");
+  });
+
+  it("cancels via the 'Cancel and sign in' link, signing out and returning to Sign In", async () => {
+    await renderResetPassword();
+
+    fireEvent.click(screen.getByRole("button", { name: /cancel and sign in/i }));
+
+    await waitFor(() => expect(screen.getByText("LOGIN PAGE")).toBeInTheDocument());
+    expect(signOutMock).toHaveBeenCalled();
+    expect(updatePasswordMock).not.toHaveBeenCalled();
   });
 });

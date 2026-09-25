@@ -47,6 +47,10 @@ describe("AuthContext password recovery", () => {
     authStateCallback = undefined;
     vi.clearAllMocks();
     authMock.getSession.mockResolvedValue({ data: { session: null } });
+    // Real sessionStorage persists across tests within the same jsdom
+    // window — clear it so one test's PASSWORD_RECOVERY write can't leak
+    // into the next test's initial-mount read.
+    window.sessionStorage.clear();
   });
 
   it("starts with isPasswordRecovery false", async () => {
@@ -55,6 +59,7 @@ describe("AuthContext password recovery", () => {
   });
 
   it("sets isPasswordRecovery true on a PASSWORD_RECOVERY event", async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: { access_token: "recovery-token" } } });
     const getState = await renderWithProvider();
 
     act(() => {
@@ -65,6 +70,7 @@ describe("AuthContext password recovery", () => {
   });
 
   it("clears isPasswordRecovery on SIGNED_OUT", async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: { access_token: "recovery-token" } } });
     const getState = await renderWithProvider();
 
     act(() => {
@@ -77,5 +83,47 @@ describe("AuthContext password recovery", () => {
     });
 
     expect(getState().isPasswordRecovery).toBe(false);
+  });
+
+  it("removes the sessionStorage key on SIGNED_OUT", async () => {
+    authMock.getSession.mockResolvedValue({ data: { session: { access_token: "recovery-token" } } });
+    const removeItemSpy = vi.spyOn(Storage.prototype, "removeItem");
+    const getState = await renderWithProvider();
+
+    act(() => {
+      authStateCallback!("PASSWORD_RECOVERY", { access_token: "recovery-token" });
+    });
+    expect(getState().isPasswordRecovery).toBe(true);
+
+    act(() => {
+      authStateCallback!("SIGNED_OUT", null);
+    });
+
+    expect(removeItemSpy).toHaveBeenCalledWith("fs_password_recovery");
+    removeItemSpy.mockRestore();
+  });
+
+  it("seeds isPasswordRecovery true from sessionStorage on mount when a session is already present", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation((key: string) =>
+      key === "fs_password_recovery" ? "true" : null
+    );
+    authMock.getSession.mockResolvedValue({ data: { session: { access_token: "restored-token" } } });
+
+    const getState = await renderWithProvider();
+
+    expect(getState().isPasswordRecovery).toBe(true);
+    vi.restoreAllMocks();
+  });
+
+  it("keeps isPasswordRecovery false when sessionStorage says true but there is no active session", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation((key: string) =>
+      key === "fs_password_recovery" ? "true" : null
+    );
+    authMock.getSession.mockResolvedValue({ data: { session: null } });
+
+    const getState = await renderWithProvider();
+
+    expect(getState().isPasswordRecovery).toBe(false);
+    vi.restoreAllMocks();
   });
 });

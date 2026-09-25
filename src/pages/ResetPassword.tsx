@@ -55,11 +55,23 @@ const ResetPassword = () => {
         return;
       }
       toast({ title: "Password updated", description: "Sign in with your new password." });
+      // Navigate away first, then sign out — signOut() firing SIGNED_OUT
+      // flips AppRoutes to the unauthenticated table (isPasswordRecovery
+      // becomes false) while the URL is still /reset-password. Navigating
+      // first means that by the time that state change lands, this
+      // component has already been swapped out, so there's no frame where a
+      // fresh ResetPassword instance renders the "link no longer works"
+      // state on top of the success toast.
+      navigate("/login", { replace: true });
       await signOut();
-      navigate("/login");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleCancel = async () => {
+    navigate("/login", { replace: true });
+    await signOut();
   };
 
   return (
@@ -112,6 +124,16 @@ const ResetPassword = () => {
         >
           {submitting ? "Updating…" : "Update password"}
         </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="text-primary font-medium hover:underline"
+          >
+            Cancel and sign in
+          </button>
+        </p>
       </form>
     </div>
   );
