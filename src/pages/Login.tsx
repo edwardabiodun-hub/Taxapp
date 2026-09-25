@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Lock, Mail, KeyRound } from "lucide-react";
+import { Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signIn } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import filesmartLockup from "@/assets/filesmart-lockup.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -34,9 +35,7 @@ const Login = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
         <div className="text-center space-y-1.5">
-          <div className="mx-auto w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-            <Lock className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <img src={filesmartLockup} alt="FileSmart" className="mx-auto h-20 w-auto mb-2" />
           <h1 className="font-display font-bold text-xl text-foreground">Welcome back</h1>
           <p className="text-sm text-muted-foreground">Sign in to access your tax records</p>
         </div>
