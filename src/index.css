@@ -142,7 +142,7 @@
     background: var(--info);
   }
   .shadow-card {
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 0 0 1px var(--border);
   }
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
