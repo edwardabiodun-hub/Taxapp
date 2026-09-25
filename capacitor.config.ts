@@ -13,7 +13,7 @@ const devServerUrl = process.env.CAPACITOR_DEV_SERVER_URL;
 
 const config: CapacitorConfig = {
   appId,
-  appName: 'TaxEase Africa',
+  appName: 'FileSmart',
   webDir: 'dist',
   ...(devServerUrl
     ? { server: { url: devServerUrl, cleartext: true } }

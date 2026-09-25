@@ -157,7 +157,7 @@ const Onboarding = () => {
           description: "Confirm your email to finish signing in, then log in below.",
         });
       } else {
-        toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
+        toast({ title: "Profile created!", description: "Welcome to FileSmart" });
       }
       navigate("/");
     } finally {
