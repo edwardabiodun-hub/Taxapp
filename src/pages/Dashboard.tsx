@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload, ShieldCheck } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, Banknote, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload, ShieldCheck } from "lucide-react";
 import { getGreeting } from "@/lib/greeting";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
@@ -129,7 +129,7 @@ const Dashboard = () => {
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
         <StatCard icon={FileCheck} label="Filed" value={String(declarations.length)} subtitle="Total submissions" variant="default" />
         <StatCard icon={TrendingUp} label="Approved" value={String(approved)} subtitle={`${declarations.length ? Math.round((approved / declarations.length) * 100) : 0}% success`} variant="success" />
-        <StatCard icon={DollarSign} label="Tax Paid" value="—" subtitle="This year" variant="default" />
+        <StatCard icon={Banknote} label="Tax Paid" value="—" subtitle="This year" variant="default" />
         <StatCard icon={FilePlus} label="Pending" value={String(pending)} subtitle="Awaiting review" variant="accent" />
       </motion.div>
 
