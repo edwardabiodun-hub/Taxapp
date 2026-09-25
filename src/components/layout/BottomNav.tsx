@@ -28,14 +28,14 @@ const BottomNav = () => {
                 className={cn(
                   "p-1.5 rounded-xl transition-all duration-200",
                   isActive
-                    ? "gradient-primary shadow-card"
+                    ? "bg-[var(--primary-tint)]"
                     : "group-hover:bg-muted"
                 )}
               >
                 <item.icon
                   className={cn(
                     "w-5 h-5 transition-colors",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground"
+                    isActive ? "text-primary" : "text-muted-foreground"
                   )}
                 />
               </div>
