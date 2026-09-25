@@ -5,6 +5,12 @@ import { stateName } from "@/types/declaration";
 const MARGIN = 20;
 const PAGE_WIDTH = 210; // A4, mm
 
+/** Deliberately "NGN", not "₦": jsPDF's standard Helvetica font can't render
+ * the Naira sign (verified directly — it comes out as a broken vertical-bar
+ * glyph in the actual output PDF), unlike the web UI's formatNaira(), which
+ * uses ₦ safely since browsers render it correctly. Don't "fix" this to
+ * match the web formatter without first embedding a Naira-glyph-supporting
+ * font in the PDF. */
 function formatNgn(amount: number): string {
   return `NGN ${Math.round(amount).toLocaleString("en-NG")}`;
 }

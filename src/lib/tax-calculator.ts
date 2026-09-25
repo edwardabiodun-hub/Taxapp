@@ -26,11 +26,13 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-/** Formats a Naira amount for display/storage: "NGN 45,200". Rounds to the
+/** Formats a Naira amount for display/storage: "₦45,200". Rounds to the
  * nearest whole naira — kobo precision matters for calculation (round2
- * above), not for a summary display or filing amount string. */
+ * above), not for a summary display or filing amount string. Web-only: the
+ * PDF export (filing-summary-pdf.ts) has its own separate formatter, since
+ * jsPDF's standard font can't render the ₦ glyph — see that file. */
 export function formatNaira(amount: number): string {
-  return `NGN ${Math.round(amount).toLocaleString("en-NG")}`;
+  return `₦${Math.round(amount).toLocaleString("en-NG")}`;
 }
 
 export interface TaxBreakdown {

@@ -14,7 +14,7 @@ import {
   Download,
   Calendar,
   MapPin,
-  DollarSign,
+  Banknote,
   Image,
   X,
   Paperclip,
@@ -237,7 +237,7 @@ const SubmissionDetail = () => {
           <DetailRow icon={Calendar} label="Updated" value={new Date(declaration.updatedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} />
           <DetailRow icon={MapPin} label="Country" value={declaration.country.toUpperCase()} />
           <DetailRow icon={MapPin} label="State" value={stateName(declaration.state)} />
-          <DetailRow icon={DollarSign} label="Amount" value={declaration.amount || "—"} />
+          <DetailRow icon={Banknote} label="Amount" value={declaration.amount || "—"} />
         </div>
       </div>
 

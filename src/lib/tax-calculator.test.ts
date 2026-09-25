@@ -3,16 +3,16 @@ import { calculateNigeriaTax, formatNaira } from "./tax-calculator";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 
 describe("formatNaira", () => {
-  it("formats a whole number with the NGN prefix and thousands separators", () => {
-    expect(formatNaira(45200)).toBe("NGN 45,200");
+  it("formats a whole number with the ₦ symbol and thousands separators", () => {
+    expect(formatNaira(45200)).toBe("₦45,200");
   });
 
   it("rounds to the nearest whole naira, dropping kobo from display", () => {
-    expect(formatNaira(1234.57)).toBe("NGN 1,235");
+    expect(formatNaira(1234.57)).toBe("₦1,235");
   });
 
   it("formats zero", () => {
-    expect(formatNaira(0)).toBe("NGN 0");
+    expect(formatNaira(0)).toBe("₦0");
   });
 });
 
