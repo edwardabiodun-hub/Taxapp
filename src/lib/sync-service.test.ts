@@ -19,11 +19,21 @@ vi.mock("./api", () => ({
   pushDeclarationsToServer: vi.fn(async () => {}),
   fetchActivitiesFromServer: vi.fn(async () => []),
   pushActivitiesToServer: vi.fn(async () => {}),
+  fetchMessagesFromServer: vi.fn(async () => []),
+  pushMessageReadStatus: vi.fn(async () => {}),
 }));
 
 describe("syncAll", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Unlike declarations/activities/profiles above (each exercised by only
+    // one test in this file, so cross-test IndexedDB state never collides),
+    // both new messages tests below write to db.messages and one asserts an
+    // absolute row count — so leftover rows from a prior test would produce
+    // a false failure. Clear it between tests, matching the pattern already
+    // used in use-restore-profile.test.ts.
+    const { db } = await import("./local-db");
+    await db.messages.clear();
   });
 
   it("merges server profile data into the existing local profile instead of creating a duplicate", async () => {
@@ -118,5 +128,59 @@ describe("syncAll", () => {
     ]);
     const after = await db.activities.get("act-pending");
     expect(after?.pendingSync).toBe(0);
+  });
+
+  it("pushes a pending read-status change and clears pendingSync", async () => {
+    const { db } = await import("./local-db");
+    const api = await import("./api");
+    const { syncAll } = await import("./sync-service");
+
+    await db.messages.put({
+      id: "msg-pending",
+      category: "general",
+      subject: "Welcome",
+      body: "Thanks for signing up.",
+      readAt: "2026-01-05T00:00:00.000Z",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      pendingSync: 1,
+    });
+
+    await syncAll();
+
+    expect(api.pushMessageReadStatus).toHaveBeenCalledWith("msg-pending", "2026-01-05T00:00:00.000Z");
+    const after = await db.messages.get("msg-pending");
+    expect(after?.pendingSync).toBe(0);
+  });
+
+  it("pulls messages from the server into local storage, updating an existing row rather than duplicating it", async () => {
+    const { db } = await import("./local-db");
+    const api = await import("./api");
+    const { syncAll } = await import("./sync-service");
+
+    await db.messages.put({
+      id: "msg-existing",
+      category: "general",
+      subject: "Old subject",
+      body: "Old body",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      pendingSync: 0,
+    });
+
+    vi.mocked(api.fetchMessagesFromServer).mockResolvedValue([
+      {
+        id: "msg-existing",
+        category: "document_request",
+        subject: "We need a document from you",
+        body: "Please upload your payslip.",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        pendingSync: 0,
+      },
+    ]);
+
+    await syncAll();
+
+    expect(await db.messages.count()).toBe(1);
+    const stored = await db.messages.get("msg-existing");
+    expect(stored?.subject).toBe("We need a document from you");
   });
 });

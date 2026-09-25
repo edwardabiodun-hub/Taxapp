@@ -6,6 +6,8 @@ import {
   pushDeclarationsToServer,
   fetchActivitiesFromServer,
   pushActivitiesToServer,
+  fetchMessagesFromServer,
+  pushMessageReadStatus,
 } from "./api";
 
 /**
@@ -60,11 +62,25 @@ export async function syncAll(): Promise<SyncResult> {
       }
     }
 
+    // Messages are read-only from the server's perspective except for
+    // read_at, which only ever moves unread -> read and never back (see
+    // LocalMessage's own doc comment) — so there's no edit-during-push race
+    // to guard against here, the same reasoning activities' pendingSync
+    // clearing above already relies on.
+    const pendingMessages = await db.messages.where("pendingSync").equals(1).toArray();
+    for (const message of pendingMessages) {
+      if (message.readAt) {
+        await pushMessageReadStatus(message.id, message.readAt);
+      }
+      await db.messages.update(message.id, { pendingSync: 0 });
+    }
+
     // ── Pull from server ──
-    const [serverProfile, serverDeclarations, serverActivities] = await Promise.all([
+    const [serverProfile, serverDeclarations, serverActivities, serverMessages] = await Promise.all([
       fetchProfileFromServer(),
       fetchDeclarationsFromServer(),
       fetchActivitiesFromServer(),
+      fetchMessagesFromServer(),
     ]);
 
     if (localProfile && serverProfile) {
@@ -99,6 +115,10 @@ export async function syncAll(): Promise<SyncResult> {
 
     for (const activity of serverActivities) {
       await db.activities.put(activity);
+    }
+
+    for (const message of serverMessages) {
+      await db.messages.put(message);
     }
 
     console.log("[sync] Completed successfully");
