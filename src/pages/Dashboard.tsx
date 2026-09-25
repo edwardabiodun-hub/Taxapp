@@ -127,7 +127,7 @@ const Dashboard = () => {
       {/* Stats */}
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
         <StatCard icon={FileCheck} label="Filed" value={String(declarations.length)} subtitle="Total submissions" variant="default" />
-        <StatCard icon={TrendingUp} label="Approved" value={String(approved)} subtitle={`${declarations.length ? Math.round((approved / declarations.length) * 100) : 0}% success`} variant="primary" />
+        <StatCard icon={TrendingUp} label="Approved" value={String(approved)} subtitle={`${declarations.length ? Math.round((approved / declarations.length) * 100) : 0}% success`} variant="success" />
         <StatCard icon={DollarSign} label="Tax Paid" value="—" subtitle="This year" variant="default" />
         <StatCard icon={FilePlus} label="Pending" value={String(pending)} subtitle="Awaiting review" variant="accent" />
       </motion.div>
