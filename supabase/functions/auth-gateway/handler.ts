@@ -14,6 +14,7 @@ export interface AuthClient {
       email: string,
       options: { redirectTo: string },
     ) => Promise<AuthResult<unknown>>;
+    getUser: () => Promise<AuthResult<{ user?: { id?: string } }>>;
     updateUser: (input: { password: string }) => Promise<AuthResult<unknown>>;
   };
 }
@@ -113,16 +114,36 @@ export function createAuthGatewayHandler(
 
     const email = typeof body.email === "string" ? normalizeEmail(body.email) : undefined;
     const authorization = request.headers.get("authorization") ?? undefined;
-    const accountKey = email ?? authorization;
-    if (!accountKey) {
-      return jsonResponse({ error: { message: "Authentication identity missing" } }, 401, request, dependencies.appOrigin);
-    }
 
     if (operation === "reset" && !isAllowedRedirect(dependencies.appOrigin, body.redirectTo)) {
       return jsonResponse({ error: { message: "Invalid password reset redirect" } }, 400, request, dependencies.appOrigin);
     }
 
     try {
+      if (!dependencies.createAuthClient) {
+        throw new Error("Auth client factory is not configured");
+      }
+
+      const authClient = dependencies.createAuthClient(authorization);
+      let accountKey = email;
+
+      if (operation === "update") {
+        if (!authorization?.toLowerCase().startsWith("bearer ")) {
+          return jsonResponse({ error: { message: "Auth session missing" } }, 401, request, dependencies.appOrigin);
+        }
+
+        const userResult = await authClient.auth.getUser();
+        const userId = userResult.data?.user?.id;
+        if (userResult.error || !userId) {
+          return jsonResponse({ error: { message: "Auth session invalid" } }, 401, request, dependencies.appOrigin);
+        }
+        accountKey = `user:${userId}`;
+      }
+
+      if (!accountKey) {
+        return jsonResponse({ error: { message: "Authentication identity missing" } }, 401, request, dependencies.appOrigin);
+      }
+
       const limit = limits[operation];
       const rateLimitResult = await enforceDualLimit(dependencies.rateLimitClient, {
         accountKey,
@@ -134,10 +155,6 @@ export function createAuthGatewayHandler(
         return jsonResponse({ error: { message: "Too many attempts. Try again later." } }, 429, request, dependencies.appOrigin);
       }
 
-      if (!dependencies.createAuthClient) {
-        throw new Error("Auth client factory is not configured");
-      }
-      const authClient = dependencies.createAuthClient(authorization);
       let result: AuthResult<unknown>;
 
       switch (operation) {
@@ -156,9 +173,6 @@ export function createAuthGatewayHandler(
           result = await authClient.auth.resetPasswordForEmail(email!, { redirectTo: body.redirectTo as string });
           break;
         case "update":
-          if (!authorization?.toLowerCase().startsWith("bearer ")) {
-            return jsonResponse({ error: { message: "Auth session missing" } }, 401, request, dependencies.appOrigin);
-          }
           if (typeof body.password !== "string") throw new Error("Password is required");
           result = await authClient.auth.updateUser({ password: body.password });
           break;
