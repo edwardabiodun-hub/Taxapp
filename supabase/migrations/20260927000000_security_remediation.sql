@@ -84,8 +84,13 @@ begin
     return new;
   end if;
 
-  if new.id <> auth.uid() then
+  if new.id is distinct from auth.uid() then
     raise exception 'Cannot change profile ownership';
+  end if;
+
+  if tg_op = 'INSERT' then
+    new.pseudonymized_at := null;
+    return new;
   end if;
 
   -- Only the dedicated security-definer function may set this marker.
@@ -100,7 +105,7 @@ $$;
 drop trigger if exists profiles_guard_user_write on public.profiles;
 
 create trigger profiles_guard_user_write
-before update on public.profiles
+before insert or update on public.profiles
 for each row
 execute function public.guard_user_profile_write();
 

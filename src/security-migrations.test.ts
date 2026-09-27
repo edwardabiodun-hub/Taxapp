@@ -29,6 +29,8 @@ describe("security remediation migration", () => {
     expect(normalized).toContain("create or replace function public.guard_user_declaration_write()");
     expect(normalized).toContain("before insert or update on public.declarations");
     expect(normalized).toContain("create or replace function public.guard_user_profile_write()");
+    expect(normalized).toContain("before insert or update on public.profiles");
+    expect(normalized).toContain("new.pseudonymized_at := null");
     expect(normalized).toContain("create or replace function public.pseudonymize_own_profile()");
     expect(normalized).toContain("grant execute on function public.pseudonymize_own_profile() to authenticated");
   });
