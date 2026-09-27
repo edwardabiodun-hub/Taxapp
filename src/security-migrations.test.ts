@@ -40,9 +40,9 @@ describe("security remediation migration", () => {
     const sql = readFileSync(rateLimitMigrationPath, "utf8").replace(/\s+/g, " ");
 
     expect(sql).toContain("create table if not exists private.rate_limits");
-    expect(sql).toContain("create or replace function private.consume_rate_limit");
+    expect(sql).toContain("create or replace function public.consume_rate_limit");
     expect(sql).toContain("on conflict (key) do update");
-    expect(sql).toContain("grant execute on function private.consume_rate_limit");
+    expect(sql).toContain("grant execute on function public.consume_rate_limit");
   });
 
   it("provides duplicate-safe message delivery functions", () => {

@@ -6,7 +6,10 @@ create table if not exists private.rate_limits (
   hits integer not null check (hits >= 0)
 );
 
-create or replace function private.consume_rate_limit(
+-- Keep the counter table in the unexposed private schema, but expose only
+-- this revoked-by-default RPC so Supabase clients can invoke it with the
+-- service-role key without adding private to the API's exposed schemas.
+create or replace function public.consume_rate_limit(
   p_key text,
   p_limit integer,
   p_window_seconds integer
@@ -44,5 +47,5 @@ end;
 $$;
 
 revoke all on table private.rate_limits from public, anon, authenticated;
-revoke all on function private.consume_rate_limit(text, integer, integer) from public, anon, authenticated;
-grant execute on function private.consume_rate_limit(text, integer, integer) to service_role;
+revoke all on function public.consume_rate_limit(text, integer, integer) from public, anon, authenticated;
+grant execute on function public.consume_rate_limit(text, integer, integer) to service_role;
