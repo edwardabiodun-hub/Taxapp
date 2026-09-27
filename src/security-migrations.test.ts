@@ -6,6 +6,10 @@ const migrationPath = resolve(
   process.cwd(),
   "supabase/migrations/20260927000000_security_remediation.sql",
 );
+const rateLimitMigrationPath = resolve(
+  process.cwd(),
+  "supabase/migrations/20260927010000_rate_limits.sql",
+);
 
 describe("security remediation migration", () => {
   it("enforces activity declaration ownership on insert and update", () => {
@@ -27,5 +31,15 @@ describe("security remediation migration", () => {
     expect(normalized).toContain("create or replace function public.guard_user_profile_write()");
     expect(normalized).toContain("create or replace function public.pseudonymize_own_profile()");
     expect(normalized).toContain("grant execute on function public.pseudonymize_own_profile() to authenticated");
+  });
+
+  it("provides atomic private rate-limit storage", () => {
+    expect(existsSync(rateLimitMigrationPath)).toBe(true);
+    const sql = readFileSync(rateLimitMigrationPath, "utf8").replace(/\s+/g, " ");
+
+    expect(sql).toContain("create table if not exists private.rate_limits");
+    expect(sql).toContain("create or replace function private.consume_rate_limit");
+    expect(sql).toContain("on conflict (key) do update");
+    expect(sql).toContain("grant execute on function private.consume_rate_limit");
   });
 });
