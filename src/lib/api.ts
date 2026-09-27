@@ -40,7 +40,7 @@ export async function fetchProfileFromServer(): Promise<LocalProfile | null> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id,name,phone,tax_id,country,date_of_birth,country_of_birth,gender,nationality,consent_accepted_at")
     .eq("id", userId)
     .maybeSingle<ProfileRow>();
   if (error) throw error;
@@ -142,7 +142,7 @@ export async function fetchDeclarationsFromServer(): Promise<LocalDeclaration[]>
   const userId = await getCurrentUserId();
   const { data, error } = await supabase
     .from("declarations")
-    .select("*")
+    .select("id,tax_year,country,state,type,status,form_data,documents,amount,created_at,updated_at")
     .eq("user_id", userId)
     .returns<DeclarationRow[]>();
   if (error) throw error;
@@ -204,7 +204,7 @@ export async function fetchActivitiesFromServer(): Promise<LocalActivity[]> {
   const userId = await getCurrentUserId();
   const { data, error } = await supabase
     .from("activities")
-    .select("*")
+    .select("id,declaration_id,type,title,description,meta,timestamp")
     .eq("user_id", userId)
     .returns<ActivityRow[]>();
   if (error) throw error;
@@ -254,7 +254,7 @@ export async function fetchMessagesFromServer(): Promise<LocalMessage[]> {
   const userId = await getCurrentUserId();
   const { data, error } = await supabase
     .from("messages")
-    .select("*")
+    .select("id,declaration_id,category,subject,body,read_at,created_at")
     .eq("recipient_user_id", userId)
     .returns<MessageRow[]>();
   if (error) throw error;

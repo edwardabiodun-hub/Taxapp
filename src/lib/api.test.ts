@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 interface FakeQueryBuilder extends PromiseLike<{ data: unknown; error: unknown }> {
-  select: () => FakeQueryBuilder;
+  select: (columns?: string) => FakeQueryBuilder;
   eq: () => FakeQueryBuilder;
   delete: () => FakeQueryBuilder;
   update: () => FakeQueryBuilder;
@@ -45,8 +45,7 @@ describe("api", () => {
 
   describe("fetchProfileFromServer", () => {
     it("maps a profile row to LocalProfile shape, pulling email from the auth user", async () => {
-      fromMock.mockReturnValue(
-        makeQueryBuilder({
+      const builder = makeQueryBuilder({
           data: {
             id: "user-uuid-1",
             name: "Amara Okafor",
@@ -60,11 +59,15 @@ describe("api", () => {
             consent_accepted_at: "2026-01-01T00:00:00.000Z",
           },
           error: null,
-        })
-      );
+        });
+      fromMock.mockReturnValue(builder);
 
       const { fetchProfileFromServer } = await import("./api");
       const profile = await fetchProfileFromServer();
+
+      expect(builder.select).toHaveBeenCalledWith(
+        "id,name,phone,tax_id,country,date_of_birth,country_of_birth,gender,nationality,consent_accepted_at",
+      );
 
       expect(profile).toEqual({
         id: "user-uuid-1",
@@ -119,8 +122,7 @@ describe("api", () => {
 
   describe("fetchDeclarationsFromServer", () => {
     it("maps declaration rows from snake_case to camelCase and marks them synced", async () => {
-      fromMock.mockReturnValue(
-        makeQueryBuilder({
+      const builder = makeQueryBuilder({
           data: [
             {
               id: "decl-1",
@@ -136,11 +138,15 @@ describe("api", () => {
             },
           ],
           error: null,
-        })
-      );
+        });
+      fromMock.mockReturnValue(builder);
 
       const { fetchDeclarationsFromServer } = await import("./api");
       const declarations = await fetchDeclarationsFromServer();
+
+      expect(builder.select).toHaveBeenCalledWith(
+        "id,tax_year,country,state,type,status,form_data,documents,amount,created_at,updated_at",
+      );
 
       expect(declarations).toHaveLength(1);
       expect(declarations[0]).toMatchObject({
@@ -155,8 +161,7 @@ describe("api", () => {
     });
 
     it("maps a present state, and leaves it undefined when absent (e.g. a declaration created before this feature existed)", async () => {
-      fromMock.mockReturnValue(
-        makeQueryBuilder({
+      const builder = makeQueryBuilder({
           data: [
             {
               id: "decl-1", tax_year: "2025", country: "ng", type: "Income Tax", status: "submitted",
@@ -170,8 +175,8 @@ describe("api", () => {
             },
           ],
           error: null,
-        })
-      );
+        });
+      fromMock.mockReturnValue(builder);
 
       const { fetchDeclarationsFromServer } = await import("./api");
       const declarations = await fetchDeclarationsFromServer();
@@ -244,8 +249,7 @@ describe("api", () => {
 
   describe("fetchActivitiesFromServer", () => {
     it("maps activity rows to LocalActivity shape with pendingSync 0", async () => {
-      fromMock.mockReturnValue(
-        makeQueryBuilder({
+      const builder = makeQueryBuilder({
           data: [
             {
               id: "act-1",
@@ -258,11 +262,15 @@ describe("api", () => {
             },
           ],
           error: null,
-        })
-      );
+        });
+      fromMock.mockReturnValue(builder);
 
       const { fetchActivitiesFromServer } = await import("./api");
       const activities = await fetchActivitiesFromServer();
+
+      expect(builder.select).toHaveBeenCalledWith(
+        "id,declaration_id,type,title,description,meta,timestamp",
+      );
 
       expect(activities).toEqual([
         {
@@ -361,8 +369,7 @@ describe("api", () => {
 
   describe("fetchMessagesFromServer", () => {
     it("maps message rows to LocalMessage shape", async () => {
-      fromMock.mockReturnValue(
-        makeQueryBuilder({
+      const builder = makeQueryBuilder({
           data: [
             {
               id: "msg-1",
@@ -375,11 +382,15 @@ describe("api", () => {
             },
           ],
           error: null,
-        })
-      );
+        });
+      fromMock.mockReturnValue(builder);
 
       const { fetchMessagesFromServer } = await import("./api");
       const messages = await fetchMessagesFromServer();
+
+      expect(builder.select).toHaveBeenCalledWith(
+        "id,declaration_id,category,subject,body,read_at,created_at",
+      );
 
       expect(messages).toEqual([
         {
