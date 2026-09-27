@@ -1,4 +1,9 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
+import {
+  claimMessageEmailDelivery,
+  markMessageEmailFailed,
+  markMessageEmailSent,
+} from "./idempotency.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -104,6 +109,18 @@ Deno.serve(async (req) => {
     return new Response("Recipient email not found", { status: 404 });
   }
 
+  let shouldSend: boolean;
+  try {
+    shouldSend = await claimMessageEmailDelivery(supabaseAdmin, messageId);
+  } catch (error) {
+    console.error("[send-message-email] Could not claim delivery:", error);
+    return new Response("Delivery ledger unavailable", { status: 503 });
+  }
+
+  if (!shouldSend) {
+    return new Response("Already delivered", { status: 200 });
+  }
+
   let resendResponse: Response;
   try {
     resendResponse = await fetch("https://api.resend.com/emails", {
@@ -111,6 +128,9 @@ Deno.serve(async (req) => {
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
+        // Resend uses this key to deduplicate the provider-side request if
+        // the database acknowledgement fails after the provider accepts it.
+        "Idempotency-Key": messageId,
       },
       body: JSON.stringify({
         from: FROM_ADDRESS,
@@ -124,17 +144,27 @@ Deno.serve(async (req) => {
     // Response object — catch it here rather than letting it become an
     // unhandled exception. Never log RESEND_API_KEY itself.
     console.error("[send-message-email] Failed to reach Resend:", err);
+    await markMessageEmailFailed(supabaseAdmin, messageId, String(err)).catch((markError) =>
+      console.error("[send-message-email] Could not record failed delivery:", markError),
+    );
     return new Response("Failed to send email", { status: 502 });
   }
 
   if (!resendResponse.ok) {
     const errorText = await resendResponse.text();
     console.error("[send-message-email] Resend API error:", resendResponse.status, errorText);
+    await markMessageEmailFailed(supabaseAdmin, messageId, errorText).catch((markError) =>
+      console.error("[send-message-email] Could not record failed delivery:", markError),
+    );
     // Deliberately not retried, and this failure never touches the
     // messages row itself — the message is already saved and visible
     // in-app regardless of whether this email send succeeds.
     return new Response("Failed to send email", { status: 502 });
   }
+
+  await markMessageEmailSent(supabaseAdmin, messageId).catch((markError) =>
+    console.error("[send-message-email] Could not record successful delivery:", markError),
+  );
 
   return new Response("OK", { status: 200 });
 });

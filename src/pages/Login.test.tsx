@@ -9,6 +9,7 @@ vi.mock("@/hooks/use-has-profile", () => ({
 
 const VALID_EMAIL = "amara@example.com";
 const VALID_PASSWORD = "correct-password";
+const fetchMock = vi.hoisted(() => vi.fn());
 
 let currentSession: { access_token: string } | null = null;
 const listeners: ((session: typeof currentSession) => void)[] = [];
@@ -21,18 +22,15 @@ vi.mock("@/lib/supabase-client", () => ({
   supabase: {
     auth: {
       getSession: vi.fn(async () => ({ data: { session: currentSession } })),
+      setSession: vi.fn(async ({ access_token }: { access_token: string }) => {
+        currentSession = { access_token };
+        notify();
+        return { data: { session: currentSession }, error: null };
+      }),
       onAuthStateChange: vi.fn((cb: (event: string, session: typeof currentSession) => void) => {
         const wrapped = (session: typeof currentSession) => cb("SIGNED_IN", session);
         listeners.push(wrapped);
         return { data: { subscription: { unsubscribe: () => {} } } };
-      }),
-      signInWithPassword: vi.fn(async ({ email, password }: { email: string; password: string }) => {
-        if (email === VALID_EMAIL && password === VALID_PASSWORD) {
-          currentSession = { access_token: "fake-token" };
-          notify();
-          return { data: { session: currentSession }, error: null };
-        }
-        return { data: { session: null }, error: { message: "Invalid login credentials" } };
       }),
       signOut: vi.fn(async () => {
         currentSession = null;
@@ -69,6 +67,19 @@ describe("Login", () => {
     currentSession = null;
     listeners.length = 0;
     hasProfile = false;
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockImplementation(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body)) as { email: string; password: string };
+      const valid = body.email === VALID_EMAIL && body.password === VALID_PASSWORD;
+      return new Response(
+        JSON.stringify(
+          valid
+            ? { data: { session: { access_token: "fake-token" }, user: { id: "user-1" } }, error: null }
+            : { data: null, error: { message: "Invalid login credentials" } },
+        ),
+        { status: valid ? 200 : 401, headers: { "content-type": "application/json" } },
+      );
+    });
   });
 
   it("rejects incorrect credentials and stays locked", async () => {
