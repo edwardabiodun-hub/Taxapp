@@ -88,19 +88,7 @@ export async function pushProfileToServer(profile: LocalProfile): Promise<void> 
  * not attempted here (see account-deletion.ts and the retention research).
  */
 export async function pseudonymizeProfileOnServer(): Promise<void> {
-  const userId = await getCurrentUserId();
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      name: "Deleted user",
-      phone: "",
-      date_of_birth: null,
-      country_of_birth: null,
-      gender: null,
-      nationality: null,
-      pseudonymized_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
+  const { error } = await supabase.rpc("pseudonymize_own_profile");
   if (error) throw error;
 }
 
@@ -176,7 +164,6 @@ export async function pushDeclarationsToServer(declarations: LocalDeclaration[])
     status: d.status,
     form_data: d.formData,
     documents: d.documents,
-    amount: d.amount ?? null,
     created_at: d.createdAt,
     // updated_at is deliberately NOT sent — a database trigger stamps it on
     // every insert/update. That's a different clock than local `updatedAt`

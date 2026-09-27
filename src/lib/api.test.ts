@@ -28,12 +28,14 @@ function makeQueryBuilder(result: { data: unknown; error: unknown }): FakeQueryB
 }
 
 const fromMock = vi.fn();
+const rpcMock = vi.fn();
 const getUserMock = vi.fn();
 
 vi.mock("./supabase-client", () => ({
-  supabase: {
-    auth: { getUser: (...args: unknown[]) => getUserMock(...args) },
-    from: (...args: unknown[]) => fromMock(...args),
+    supabase: {
+      auth: { getUser: (...args: unknown[]) => getUserMock(...args) },
+      from: (...args: unknown[]) => fromMock(...args),
+      rpc: (...args: unknown[]) => rpcMock(...args),
   },
 }));
 
@@ -41,6 +43,7 @@ describe("api", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getUserMock.mockResolvedValue({ data: { user: { id: "user-uuid-1", email: "amara@example.com" } } });
+    rpcMock.mockResolvedValue({ data: null, error: null });
   });
 
   describe("fetchProfileFromServer", () => {
@@ -218,6 +221,7 @@ describe("api", () => {
       // updated_at must NOT be sent — the DB trigger owns that column, and
       // it's a different clock than local updatedAt (see api.ts comment).
       expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("updated_at");
+      expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("amount");
     });
 
     it("includes state in the upserted row when present", async () => {
@@ -349,21 +353,8 @@ describe("api", () => {
       const { pseudonymizeProfileOnServer } = await import("./api");
       await pseudonymizeProfileOnServer();
 
-      expect(builder.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: expect.any(String),
-          phone: "",
-          date_of_birth: null,
-          country_of_birth: null,
-          gender: null,
-          nationality: null,
-        })
-      );
-      const updatePayload = vi.mocked(builder.update).mock.calls[0][0] as Record<string, unknown>;
-      expect(updatePayload).not.toHaveProperty("tax_id");
-      expect(updatePayload).not.toHaveProperty("country");
-      expect(updatePayload.pseudonymized_at).toEqual(expect.any(String));
-      expect(builder.eq).toHaveBeenCalledWith("id", "user-uuid-1");
+      expect(rpcMock).toHaveBeenCalledWith("pseudonymize_own_profile");
+      expect(builder.update).not.toHaveBeenCalled();
     });
   });
 

@@ -17,4 +17,15 @@ describe("security remediation migration", () => {
     expect(normalized).toContain("where d.id = new.declaration_id and d.user_id = new.user_id");
     expect(normalized).toContain("before insert or update on public.activities");
   });
+
+  it("guards authoritative declaration and profile writes", () => {
+    const sql = readFileSync(migrationPath, "utf8");
+    const normalized = sql.replace(/\s+/g, " ");
+
+    expect(normalized).toContain("create or replace function public.guard_user_declaration_write()");
+    expect(normalized).toContain("before insert or update on public.declarations");
+    expect(normalized).toContain("create or replace function public.guard_user_profile_write()");
+    expect(normalized).toContain("create or replace function public.pseudonymize_own_profile()");
+    expect(normalized).toContain("grant execute on function public.pseudonymize_own_profile() to authenticated");
+  });
 });

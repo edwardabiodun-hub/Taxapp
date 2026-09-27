@@ -30,3 +30,104 @@ create trigger activities_check_declaration_ownership
 before insert or update on public.activities
 for each row
 execute function public.check_activity_declaration_ownership();
+
+create or replace function public.guard_user_declaration_write()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  -- Privileged staff/service-role writes are controlled outside auth.uid().
+  if auth.uid() is null then
+    return new;
+  end if;
+
+  if new.user_id <> auth.uid() then
+    raise exception 'Cannot change declaration ownership';
+  end if;
+
+  if tg_op = 'INSERT' then
+    if new.status not in ('draft', 'submitted') then
+      raise exception 'Invalid initial declaration status';
+    end if;
+    new.amount := null;
+    new.synced_at := null;
+    new.created_at := now();
+  else
+    new.status := old.status;
+    new.amount := old.amount;
+    new.user_id := old.user_id;
+    new.created_at := old.created_at;
+    new.synced_at := old.synced_at;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists declarations_guard_user_write on public.declarations;
+
+create trigger declarations_guard_user_write
+before insert or update on public.declarations
+for each row
+execute function public.guard_user_declaration_write();
+
+create or replace function public.guard_user_profile_write()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    return new;
+  end if;
+
+  if new.id <> auth.uid() then
+    raise exception 'Cannot change profile ownership';
+  end if;
+
+  -- Only the dedicated security-definer function may set this marker.
+  if current_setting('filesmart.pseudonymization', true) <> 'true' then
+    new.pseudonymized_at := old.pseudonymized_at;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_guard_user_write on public.profiles;
+
+create trigger profiles_guard_user_write
+before update on public.profiles
+for each row
+execute function public.guard_user_profile_write();
+
+create or replace function public.pseudonymize_own_profile()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  perform set_config('filesmart.pseudonymization', 'true', true);
+
+  update public.profiles
+  set name = 'Deleted user',
+      phone = '',
+      date_of_birth = null,
+      country_of_birth = null,
+      gender = null,
+      nationality = null,
+      pseudonymized_at = now()
+  where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.pseudonymize_own_profile() from public;
+grant execute on function public.pseudonymize_own_profile() to authenticated;
