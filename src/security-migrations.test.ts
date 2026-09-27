@@ -42,4 +42,14 @@ describe("security remediation migration", () => {
     expect(sql).toContain("on conflict (key) do update");
     expect(sql).toContain("grant execute on function private.consume_rate_limit");
   });
+
+  it("provides duplicate-safe message delivery functions", () => {
+    const sql = readFileSync(migrationPath, "utf8").replace(/\s+/g, " ");
+
+    expect(sql).toContain("create table public.message_email_deliveries");
+    expect(sql).toContain("create or replace function public.claim_message_email_delivery");
+    expect(sql).toContain("create or replace function public.mark_message_email_sent");
+    expect(sql).toContain("create or replace function public.mark_message_email_failed");
+    expect(sql).toContain("for update");
+  });
 });

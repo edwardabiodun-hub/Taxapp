@@ -131,3 +131,86 @@ $$;
 
 revoke all on function public.pseudonymize_own_profile() from public;
 grant execute on function public.pseudonymize_own_profile() to authenticated;
+
+create table public.message_email_deliveries (
+  message_id uuid primary key references public.messages(id) on delete cascade,
+  status text not null check (status in ('sending', 'failed', 'sent')),
+  attempts integer not null default 0 check (attempts >= 0),
+  last_error text,
+  sent_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.message_email_deliveries enable row level security;
+revoke all on table public.message_email_deliveries from public, anon, authenticated;
+grant all on table public.message_email_deliveries to service_role;
+
+create or replace function public.claim_message_email_delivery(p_message_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_status text;
+begin
+  select status
+  into v_status
+  from public.message_email_deliveries
+  where message_id = p_message_id
+  for update;
+
+  if found then
+    if v_status in ('sending', 'sent') then
+      return false;
+    end if;
+
+    update public.message_email_deliveries
+    set status = 'sending',
+        attempts = attempts + 1,
+        last_error = null,
+        updated_at = now()
+    where message_id = p_message_id;
+    return true;
+  end if;
+
+  insert into public.message_email_deliveries(message_id, status, attempts)
+  values (p_message_id, 'sending', 1);
+  return true;
+end;
+$$;
+
+create or replace function public.mark_message_email_sent(p_message_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.message_email_deliveries
+  set status = 'sent', sent_at = now(), updated_at = now()
+  where message_id = p_message_id;
+  return found;
+end;
+$$;
+
+create or replace function public.mark_message_email_failed(p_message_id uuid, p_error text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.message_email_deliveries
+  set status = 'failed', last_error = left(p_error, 1000), updated_at = now()
+  where message_id = p_message_id;
+  return found;
+end;
+$$;
+
+revoke all on function public.claim_message_email_delivery(uuid) from public, anon, authenticated;
+revoke all on function public.mark_message_email_sent(uuid) from public, anon, authenticated;
+revoke all on function public.mark_message_email_failed(uuid, text) from public, anon, authenticated;
+grant execute on function public.claim_message_email_delivery(uuid) to service_role;
+grant execute on function public.mark_message_email_sent(uuid) to service_role;
+grant execute on function public.mark_message_email_failed(uuid, text) to service_role;
