@@ -19,4 +19,21 @@ describe("TaxCalculator glossary integration", () => {
     expect(screen.getByRole("button", { name: "Learn about Chargeable income" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Eligible deductions" })).toBeInTheDocument();
   });
+
+  it("adds glossary triggers to calculator field terminology", () => {
+    render(
+      <TooltipProvider>
+        <MemoryRouter>
+          <TaxCalculator />
+        </MemoryRouter>
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Learn about Annual salary" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Commissions and bonuses" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Allowances" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Business income" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Rent income" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Foreign income" })).toBeInTheDocument();
+  });
 });

@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface InvestmentIncomeStepProps {
   form: NigeriaDeclarationForm;
@@ -13,7 +13,7 @@ const Field = ({ label, hint, value, onChange, badge }: {
 }) => (
   <div className="space-y-1.5">
     <div className="flex items-center gap-2">
-      <Label className="text-xs font-semibold">{label}</Label>
+      <div className="text-xs font-semibold"><GlossaryText>{label}</GlossaryText></div>
       {badge && (
         <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-success/10 text-success">
           {badge}
@@ -22,9 +22,9 @@ const Field = ({ label, hint, value, onChange, badge }: {
     </div>
     <div className="relative">
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₦</span>
-      <Input className="pl-8" placeholder="0.00" value={value} onChange={(e) => onChange(e.target.value)} />
+      <Input aria-label={label} className="pl-8" placeholder="0.00" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
-    {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+    {hint && <p className="text-[10px] text-muted-foreground"><GlossaryText>{hint}</GlossaryText></p>}
   </div>
 );
 
@@ -36,28 +36,28 @@ const InvestmentIncomeStep = ({ form, update }: InvestmentIncomeStepProps) => (
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Dividends</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Dividends</GlossaryText></p>
       <Field label="Nigerian Company Dividends" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.nigerianDividends} onChange={(v) => update("nigerianDividends", v)} />
       <Field label="Other Dividends" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.otherDividends} onChange={(v) => update("otherDividends", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Interest & Rent</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Interest & Rent</GlossaryText></p>
       <Field label="Interest Income" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.interestIncome} onChange={(v) => update("interestIncome", v)} />
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold">Interest Sources</Label>
-        <Textarea placeholder="List each source and gross income received" className="min-h-[60px] text-sm" value={form.interestSources} onChange={(e) => update("interestSources", e.target.value)} />
+        <div className="text-xs font-semibold"><GlossaryText>Interest Sources</GlossaryText></div>
+        <Textarea aria-label="Interest Sources" placeholder="List each source and gross income received" className="min-h-[60px] text-sm" value={form.interestSources} onChange={(e) => update("interestSources", e.target.value)} />
       </div>
       <Field label="Rent Income (Net)" hint="Gross rent minus repair expenses — Taxable" value={form.rentIncome} onChange={(v) => update("rentIncome", v)} />
       <Field label="Rent Expenses" hint="Repair and maintenance expenses" value={form.rentExpenses} onChange={(v) => update("rentExpenses", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Other Profits</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Other Profits</GlossaryText></p>
       <Field label="Other Investment Income" hint="Profits from sources not included above — Taxable" value={form.otherInvestmentIncome} onChange={(v) => update("otherInvestmentIncome", v)} />
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold">Details</Label>
-        <Textarea placeholder="List details of each source and income" className="min-h-[60px] text-sm" value={form.otherInvestmentDetails} onChange={(e) => update("otherInvestmentDetails", e.target.value)} />
+        <div className="text-xs font-semibold"><GlossaryText>Details</GlossaryText></div>
+        <Textarea aria-label="Details" placeholder="List details of each source and income" className="min-h-[60px] text-sm" value={form.otherInvestmentDetails} onChange={(e) => update("otherInvestmentDetails", e.target.value)} />
       </div>
     </div>
   </div>

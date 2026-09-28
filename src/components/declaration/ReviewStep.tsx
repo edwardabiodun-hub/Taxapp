@@ -2,6 +2,7 @@ import { FileText, Paperclip, Calculator } from "lucide-react";
 import { stateName, type NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
 import { calculateStateTax } from "@/lib/tax/state-tax";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
@@ -11,7 +12,7 @@ interface ReviewStepProps {
 const SummaryRow = ({ label, value, badge }: { label: string; value: string; badge?: string }) => (
   <div className="flex justify-between items-center">
     <div className="flex items-center gap-2">
-      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs"><GlossaryText>{label}</GlossaryText></span>
       {badge && (
         <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${
           badge === "Exempt" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
@@ -26,7 +27,7 @@ const SummaryRow = ({ label, value, badge }: { label: string; value: string; bad
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
-    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{title}</p>
+    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>{title}</GlossaryText></p>
     {children}
   </div>
 );
@@ -49,28 +50,28 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
         <div className="gradient-hero rounded-xl p-5 text-primary-foreground space-y-4">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />
-            <h4 className="font-display font-bold text-sm">Tax Liability Estimate</h4>
+            <h4 className="font-display font-bold text-sm"><GlossaryText>Tax Liability Estimate</GlossaryText></h4>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70">Gross Income</p>
+              <p className="text-[10px] opacity-70"><GlossaryText>Gross Income</GlossaryText></p>
               <p className="font-display font-bold text-lg">{fmtN(tax.grossIncome)}</p>
             </div>
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70">Deductions (incl. CRA)</p>
+              <p className="text-[10px] opacity-70"><GlossaryText>Deductions (incl. CRA)</GlossaryText></p>
               <p className="font-display font-bold text-lg">{fmtN(tax.totalDeductions)}</p>
             </div>
           </div>
 
           <div className="bg-background/10 rounded-xl p-3">
-            <p className="text-[10px] opacity-70">Taxable Income</p>
+            <p className="text-[10px] opacity-70"><GlossaryText>Taxable Income</GlossaryText></p>
             <p className="font-display font-bold text-xl">{fmtN(tax.taxableIncome)}</p>
           </div>
 
           {/* Band breakdown */}
           <div className="space-y-1.5">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Tax Band Breakdown</p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Tax Band Breakdown</GlossaryText></p>
             {tax.bands.map((band, i) => (
               band.income > 0 && (
                 <div key={i} className="flex justify-between items-center text-[11px]">
@@ -83,19 +84,19 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
 
           <div className="border-t border-primary-foreground/20 pt-3 space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="opacity-70">Computed Tax</span>
+              <span className="opacity-70"><GlossaryText>Computed Tax</GlossaryText></span>
               <span className="font-semibold">{fmtN(tax.computedTax)}</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="opacity-70">Minimum Tax (1%)</span>
+              <span className="opacity-70"><GlossaryText>Minimum Tax (1%)</GlossaryText></span>
               <span className="font-semibold">{fmtN(tax.minimumTax)}</span>
             </div>
           </div>
 
           <div className="bg-background/20 rounded-xl p-4 text-center">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated Tax Payable</p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Estimated Tax Payable</GlossaryText></p>
             <p className="font-display font-bold text-2xl mt-1">{fmtN(tax.finalTax)}</p>
-            <p className="text-[10px] opacity-70 mt-0.5">Effective rate: {tax.effectiveRate.toFixed(1)}%</p>
+            <p className="text-[10px] opacity-70 mt-0.5"><GlossaryText>Effective rate</GlossaryText>: {tax.effectiveRate.toFixed(1)}%</p>
           </div>
 
           <div className="bg-background/15 border border-primary-foreground/20 rounded-xl p-3 space-y-1.5">
@@ -103,10 +104,9 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
               ⚠️ Disclaimer
             </p>
             <p className="text-[10px] opacity-80 leading-relaxed">
-              This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. 
-              The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) 
-              or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, 
-              audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
+              <GlossaryText>
+                This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
+              </GlossaryText>
             </p>
           </div>
         </div>
