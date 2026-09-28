@@ -37,4 +37,23 @@ describe("tax glossary", () => {
       { text: " today." },
     ]);
   });
+
+  it("recognizes calculator terminology and prefers the longest phrase", () => {
+    const tokens = tokenizeGlossaryText(
+      "Annual Salary, Business Income (Net), Benefits in Kind, and Consolidated Relief Allowance.",
+    );
+
+    expect(tokens.filter((token) => token.entryId).map((token) => token.entryId)).toEqual([
+      "annual-salary",
+      "business-income",
+      "benefits-in-kind",
+      "consolidated-relief-allowance",
+    ]);
+  });
+
+  it("does not match a terminology fragment inside an unrelated word", () => {
+    const tokens = tokenizeGlossaryText("salaryman does not mean Annual Salary");
+
+    expect(tokens.filter((token) => token.entryId).map((token) => token.entryId)).toEqual(["annual-salary"]);
+  });
 });
