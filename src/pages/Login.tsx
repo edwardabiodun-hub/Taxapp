@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signIn } from "@/lib/auth";
@@ -44,10 +45,11 @@ const Login = () => {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+          <Label htmlFor="sign-in-email" className="flex items-center gap-2 text-sm font-medium text-card-foreground">
             <Mail className="w-4 h-4 text-primary" /> Email
           </Label>
           <Input
+            id="sign-in-email"
             type="email"
             autoComplete="username"
             placeholder="amara@example.com"
@@ -59,11 +61,11 @@ const Login = () => {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+          <Label htmlFor="sign-in-password" className="flex items-center gap-2 text-sm font-medium text-card-foreground">
             <KeyRound className="w-4 h-4 text-primary" /> Password
           </Label>
-          <Input
-            type="password"
+          <PasswordInput
+            id="sign-in-password"
             autoComplete="current-password"
             placeholder="••••••••"
             value={password}

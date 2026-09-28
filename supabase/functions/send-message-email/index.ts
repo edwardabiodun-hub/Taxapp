@@ -4,6 +4,12 @@ import {
   markMessageEmailFailed,
   markMessageEmailSent,
 } from "./idempotency.ts";
+import {
+  buildMessagesUrl,
+  readResponseBodyLimited,
+  postToResend,
+  validateAppUrl,
+} from "./outbound.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -18,13 +24,19 @@ const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 // Where the "view this message" link in the email points. Override via the
 // APP_URL secret once a production domain exists; the demo URL is a
 // reasonable default for now, not a hardcoded assumption about the future.
-const APP_URL = Deno.env.get("APP_URL") ?? "https://filesmart-demo.netlify.app";
+const configuredAppUrl = Deno.env.get("APP_URL") ?? "https://filesmart-demo.netlify.app";
+let APP_URL: string | null = null;
+try {
+  APP_URL = validateAppUrl(configuredAppUrl);
+} catch (error) {
+  console.error("[send-message-email] Invalid APP_URL configuration:", error);
+}
 // Resend's shared sandbox sender, until a verified sending domain exists —
 // override via the RESEND_FROM_ADDRESS secret once one is set up.
 const FROM_ADDRESS = Deno.env.get("RESEND_FROM_ADDRESS") ?? "onboarding@resend.dev";
 
 Deno.serve(async (req) => {
-  if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !WEBHOOK_SECRET) {
+  if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !WEBHOOK_SECRET || !APP_URL) {
     console.error("[send-message-email] Missing required environment secrets");
     return new Response("Server misconfigured", { status: 500 });
   }
@@ -123,22 +135,21 @@ Deno.serve(async (req) => {
 
   let resendResponse: Response;
   try {
-    resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
+    resendResponse = await postToResend(
+      {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
         // Resend uses this key to deduplicate the provider-side request if
         // the database acknowledgement fails after the provider accepts it.
         "Idempotency-Key": messageId,
       },
-      body: JSON.stringify({
+      JSON.stringify({
         from: FROM_ADDRESS,
         to: userData.user.email,
         subject: "You have a new message from FileSmart",
-        html: `<p>You have a new message from FileSmart. Open the app to read it.</p><p><a href="${APP_URL}/messages">View your messages</a></p>`,
+        html: `<p>You have a new message from FileSmart. Open the app to read it.</p><p><a href="${buildMessagesUrl(APP_URL)}">View your messages</a></p>`,
       }),
-    });
+    );
   } catch (err) {
     // A network failure, DNS error, or timeout throws before we ever get a
     // Response object — catch it here rather than letting it become an
@@ -150,8 +161,25 @@ Deno.serve(async (req) => {
     return new Response("Failed to send email", { status: 502 });
   }
 
+  let responseText: string;
+  try {
+    responseText = await readResponseBodyLimited(resendResponse);
+  } catch (err) {
+    console.error("[send-message-email] Resend response exceeded the size limit:", err);
+    await markMessageEmailFailed(supabaseAdmin, messageId, "Resend response exceeded the size limit").catch((markError) =>
+      console.error("[send-message-email] Could not record failed delivery:", markError),
+    );
+    return new Response("Failed to send email", { status: 502 });
+  }
+
+  console.info("[send-message-email] Resend request completed", {
+    destination: "api.resend.com",
+    ok: resendResponse.ok,
+    status: resendResponse.status,
+  });
+
   if (!resendResponse.ok) {
-    const errorText = await resendResponse.text();
+    const errorText = responseText.slice(0, 4_000);
     console.error("[send-message-email] Resend API error:", resendResponse.status, errorText);
     await markMessageEmailFailed(supabaseAdmin, messageId, errorText).catch((markError) =>
       console.error("[send-message-email] Could not record failed delivery:", markError),

@@ -122,6 +122,18 @@ describe("Login", () => {
     expect(screen.getByRole("link", { name: /forgot password/i })).toHaveAttribute("href", "/forgot-password");
   });
 
+  it("toggles the sign-in password visibility", async () => {
+    await renderLogin();
+
+    const password = screen.getByPlaceholderText("••••••••");
+    expect(password).toHaveAttribute("type", "password");
+
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(password).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: "Hide password" })).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("shows the Create account link when no local profile exists on this device", async () => {
     hasProfile = false;
     await renderLogin();

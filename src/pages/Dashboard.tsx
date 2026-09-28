@@ -6,6 +6,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 import { useProfile, useDeclarations } from "@/hooks/use-local-data";
 import { useSync } from "@/hooks/use-sync";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const container = {
   hidden: {},
@@ -78,8 +79,8 @@ const Dashboard = () => {
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {auditRequests.length === 1
-                  ? `Your ${auditRequests[0].type} (${auditRequests[0].taxYear}) needs additional documents.`
-                  : `${auditRequests.length} declarations need additional documents from tax authorities.`}
+                  ? <>Your {auditRequests[0].type} ({auditRequests[0].taxYear}) <GlossaryText>needs additional documents.</GlossaryText></>
+                  : <>{auditRequests.length} declarations <GlossaryText>need additional documents from tax authorities.</GlossaryText></>}
               </p>
             </div>
           </div>
@@ -175,8 +176,7 @@ const Dashboard = () => {
         </div>
         <p className="text-lg font-display font-bold text-foreground leading-tight">Documents matter</p>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Attaching payslips and financial statements to your filing helps avoid audit requests, and stays
-          securely encrypted on your device.
+          <GlossaryText>Attaching payslips and financial statements to your filing helps avoid audit requests, and stays securely encrypted on your device.</GlossaryText>
         </p>
       </motion.div>
     </motion.div>

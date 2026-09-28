@@ -3,6 +3,7 @@ import { Upload, FileText, Image, X, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 export interface UploadedDoc {
   /** The persisted documentFiles record id (see document-storage.ts) — the
@@ -106,9 +107,9 @@ const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: Document
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-display font-bold text-foreground text-sm">Supporting Documents</h3>
+        <h3 className="font-display font-bold text-foreground text-sm"><GlossaryText>Supporting Documents</GlossaryText></h3>
         <p className="text-[11px] text-muted-foreground">
-          Attach receipts, financial statements, and other supporting documents
+          <GlossaryText>Attach receipts, financial statements, and other supporting documents</GlossaryText>
         </p>
       </div>
 

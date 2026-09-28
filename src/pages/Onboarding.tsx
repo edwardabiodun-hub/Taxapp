@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound } from "lucide-react";
+import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -85,7 +86,7 @@ const Onboarding = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const update = (key: keyof ProfileForm, value: any) => {
+  const update = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -239,9 +240,9 @@ const Onboarding = () => {
                     className={cn(errors.phone && "border-destructive")}
                   />
                 </Field>
-                <Field label="Password" icon={KeyRound} error={errors.password}>
-                  <Input
-                    type="password"
+                <Field label="Password" htmlFor="sign-up-password" icon={KeyRound} error={errors.password}>
+                  <PasswordInput
+                    id="sign-up-password"
                     autoComplete="new-password"
                     placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                     value={form.password}
@@ -249,9 +250,9 @@ const Onboarding = () => {
                     className={cn(errors.password && "border-destructive")}
                   />
                 </Field>
-                <Field label="Confirm Password" icon={KeyRound} error={errors.confirmPassword}>
-                  <Input
-                    type="password"
+                <Field label="Confirm Password" htmlFor="sign-up-confirm-password" icon={KeyRound} error={errors.confirmPassword}>
+                  <PasswordInput
+                    id="sign-up-confirm-password"
                     autoComplete="new-password"
                     placeholder="Re-enter your password"
                     value={form.confirmPassword}
@@ -438,14 +439,15 @@ const Onboarding = () => {
   );
 };
 
-const Field = ({ label, icon: Icon, error, children }: {
+const Field = ({ label, htmlFor, icon: Icon, error, children }: {
   label: string;
-  icon: any;
+  htmlFor?: string;
+  icon: LucideIcon;
   error?: string;
   children: React.ReactNode;
 }) => (
   <div className="space-y-1.5">
-    <Label className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+    <Label htmlFor={htmlFor} className="flex items-center gap-2 text-sm font-medium text-card-foreground">
       <Icon className="w-4 h-4 text-primary" />
       {label} <span className="text-destructive">*</span>
     </Label>
