@@ -28,6 +28,7 @@ import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
 import { recordActivity } from "@/lib/activity-log";
 import { buildFilingSummary } from "@/lib/filing-summary";
 import { renderFilingSummaryPdf } from "@/lib/filing-summary-pdf";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const statusConfig = {
   draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -200,7 +201,7 @@ const SubmissionDetail = () => {
           <h1 className="font-display font-bold text-lg text-foreground truncate">
             {declaration.type}
           </h1>
-          <p className="text-xs text-muted-foreground">Tax Year {declaration.taxYear}</p>
+          <p className="text-xs text-muted-foreground"><GlossaryText>Tax Year</GlossaryText> {declaration.taxYear}</p>
         </div>
         <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold", config.className)}>
           <StatusIcon className="w-3.5 h-3.5" />
@@ -220,9 +221,8 @@ const SubmissionDetail = () => {
             <div>
               <p className="font-display font-bold text-sm text-foreground">Audit Request</p>
               <p className="text-xs text-muted-foreground mt-1">
-                The tax authorities have requested additional documentation to complete the assessment
-                of your {declaration.type} for {declaration.taxYear}. Please upload the required
-                documents below to proceed.
+                <GlossaryText>The tax authorities have requested additional documentation to complete the assessment of your</GlossaryText>{" "}
+                {declaration.type}{" "}<GlossaryText>for</GlossaryText>{" "}{declaration.taxYear}. <GlossaryText>Please upload the required documents below to proceed.</GlossaryText>
               </p>
             </div>
           </div>
@@ -360,10 +360,10 @@ const SubmissionDetail = () => {
           <h3 className="font-display font-bold text-sm text-foreground">
             {isAudit ? "Upload Requested Documents" : "Add Documents"}
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {isAudit
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <GlossaryText>{isAudit
               ? "Attach the documents requested by tax authorities to resolve the audit."
-              : "Attach additional supporting documents to this submission."}
+              : "Attach additional supporting documents to this submission."}</GlossaryText>
           </p>
         </div>
 
@@ -450,7 +450,7 @@ const DetailRow = ({ icon: Icon, label, value }: { icon: any; label: string; val
   <div className="flex items-center gap-2">
     <Icon className="w-3.5 h-3.5 text-muted-foreground" />
     <div>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-[10px] text-muted-foreground"><GlossaryText>{label}</GlossaryText></p>
       <p className="text-xs font-semibold text-card-foreground">{value}</p>
     </div>
   </div>

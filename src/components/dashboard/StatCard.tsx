@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -30,13 +31,13 @@ const StatCard = ({ icon: Icon, label, value, subtitle, variant = "default" }: S
           <Icon className={cn("w-4 h-4", variant === "default" ? "text-primary" : "text-current")} />
         </div>
         <span className={cn("text-xs font-medium", variant === "default" ? "text-muted-foreground" : "text-current/80")}>
-          {label}
+          <GlossaryText>{label}</GlossaryText>
         </span>
       </div>
       <p className="text-2xl font-display font-bold">{value}</p>
       {subtitle && (
         <p className={cn("text-xs mt-1", variant === "default" ? "text-muted-foreground" : "text-current/70")}>
-          {subtitle}
+        <GlossaryText>{subtitle}</GlossaryText>
         </p>
       )}
     </div>

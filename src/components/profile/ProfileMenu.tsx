@@ -15,6 +15,7 @@ import {
 import { signOut } from "@/lib/auth";
 import { requestAccountDeletion } from "@/lib/account-deletion";
 import { toast } from "@/hooks/use-toast";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const ProfileMenu = () => {
   const navigate = useNavigate();
@@ -95,10 +96,9 @@ const ProfileMenu = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes your personal details immediately. Tax declarations filed within the last six
-              years can't be deleted yet — Nigerian tax law (NTAA 2025 s.31(5)) requires them to be kept
-              for audit purposes. They'll remain, tied to your Tax ID only, until their retention period
-              ends. This can't be undone.
+              <GlossaryText>
+                This removes your personal details immediately. Tax declarations filed within the last six years can't be deleted yet — Nigerian tax law (NTAA 2025 s.31(5)) requires them to be kept for audit purposes. They'll remain, tied to your Tax ID only, until their retention period ends. This can't be undone.
+              </GlossaryText>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

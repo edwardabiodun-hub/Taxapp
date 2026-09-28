@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { db } from "@/lib/local-db";
 import { toast } from "@/hooks/use-toast";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const nationalities = [
@@ -214,7 +215,7 @@ const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value
   <div className="flex items-center gap-3">
     <Icon className="w-4 h-4 text-muted-foreground" />
     <div>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider"><GlossaryText>{label}</GlossaryText></p>
       <p className="text-sm font-medium text-card-foreground">{value}</p>
     </div>
   </div>

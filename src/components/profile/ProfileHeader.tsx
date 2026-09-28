@@ -1,4 +1,5 @@
 import { User } from "lucide-react";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface ProfileHeaderProps {
   name: string;
@@ -14,7 +15,7 @@ const ProfileHeader = ({ name, email, taxId }: ProfileHeaderProps) => (
     <h2 className="font-display font-bold text-xl">{name}</h2>
     <p className="text-sm opacity-80">{email}</p>
     <div className="mt-3 inline-flex items-center gap-2 bg-background/15 rounded-full px-4 py-1.5">
-      <span className="text-xs font-medium">Tax ID: {taxId}</span>
+      <span className="text-xs font-medium"><GlossaryText>Tax ID</GlossaryText>: {taxId}</span>
     </div>
   </div>
 );
