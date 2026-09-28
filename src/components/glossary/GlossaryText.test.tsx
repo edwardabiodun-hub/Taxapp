@@ -26,6 +26,12 @@ describe("GlossaryText", () => {
     expect(screen.getByRole("button", { name: "Learn about VAT" })).toHaveTextContent("Value Added Tax");
   });
 
+  it("provides its tooltip context when embedded outside the app shell", () => {
+    render(<GlossaryText entries={entries}>Value Added Tax applies here.</GlossaryText>);
+
+    expect(screen.getByRole("button", { name: "Learn about VAT" })).toBeInTheDocument();
+  });
+
   it("supports click, Escape, and excludes links and code content", () => {
     render(
       <TooltipProvider>
