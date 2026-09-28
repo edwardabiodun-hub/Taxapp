@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { updatePassword } from "@/lib/auth";
@@ -86,9 +86,8 @@ const ResetPassword = () => {
           <Label htmlFor="new-password" className="flex items-center gap-2 text-sm font-medium text-card-foreground">
             <KeyRound className="w-4 h-4 text-primary" /> New password
           </Label>
-          <Input
+          <PasswordInput
             id="new-password"
-            type="password"
             autoComplete="new-password"
             placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             value={password}
@@ -105,9 +104,8 @@ const ResetPassword = () => {
           >
             <KeyRound className="w-4 h-4 text-primary" /> Confirm password
           </Label>
-          <Input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             autoComplete="new-password"
             placeholder="Re-enter your new password"
             value={confirmPassword}

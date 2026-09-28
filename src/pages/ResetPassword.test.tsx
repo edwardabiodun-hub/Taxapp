@@ -46,6 +46,24 @@ describe("ResetPassword", () => {
     expect(updatePasswordMock).not.toHaveBeenCalled();
   });
 
+  it("toggles the new and confirmation password fields independently", async () => {
+    await renderResetPassword();
+
+    const password = screen.getByLabelText(/new password/i);
+    const confirmation = screen.getByLabelText(/confirm password/i);
+    const showButtons = screen.getAllByRole("button", { name: "Show password" });
+
+    fireEvent.click(showButtons[0]);
+
+    expect(password).toHaveAttribute("type", "text");
+    expect(confirmation).toHaveAttribute("type", "password");
+    expect(screen.getAllByRole("button", { name: "Show password" })).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(confirmation).toHaveAttribute("type", "text");
+  });
+
   it("rejects mismatched password confirmation", async () => {
     await renderResetPassword();
 

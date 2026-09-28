@@ -64,6 +64,24 @@ function fillRequiredFields() {
 }
 
 describe("Onboarding consent gate", () => {
+  it("toggles the password fields independently", async () => {
+    await renderOnboarding();
+
+    const password = screen.getByPlaceholderText("At least 8 characters");
+    const confirmation = screen.getByPlaceholderText("Re-enter your password");
+    const showButtons = screen.getAllByRole("button", { name: "Show password" });
+
+    fireEvent.click(showButtons[0]);
+
+    expect(password).toHaveAttribute("type", "text");
+    expect(confirmation).toHaveAttribute("type", "password");
+    expect(screen.getAllByRole("button", { name: "Show password" })).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(confirmation).toHaveAttribute("type", "text");
+  });
+
   it("blocks advancing past step 0 without accepting the privacy notice", async () => {
     await renderOnboarding();
     fillRequiredFields();

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { calculateNigeriaTax, type TaxBreakdown } from "@/lib/tax-calculator";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const Field = ({ label, hint, value, onChange }: {
   label: string; hint?: string; value: string; onChange: (v: string) => void;
@@ -46,7 +47,10 @@ const TaxCalculator = () => {
           <h2 className="font-display font-bold text-lg text-foreground">Tax Estimator</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          Quickly estimate your Nigerian personal income tax before filing
+          <GlossaryText>Quickly estimate your Nigerian personal income tax before filing</GlossaryText>
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          <GlossaryText>Use eligible deductions to estimate chargeable income before filing.</GlossaryText>
         </p>
       </div>
 

@@ -1,0 +1,22 @@
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+
+import { TooltipProvider } from "@/components/ui/tooltip";
+import TaxCalculator from "./TaxCalculator";
+
+describe("TaxCalculator glossary integration", () => {
+  it("adds glossary triggers to explanatory tax content", () => {
+    render(
+      <TooltipProvider>
+        <MemoryRouter>
+          <TaxCalculator />
+        </MemoryRouter>
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Learn about Personal income tax" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Chargeable income" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Learn about Eligible deductions" })).toBeInTheDocument();
+  });
+});
