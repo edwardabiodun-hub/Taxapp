@@ -360,7 +360,7 @@ const SubmissionDetail = () => {
           <h3 className="font-display font-bold text-sm text-foreground">
             {isAudit ? "Upload Requested Documents" : "Add Documents"}
           </h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             <GlossaryText>{isAudit
               ? "Attach the documents requested by tax authorities to resolve the audit."
               : "Attach additional supporting documents to this submission."}</GlossaryText>

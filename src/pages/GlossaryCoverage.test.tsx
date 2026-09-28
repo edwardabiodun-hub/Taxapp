@@ -30,7 +30,7 @@ describe("app-wide glossary coverage", () => {
 
     expect(screen.getByRole("button", { name: "Learn about Tax ID" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Tax paid" })).toBeInTheDocument();
-  expect(screen.getAllByRole("button", { name: "Learn about Supporting documents" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Learn about Supporting documents" })).toHaveLength(2);
     expect(screen.getByText("personal-tax-return.pdf")).toBeInTheDocument();
     expect(screen.getByText("personal-tax-return.pdf").closest("button")).toBeNull();
 

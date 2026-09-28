@@ -37,7 +37,7 @@ const StatCard = ({ icon: Icon, label, value, subtitle, variant = "default" }: S
       <p className="text-2xl font-display font-bold">{value}</p>
       {subtitle && (
         <p className={cn("text-xs mt-1", variant === "default" ? "text-muted-foreground" : "text-current/70")}>
-        <GlossaryText>{subtitle}</GlossaryText>
+          <GlossaryText>{subtitle}</GlossaryText>
         </p>
       )}
     </div>

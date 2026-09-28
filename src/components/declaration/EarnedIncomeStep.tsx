@@ -82,7 +82,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {/* Employment */}
       {activeTab === "employment" && (
         <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Employment Income</GlossaryText></p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Employment Income</GlossaryText></p>
           <Field label="Annual Salary" hint="Gross value — fully taxable" value={form.annualSalary} onChange={(v) => update("annualSalary", v)} />
           <Field label="Commissions & Bonuses" hint="Sales commissions, performance bonuses" value={form.commissions} onChange={(v) => update("commissions", v)} />
           <Field label="Allowances" hint="Leave allowance, 13th month, etc." value={form.allowances} onChange={(v) => update("allowances", v)} />
@@ -92,7 +92,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {/* Business */}
       {activeTab === "business" && (
         <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Trade, Business, Profession or Vocation</GlossaryText></p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Trade, Business, Profession or Vocation</GlossaryText></p>
           <Field label="Net Business Income" hint="Net after deduction of all allowable expenses" value={form.businessIncome} onChange={(v) => update("businessIncome", v)} />
           <Field label="Allowable Business Expenses" hint="Attach copies of accounts for the year ended" value={form.businessExpenses} onChange={(v) => update("businessExpenses", v)} />
         </div>
@@ -101,7 +101,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {/* Annuity */}
       {activeTab === "annuity" && (
         <div className="space-y-4 bg-card rounded-xl p-4 shadow-card">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Annuity Income</GlossaryText></p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Annuity Income</GlossaryText></p>
 
           <div className="space-y-3 border-b border-border pb-3">
             <Field label="Pension Received" hint="Exempted — income from a matured scheme" value={form.pensionReceived} onChange={(v) => update("pensionReceived", v)} />
@@ -126,7 +126,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {/* Foreign */}
       {activeTab === "foreign" && (
         <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Foreign Income</GlossaryText></p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Foreign Income</GlossaryText></p>
           <Field label="Income from Outside Nigeria" hint="Taxable in full unless treaty relief applies" value={form.foreignIncome} onChange={(v) => update("foreignIncome", v)} />
         </div>
       )}
