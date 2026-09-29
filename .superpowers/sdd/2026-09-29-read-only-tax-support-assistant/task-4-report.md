@@ -43,3 +43,11 @@ Verification:
 - Final focused `npm test -- src/components/support/SupportChat.test.tsx`: exit 0; 14 tests passed.
 - Focused ESLint over Task 4 client/UI files: exit 0, no findings.
 - `npx tsc --noEmit -p tsconfig.app.json`: exit 1 on diagnostics in `App.test.tsx`, `DocumentsStep.tsx`, `SyncContext.test.tsx`, `account-deletion.test.ts`, `api.test.ts`, `auth-gateway.test.ts`, `auth.ts`, and `SubmissionDetail.tsx`; no Task 4 file diagnostic. These diagnostics predate this fix round and remain outside its scope.
+
+## Fix round 2 — role-aware display safety
+
+The display filter now requires an explicit `user` or `assistant` role. User-entered messages remove amount-like values and identifiers. Assistant messages remove direct personal financial statements, including `Your tax liability for 2025 is 4000000.` and `Your income is NGN 4,000,000.`, while retaining public statutory wording such as `The VAT registration threshold is NGN 25,000,000.` Shared PII, document-content, and internal-text filtering still applies to both roles. `SupportChat` and `SupportChatMessage` pass the role explicitly; the account-context label, desktop 44px close target, 401/429 states, and AppLayout/Messages navigation remain covered by the existing UI tests.
+
+Changed files: `src/components/support/display-safety.ts`, new `display-safety.test.ts`, `SupportChat.tsx`, `SupportChatMessage.tsx`, and `SupportChat.test.tsx`. No unrelated source or pre-existing untracked artifact was changed.
+
+Verification: `npm test -- src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx --no-file-parallelism` — exit 0, 2 files and 19 tests passed. Focused ESLint on the five Task 4 files — exit 0, no findings. `npx tsc --noEmit -p tsconfig.app.json` still exits 1 on the same diagnostics outside Task 4 (`App.test.tsx`, `DocumentsStep.tsx`, `SyncContext.test.tsx`, `account-deletion.test.ts`, `api.test.ts`, `auth-gateway.test.ts`, `auth.ts`, and `SubmissionDetail.tsx`); it reports no Task 4 diagnostic.

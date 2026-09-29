@@ -61,7 +61,7 @@ export function SupportChat({ open, onOpenChange }: { open: boolean; onOpenChang
     try {
       const response = await sendSupportChatMessage({ message, history: previousTurns(exchanges) });
       const accountContext = isAccountStatusPrompt(message);
-      const answer = safeSupportDisplayText(response.answer.startsWith(accountLabel) ? response.answer.slice(accountLabel.length).trim() : response.answer);
+      const answer = safeSupportDisplayText(response.answer.startsWith(accountLabel) ? response.answer.slice(accountLabel.length).trim() : response.answer, "assistant");
       setExchanges((current) => [...current, { question: message, answer, citations: response.citations, accountContext }]);
       setDraft("");
     } catch (cause) {
