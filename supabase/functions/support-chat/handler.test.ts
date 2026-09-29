@@ -184,10 +184,21 @@ describe('support-chat security boundary', () => {
     'What is my declaration status? My account contains 4,000,000.',
     'My account has 4,000,000.',
     'My account holds 4,000,000.',
+    'What is my declaration status? My account had 4,000,000.',
+    'What is my declaration status? 4,000,000 is in my account.',
+    'What is my declaration status? NGN 4,000,000 is in my account.',
+    'What is my declaration status?\n₦4,000,000 is in my account.',
+    'What is my declaration status? My account had\n4,000,000 naira.',
     'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
     'How does FileSmart process uploaded documents?',
     'What is my declaration status? How are my uploaded documents stored?',
     'What is my declaration status? What happens to my uploaded files?',
+    'Where do my uploaded documents go?',
+    'What do you do with my uploaded documents?',
+    'How are uploaded files stored?',
+    'What is the retention period for uploaded files?',
+    'Where are uploaded documents stored?',
+    'How are uploaded files processed?',
   ])('refuses %s before summary, retrieval, or provider input', async (message) => {
     const f = fixture();
     const response = await f.handler(request({ message, history: [] }));
@@ -231,12 +242,21 @@ describe('support-chat security boundary', () => {
       'What is my declaration status? My account contains 4,000,000.',
       'My account has 4,000,000.',
       'My account holds 4,000,000.',
+      'What is my declaration status? My account had 4,000,000.',
+      'What is my declaration status? 4,000,000 is in my account.',
+      'What is my declaration status? NGN 4,000,000 is in my account.',
+      'What is my declaration status?\n₦4,000,000 is in my account.',
+      'What is my declaration status? My account had\n4,000,000 naira.',
     ]) await handler(request({ message, history: [] }));
     for (const content of [
       'The amount on your account is 4,000,000.',
       'My account contains 4,000,000.',
       'My account has 4,000,000.',
       'My account holds 4,000,000.',
+      'My account had 4,000,000.',
+      '4,000,000 is in my account.',
+      'NGN 4,000,000 is in my account.',
+      '₦4,000,000\nis in my account.',
     ]) await handler(request({ message: 'What is my declaration status?', history: [
       { role: 'user', content },
       { role: 'assistant', content: 'I can explain general tax rules.' },

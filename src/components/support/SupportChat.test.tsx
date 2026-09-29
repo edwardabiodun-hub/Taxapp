@@ -121,13 +121,17 @@ describe("SupportChat surface", () => {
       "Your account contains 4,000,000.",
       "Your account has",
       "4,000,000.",
+      "Your account had 4,000,000.",
+      "4,000,000 is in your account.",
+      "Your account had",
+      "NGN 4,000,000.",
     ].join("\n"), citations: [] });
     openChat();
     fireEvent.change(screen.getByRole("textbox", { name: "Ask a tax question" }), { target: { value: "My salary 4000000\nWhat is the VAT registration threshold?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send question" }));
     const answer = await screen.findByText("The VAT registration threshold is NGN 25,000,000.");
     expect(answer).toBeInTheDocument();
-    expect(screen.getByLabelText("Tax support conversation")).not.toHaveTextContent(/My salary 4000000|Your tax bill is NGN 4,000,000|tax liability for 2025 is 4000000|Your income is NGN 4,000,000|amount on your account|account contains|account has|4,000,000/i);
+    expect(screen.getByLabelText("Tax support conversation")).not.toHaveTextContent(/My salary 4000000|Your tax bill is NGN 4,000,000|tax liability for 2025 is 4000000|Your income is NGN 4,000,000|amount on your account|account contains|account has|account had|is in your account|4,000,000/i);
   });
 
   it("shows safe offline and provider errors without revealing details", async () => {

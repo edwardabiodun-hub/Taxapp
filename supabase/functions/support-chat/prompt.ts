@@ -88,7 +88,25 @@ const FALLBACK = 'I can provide general Nigerian tax information and high-level 
 const SENSITIVE_FILENAME = /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu;
 const LABELED_PERSONAL_FIELD = /^\s*(?:full\s+name|name|(?:postal\s+)?address)\s*[:=]/i;
 const SENSITIVE_LINE = /\b(?:system prompt|system instructions?|developer instructions?|hidden instructions?|internal assistant|get_my_declaration_status|get_my_support_message_summary|get_my_profile_completion|search_support_knowledge|form_data|messageCategories|unreadMessageCount|profileComplete)\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b|\b\d{9,15}\b|\+?234[\s-]?(?:\d[\s-]?){10}\b|\b(?:your|my)\b[^\n]{0,80}(?:₦|NGN\s*)[\d,]+/i;
-const ACCOUNT_AMOUNT_PROSE = /\b(?:the\s+)?(?:amount\s+on\s+)?(?:my|your|our)\s+account\b[\s\S]{0,80}?\b(?:contains?|has|holds?|includes?|shows?|lists?|reflects?|is|was|equals?|comes?\s+to|amounts?\s+to)\b[\s\S]{0,40}?(?:[₦$£€]\s*|(?:NGN|USD|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[.!?]?/gi;
+const ACCOUNT_AMOUNT_PATTERNS = [
+  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b/i,
+  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
+];
+
+function stripAccountAmountLines(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const blocked = new Set<number>();
+  for (let start = 0; start < lines.length; start += 1) {
+    for (let end = start; end < Math.min(lines.length, start + 4); end += 1) {
+      if (end > start && /[.!?]\s*$/.test(lines[end - 1])) break;
+      if (ACCOUNT_AMOUNT_PATTERNS.some((pattern) => pattern.test(lines.slice(start, end + 1).join(' ')))) {
+        for (let line = start; line <= end; line += 1) blocked.add(line);
+        break;
+      }
+    }
+  }
+  return lines.filter((_, index) => !blocked.has(index)).join('\n');
+}
 const SENSITIVE_PROSE = [
   /\b(?:your|you|my)\b.{0,80}\b(?:income|salary|tax bill|tax due|balance|refund|liability|amount|owe|earned)\b.{0,50}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?(?:\s*naira)?\b/i,
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
@@ -103,7 +121,7 @@ const SENSITIVE_PROSE = [
 
 export function sanitizeAssistantText(text: string): string {
   const withoutFences = text.replace(/```(?:system|developer|json)?\s*[\s\S]*?```/gi, '');
-  const withoutAccountAmounts = withoutFences.replace(ACCOUNT_AMOUNT_PROSE, '');
+  const withoutAccountAmounts = stripAccountAmountLines(withoutFences);
   const withoutDto = withoutAccountAmounts.replace(/^\s*\{[\s\S]*?^\s*\}\s*$/gm, (block) =>
     /"(?:declarations|taxYear|documentCount|messageCategories|unreadMessageCount|profileComplete)"/.test(block) ? '' : block);
   const safeLines = withoutDto.split(/\r?\n/).filter((line) => {

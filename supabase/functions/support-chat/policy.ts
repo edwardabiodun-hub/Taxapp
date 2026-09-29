@@ -1,7 +1,15 @@
 export type SupportRequestKind = 'education' | 'account_status' | 'refusal';
 export type SupportRequestClassification = { kind: SupportRequestKind };
 
+const PERSONAL_ACCOUNT_TERMS = '(?:account|balance|income|salary|tax\\s+(?:bill|liability|due|paid)|amount|earnings|refund)';
+const FINANCIAL_AMOUNT = '(?:[₦$£€]\\s*|(?:NGN|USD|GBP|naira)\\s*)?(?:\\d{1,3}(?:,\\d{3})+|\\d{4,})(?:\\.\\d+)?';
+const PERSONAL_AMOUNT_PATTERNS = [
+  new RegExp(`\\b(?:my|your|our)\\s+${PERSONAL_ACCOUNT_TERMS}\\b[\\s\\S]{0,100}?${FINANCIAL_AMOUNT}\\b`, 'i'),
+  new RegExp(`${FINANCIAL_AMOUNT}\\b[\\s\\S]{0,100}?\\b(?:my|your|our)\\s+${PERSONAL_ACCOUNT_TERMS}\\b`, 'i'),
+];
+
 const REFUSAL_PATTERNS = [
+  ...PERSONAL_AMOUNT_PATTERNS,
   /\b(?:system|developer|hidden|internal)\s+(?:prompt|instructions?|messages?|rules?|workflows?|steps?|tools?|schemas?|routing|procedures?|scoring)\b/,
   /\b(?:your|filesmart(?:'s)?)\s+(?:internal\s+)?(?:prompts?|instructions?|tools?|schemas?|routing|workflows?|architecture|source code|business logic|product details?)\b/,
   /\bfilesmart\b.{0,80}\b(?:prepares?|handles?|calculates?|reviews?|verifies?|decides?|routes?|routing|internally|workflows?|process(?:es)?|tools?|schemas?|operational)\b/,
@@ -37,6 +45,9 @@ const DOCUMENT_WORKFLOW_PATTERNS = [
   /\bwhat\s+happens?\b.{0,120}\b(?:my\s+)?(?:uploaded?|documents?|files?)\b/,
   /\b(?:how|where|when)\b.{0,120}\b(?:my\s+)?(?:uploaded?|documents?|files?)\b.{0,80}\b(?:stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|process(?:es|ed|ing)?|handle(?:s|d|ing)?|keep(?:s|ing)?|save(?:s|d|ing)?)\b/,
   /\bwhat\s+does\b.{0,120}\b(?:uploaded?|documents?|files?)\b.{0,80}\b(?:do|with|after|stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|process(?:es|ed|ing)?|handle(?:s|d|ing)?)\b/,
+  /\bwhat\s+do\s+you\s+do\s+with\b.{0,120}\b(?:uploaded?|documents?|files?)\b/,
+  /\b(?:where|what|how|when)\b.{0,120}\b(?:uploaded?|documents?|files?)\b.{0,80}\b(?:go|destination|stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|retention|process(?:es|ed|ing)?|handle(?:s|d|ing)?|keep(?:s|ing)?|save(?:s|d|ing)?)\b/,
+  /\b(?:where|what|how|when)\b.{0,100}\b(?:go|destination|stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|retention|process(?:es|ed|ing)?|handle(?:s|d|ing)?|keep(?:s|ing)?|save(?:s|d|ing)?)\b.{0,120}\b(?:uploaded?|documents?|files?)\b/,
 ];
 
 export function classifySupportRequest(message: string): SupportRequestClassification {
@@ -48,8 +59,8 @@ export function classifySupportRequest(message: string): SupportRequestClassific
   if (normalized.length > 2_000) return { kind: 'refusal' };
 
   if (REFUSAL_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
+  if (DOCUMENT_WORKFLOW_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
   const isAccountStatus = ACCOUNT_STATUS_PATTERNS.some((pattern) => pattern.test(normalized));
-  if (isAccountStatus && DOCUMENT_WORKFLOW_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
   if (isAccountStatus) return { kind: 'account_status' };
   return { kind: 'education' };
 }

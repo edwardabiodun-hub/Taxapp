@@ -81,3 +81,15 @@ Starting HEAD: `cd356cfe4eec71b04da520b4a4f17596b32be8a1`. The shared classifier
 - `npx tsc --noEmit -p tsconfig.app.json` — exit 1 with the same 14 existing diagnostics outside this fix, including the pre-existing `Object.hasOwn` target diagnostic in `supabase/functions/support-chat/handler.ts`; no new app type claim is made.
 
 No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed.
+
+## Final fix round — order-independent amounts and document workflow boundary
+
+Starting HEAD: `51ad5469650be5745eae04f7a0a0083be4d778e6`. The policy classifier now uses normalized, order-independent personal/account amount detection across account verb variants, currency forms, and line breaks before knowledge retrieval, summary RPCs, or provider input. Document/upload/storage/retention/process questions now refuse regardless of whether FileSmart is named. Server and client sanitizers remove complete account-specific amount lines across line breaks while preserving public VAT threshold education.
+
+- RED: the initial five-file focused command — exit 1; `Test Files 3 failed; Tests 26 failed | 154 passed (180)`. The new order-independent amount, document-workflow, and sanitizer regressions failed before the production fix.
+- Final focused command: `npm test -- supabase/functions/support-chat/policy.test.ts supabase/functions/support-chat/handler.test.ts src/support-chat-security.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 0; `Test Files 5 passed (5); Tests 180 passed (180)`. React Router future-flag warnings only.
+- Final serial focused command: `npm test -- src/support-chat-security.test.ts supabase/functions/support-chat/handler.test.ts supabase/functions/support-chat/policy.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx src/lib/support-chat.test.ts src/App.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 0; `Test Files 7 passed (7); Tests 196 passed (196)`. React Router future-flag warnings only.
+- Focused ESLint over changed support code/tests — exit 0, no findings.
+- Focused Edge TypeScript check with ES2022 target — exit 0, no diagnostics.
+
+No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed. Pre-existing untracked artifacts were not touched.

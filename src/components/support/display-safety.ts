@@ -19,7 +19,25 @@ const assistantPersonalAmountPatterns = [
   /^\s*(?:[₦$£€]|NGN|USD|naira)\s*\d[\d,]*(?:\.\d+)?\s*\.?$/i,
 ];
 
-const accountAmountPattern = /\b(?:the\s+)?(?:amount\s+on\s+)?(?:my|your|our)\s+account\b[\s\S]{0,80}?\b(?:contains?|has|holds?|includes?|shows?|lists?|reflects?|is|was|equals?|comes?\s+to|amounts?\s+to)\b[\s\S]{0,40}?(?:[₦$£€]\s*|(?:NGN|USD|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[.!?]?/gi;
+const accountAmountPatterns = [
+  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b/i,
+  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
+];
+
+function stripAccountAmountLines(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const blocked = new Set<number>();
+  for (let start = 0; start < lines.length; start += 1) {
+    for (let end = start; end < Math.min(lines.length, start + 4); end += 1) {
+      if (end > start && /[.!?]\s*$/.test(lines[end - 1])) break;
+      if (accountAmountPatterns.some((pattern) => pattern.test(lines.slice(start, end + 1).join(" ")))) {
+        for (let line = start; line <= end; line += 1) blocked.add(line);
+        break;
+      }
+    }
+  }
+  return lines.filter((_, index) => !blocked.has(index)).join("\n");
+}
 const sharedSensitivePatterns = [
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
@@ -40,7 +58,7 @@ const sharedSensitivePatterns = [
 ];
 
 export function safeSupportDisplayText(text: string, role: SupportDisplayRole): string {
-  const withoutAccountAmounts = text.replace(accountAmountPattern, "");
+  const withoutAccountAmounts = stripAccountAmountLines(text);
   const safe = withoutAccountAmounts.split(/\r?\n/)
     .filter((line) => !sharedSensitivePatterns.some((pattern) => pattern.test(line))
       && !assistantPersonalAmountPatterns.some((pattern) => pattern.test(line))

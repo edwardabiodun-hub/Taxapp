@@ -61,6 +61,11 @@ describe('classifySupportRequest', () => {
     'What is my declaration status? My account contains 4,000,000.',
     'My account has 4,000,000.',
     'My account holds 4,000,000.',
+    'What is my declaration status? My account had 4,000,000.',
+    'What is my declaration status? 4,000,000 is in my account.',
+    'What is my declaration status? NGN 4,000,000 is in my account.',
+    'What is my declaration status?\n₦4,000,000 is in my account.',
+    'What is my declaration status? My account had\n4,000,000 naira.',
     'My salary is 4000000.',
     'Your account balance is NGN 500,000.',
     'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
@@ -70,6 +75,22 @@ describe('classifySupportRequest', () => {
     'What is my declaration status? What happens to my uploaded files?',
   ])('refuses private amounts and FileSmart document-process probes: %s', (message) => {
     expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
+  });
+
+  it.each([
+    'Where do my uploaded documents go?',
+    'What do you do with my uploaded documents?',
+    'How are uploaded files stored?',
+    'What is the retention period for uploaded files?',
+    'Where are uploaded documents stored?',
+    'How are uploaded files processed?',
+  ])('refuses document handling questions without a product name: %s', (message) => {
+    expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
+  });
+
+  it('keeps public tax education about document requirements available', () => {
+    expect(classifySupportRequest('What documents are generally required for a Nigerian tax return?'))
+      .toEqual({ kind: 'education' });
   });
 
   it.each([
@@ -250,6 +271,10 @@ describe('sanitizeAssistantText', () => {
       'Your tax bill is 4,000,000.',
       'Your account contains 4,000,000.',
       'Your account has\n4,000,000.',
+      'Your account had 4,000,000.',
+      '4,000,000 is in your account.',
+      'Your account had\nNGN 4,000,000.',
+      '₦4,000,000\nis in your account.',
       'The VAT registration threshold is NGN 25,000,000.',
     ].join('\n'))).toBe('The VAT registration threshold is NGN 25,000,000.');
   });

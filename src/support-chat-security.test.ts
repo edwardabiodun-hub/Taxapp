@@ -161,6 +161,10 @@ describe('support-chat adversarial boundary', () => {
       'Your account contains 4,000,000.',
       'Your account has',
       '4,000,000.',
+      'Your account had 4,000,000.',
+      '4,000,000 is in your account.',
+      'Your account had',
+      'NGN 4,000,000.',
       'The VAT registration threshold is NGN 25,000,000.',
     ].join('\n'));
 
@@ -171,6 +175,6 @@ describe('support-chat adversarial boundary', () => {
     expect(fixture.generateAnswer).toHaveBeenCalledOnce();
     expect(payload.answer).toContain('General Nigerian tax guidance is available.');
     expect(payload.answer).toContain('The VAT registration threshold is NGN 25,000,000.');
-    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|account contains|account has|4,000,000/i);
+    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|account contains|account has|account had|is in your account|4,000,000/i);
   });
 });
