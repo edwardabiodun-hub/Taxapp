@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SupportChatMessage } from "./SupportChatMessage";
+import { safeSupportDisplayText } from "./display-safety";
 
 type Exchange = { question: string; answer: string; citations: SupportChatResponse["citations"]; accountContext: boolean };
 
@@ -20,14 +21,16 @@ const suggestions = [
 ];
 const accountLabel = "Based on your synced FileSmart records.";
 
-function safeText(text: string): string {
-  const safe = text.split(/\r?\n/).filter((line) =>
-    !/\b(?:tax\s*(?:identification\s*)?(?:id|number)|tin|phone|form[_ ]data|document contents|internal workflow|system prompt|service.role)\b/i.test(line)
-    && !/\b(?:my|your)\b.{0,80}(?:₦|NGN\s*)[\d,]+/i.test(line)
-    && !/\b(?:my|your)\b.{0,80}\b(?:income|salary|amount|refund|balance)\b.{0,30}\d[\d,]*(?:\.\d+)?/i.test(line)
-    && !/\b\d{9,15}\b/.test(line)
-  ).join("\n").trim();
-  return safe || "I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.";
+function isAccountStatusPrompt(message: string): boolean {
+  const prompt = message.normalize("NFKC").replace(/\s+/g, " ").toLowerCase();
+  return [
+    /\b(?:status|progress)\b.{0,50}\b(?:my|our)\b.{0,40}\b(?:declaration|submission|return|filing|account)\b/,
+    /\b(?:my|our)\b.{0,40}\b(?:declaration|submission|return|filing|account)\b.{0,40}\b(?:status|progress)\b/,
+    /\b(?:how many|count|number of)\b.{0,60}\b(?:documents?|attachments?)\b.{0,40}\b(?:my|uploaded|attached|submission|declaration)\b/,
+    /\b(?:my|our)\b.{0,40}\b(?:documents?|attachments?)\b.{0,40}\b(?:count|how many|number)\b/,
+    /\b(?:unread|new)\b.{0,40}\b(?:support\s+)?messages?\b/,
+    /\b(?:my|our)\b.{0,30}\bprofile\b.{0,30}\b(?:complete|completion|status|missing)\b/,
+  ].some((pattern) => pattern.test(prompt));
 }
 
 function previousTurns(exchanges: Exchange[]): SupportChatTurn[] {
@@ -57,8 +60,8 @@ export function SupportChat({ open, onOpenChange }: { open: boolean; onOpenChang
     setPending(message);
     try {
       const response = await sendSupportChatMessage({ message, history: previousTurns(exchanges) });
-      const accountContext = response.answer.startsWith(accountLabel) || /\b(?:my declaration|my account|status)\b/i.test(message);
-      const answer = safeText(response.answer.startsWith(accountLabel) ? response.answer.slice(accountLabel.length).trim() : response.answer);
+      const accountContext = isAccountStatusPrompt(message);
+      const answer = safeSupportDisplayText(response.answer.startsWith(accountLabel) ? response.answer.slice(accountLabel.length).trim() : response.answer);
       setExchanges((current) => [...current, { question: message, answer, citations: response.citations, accountContext }]);
       setDraft("");
     } catch (cause) {
@@ -93,13 +96,13 @@ export function SupportChat({ open, onOpenChange }: { open: boolean; onOpenChang
           )}
           {exchanges.map((exchange, index) => (
             <div key={index} className="space-y-3">
-              <SupportChatMessage role="user" content={safeText(exchange.question)} />
+              <SupportChatMessage role="user" content={exchange.question} />
               <SupportChatMessage role="assistant" content={exchange.answer} citations={exchange.citations} accountContext={exchange.accountContext} />
             </div>
           ))}
           {pending && (
             <div className="space-y-3">
-              <SupportChatMessage role="user" content={safeText(pending)} />
+              <SupportChatMessage role="user" content={pending} />
               <div role="status" className="max-w-[90%] space-y-2 rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
                 <span>Thinking…</span>
                 <Skeleton className="h-3 w-44" />
@@ -145,7 +148,7 @@ export function SupportChat({ open, onOpenChange }: { open: boolean; onOpenChang
 
   return (
     <Sheet open={open && isUnlocked} onOpenChange={onOpenChange}>
-      <SheetContent side="right" data-support-surface="desktop-sheet" className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-md" onOpenAutoFocus={(event) => { event.preventDefault(); inputRef.current?.focus(); }} onCloseAutoFocus={focusLauncher}>
+      <SheetContent side="right" data-support-surface="desktop-sheet" className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-md [&>button]:flex [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:items-center [&>button]:justify-center" onOpenAutoFocus={(event) => { event.preventDefault(); inputRef.current?.focus(); }} onCloseAutoFocus={focusLauncher}>
         <SheetHeader className="border-b border-border p-4 pr-14 text-left">
           <SheetTitle>Tax Support</SheetTitle>
           <SheetDescription>General tax information, not professional tax advice.</SheetDescription>

@@ -31,6 +31,8 @@ describe("sendSupportChatMessage", () => {
     await expect(sendSupportChatMessage({ message: "What is VAT?", history: [] })).rejects.toMatchObject({ code: "unavailable", message: expect.not.stringContaining("sk-test") });
     invoke.mockResolvedValue({ data: null, error: { message: "JWT details", context: { status: 401 } } });
     await expect(sendSupportChatMessage({ message: "What is VAT?", history: [] })).rejects.toMatchObject({ code: "authentication" });
+    invoke.mockResolvedValue({ data: null, error: { message: "quota details", context: { status: 429 } } });
+    await expect(sendSupportChatMessage({ message: "What is VAT?", history: [] })).rejects.toMatchObject({ code: "rate_limit", message: expect.not.stringContaining("quota details") });
   });
 
   it("rejects malformed answers and unsafe citation links", async () => {
