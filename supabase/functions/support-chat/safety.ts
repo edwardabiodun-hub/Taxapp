@@ -11,7 +11,7 @@ const PERSONAL_AMOUNT_PATTERNS = [
   new RegExp(AMOUNT_TOKEN + '[\\s\\S]{0,100}?\\b(?:my|your|our)\\s+' + PERSONAL_ACCOUNT_TERM + '\\b', 'iu'),
 ];
 
-const LABELED_PERSONAL_FIELD = /\b(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
+const LABELED_PERSONAL_FIELD = /\b(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account|date\s+of\s+birth|birth\s+date|dob)\s*[:=]/i;
 const EMAIL_ADDRESS = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PHONE_NUMBER = /(?:\+?234|0)[\s.-]?(?:\d[\s.-]?){9,10}\b/;
 const TAX_IDENTIFIER = /\b(?:tax\s*(?:identification\s*)?(?:id|number)|TIN|BVN|NIN)\b[\s:=]*(?:is[\s:=]*)?(?:\d[\s-]?){8,15}\b/i;

@@ -138,6 +138,8 @@ describe('classifySupportRequest', () => {
     'What is income tax?\nPhone: +234 801 234 5678',
     'What is income tax?\nTIN: 123-456-789-01',
     'What is income tax?\nName: Ada Okafor',
+    'What is income tax?\nDate of birth: 1990-01-01',
+    'What is income tax?\nDOB: 1990-01-01',
   ])('refuses PII wherever it appears in combined classification input: %s', (message) => {
     expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
   });
@@ -361,5 +363,13 @@ describe('sanitizeAssistantText', () => {
   it('strips official HTTP(S) URLs before broad document checks', () => {
     const text = 'The VAT threshold is NGN 25,000,000. See https://nass.gov.ng/guides/vat.pdf for the official source.';
     expect(sanitizeAssistantText(text)).toBe(text);
+  });
+
+  it.each([
+    'Date of birth: 1990-01-01',
+    'General tax guidance. Date of birth: 1990-01-01',
+    'DOB = 1990-01-01',
+  ])('fails closed for labeled date-of-birth output: %s', (text) => {
+    expect(sanitizeAssistantText(text)).toBe('I can provide general Nigerian tax information and high-level account status only.');
   });
 });

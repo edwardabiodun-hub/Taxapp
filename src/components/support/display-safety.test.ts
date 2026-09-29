@@ -28,6 +28,9 @@ describe("safeSupportDisplayText", () => {
     ["assistant", "Are my documents safe?", false],
     ["assistant", "I reviewed your uploaded document and it is complete.", false],
     ["assistant", "What is in this attachment?", false],
+    ["assistant", "Date of birth: 1990-01-01", false],
+    ["assistant", "General tax guidance. Date of birth: 1990-01-01", false],
+    ["assistant", "DOB = 1990-01-01", false],
   ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
     expect(safeSupportDisplayText(line, role) === line).toBe(visible);
   });
@@ -120,5 +123,13 @@ describe("safeSupportDisplayText", () => {
     expect(safeSupportDisplayText(citation, "assistant")).toBe(citation);
     expect(safeSupportDisplayText("Your uploaded files are in the portal.", "assistant"))
       .toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+  });
+
+  it("rejects embedded labeled DOB lines while preserving safe public education", () => {
+    const text = "General Nigerian tax guidance is available.\nDate of birth: 1990-01-01";
+    expect(safeSupportDisplayText(text, "assistant"))
+      .toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+    const publicText = "The VAT registration threshold is NGN 25,000,000.";
+    expect(safeSupportDisplayText(publicText, "assistant")).toBe(publicText);
   });
 });

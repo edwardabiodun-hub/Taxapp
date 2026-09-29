@@ -35,7 +35,7 @@ const personalAccountAmountPatterns = [
 ];
 const documentReferences = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?|documents?|files?|pdfs?|attachments?)\b/i;
 const documentHandling = /\b(?:review(?:ed|s|ing)?|read|open|summari[sz](?:e|ed|es|ing)|extract|quote|analy[sz](?:e|ed|es|ing)|transcrib(?:e|ed|es|ing)|inspect|look\s+at|check|safe|secure|stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|upload(?:ed|s)?|download(?:ed|s)?|portal|access|view|see|where|destination|go|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|what\s+happens?|do\s+with|what\s+(?:is|'s)\s+(?:in|inside|on|written|contained))\b/i;
-const labeledPersonalField = /\b(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
+const labeledPersonalField = /\b(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account|date\s+of\s+birth|birth\s+date|dob)\s*[:=]/i;
 const sharedSensitivePatterns = [
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,

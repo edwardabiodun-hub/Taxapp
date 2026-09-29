@@ -129,3 +129,17 @@ Regression evidence completed before the user-directed stop:
 - The two UI assertions were updated to the new fail-closed fallback contract after that run. Per the user request, no rerun, focused ESLint, Edge TypeScript check, or additional verification was performed after this final edit.
 
 The commit therefore contains the implementation and regression coverage, but the final post-edit verification is incomplete. Pre-existing untracked artifacts were not touched.
+
+## Final-review fix — labeled date-of-birth PII
+
+Starting HEAD: 60c644f3a18ea36597269762bfddf9f7c6191be8. The shared server PII detector and client display mirror now reject labeled date-of-birth fields, including Date of birth:, DOB:, and embedded occurrences anywhere in the normalized combined current message/history or provider output. The handler refuses before summary RPCs and the provider wire request. Official citations and safe public VAT education remain allowed.
+
+Regression evidence:
+
+- Initial DOB RED: the focused three-file command exited 1 with 8 failed and 226 passed tests. Failures covered classifier/history, provider-wire, server sanitizer, and client sanitizer cases.
+- Focused GREEN: npm test -- supabase/functions/support-chat/policy.test.ts supabase/functions/support-chat/handler.test.ts src/components/support/display-safety.test.ts --no-file-parallelism --testTimeout=10000 --reporter=dot — exit 0; 3 files passed, 234 tests passed.
+- Final serial focused suite: npm test -- src/support-chat-security.test.ts supabase/functions/support-chat/handler.test.ts supabase/functions/support-chat/policy.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx src/lib/support-chat.test.ts src/App.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot — exit 0; 7 files passed, 283 tests passed. React Router future-flag warnings only.
+- Focused ESLint over changed support code/tests — exit 0 with no findings.
+- Focused Edge TypeScript check covering support-chat knowledge/provider/safety/policy/prompt/handler with ES2022 and allowImportingTsExtensions — exit 0 with no diagnostics.
+
+The sandboxed Vitest path remains unable to resolve the linked worktree ancestor; the focused commands were run successfully through the approved external execution path. No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno runtime, provider-service, DNS/egress, or production-gate pass is claimed. .gstack/, .npm-cache/, handoff.md, and reports/edge-origin-security-audit-2026-09-29.md were not modified.

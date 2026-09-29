@@ -207,6 +207,35 @@ describe('support-chat security boundary', () => {
     expect(f.knowledgeRpc).not.toHaveBeenCalled();
   });
 
+  it('refuses a labeled DOB in later history before the provider wire request', async () => {
+    const f = fixture();
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: 'Should not be reached.' } }],
+    }), { status: 200 }));
+    const provider = createOpenAiAnswerProvider({
+      apiUrl: 'https://provider.example/chat/completions',
+      apiKey: 'provider-key',
+      model: 'model-1',
+      allowedHosts: 'provider.example',
+      fetcher,
+    });
+    const handler = createSupportChatHandler({ ...f.dependencies, provider });
+
+    const response = await handler(request({
+      message: 'What is my declaration status?',
+      history: [
+        { role: 'user', content: 'General tax guidance.\nDate of birth: 1990-01-01' },
+        { role: 'assistant', content: 'I can help with general tax information.' },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+  });
+
   it.each([
     'What is my declaration status? My tax bill is 4,000,000.',
     'The amount on your account is 4,000,000.',
