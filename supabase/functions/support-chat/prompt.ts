@@ -85,14 +85,16 @@ export function buildSupportSystemPrompt(context: SupportPromptContext): string 
 }
 
 const FALLBACK = 'I can provide general Nigerian tax information and high-level account status only.';
-const SENSITIVE_FILENAME = /(?<![\w/])[a-z0-9][a-z0-9._() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic)\b/i;
+const SENSITIVE_FILENAME = /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu;
+const LABELED_PERSONAL_FIELD = /^\s*(?:full\s+name|name|(?:postal\s+)?address)\s*[:=]/i;
 const SENSITIVE_LINE = /\b(?:system prompt|system instructions?|developer instructions?|hidden instructions?|internal assistant|get_my_declaration_status|get_my_support_message_summary|get_my_profile_completion|search_support_knowledge|form_data|messageCategories|unreadMessageCount|profileComplete)\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b|\b\d{9,15}\b|\+?234[\s-]?(?:\d[\s-]?){10}\b|\b(?:your|my)\b[^\n]{0,80}(?:₦|NGN\s*)[\d,]+/i;
 const SENSITIVE_PROSE = [
   /\b(?:your|you|my)\b.{0,80}\b(?:income|salary|tax due|balance|refund|liability|amount|owe|earned)\b.{0,50}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?(?:\s*naira)?\b/i,
   /\b(?:TIN|tax(?:payer)?\s*(?:identification\s*)?(?:ID|number))\b.{0,30}\b\d(?:[\s-]?\d){8,14}\b/i,
   /\b(?:[a-z][a-z0-9]*_){2,}[a-z0-9_]+\b/i,
   /\b(?:internal|proprietary|private)\s+(?:workflows?|routing|schemas?|tools?|process(?:es)?|queues?|prompts?|procedures?)\b/i,
-  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\b(?:sends?|routes?|forwards?|handles?|moves?|dispatches?|submits?|process(?:es)?|prepares?|reviews?|verifies?|approves?|calculates?|scores?|queues?|workflows?|operational|proprietary)\b/i,
+  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\b(?:sends?|routes?|forwards?|handles?|moves?|dispatches?|stores?|submits?|process(?:es)?|prepares?|reviews?|verifies?|approves?|calculates?|scores?|queues?|workflows?|operational|proprietary|private\s+database|triage\s+team)\b/i,
+  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\buses?\b.{0,80}\b(?:triage|teams?|private\s+database|queues?|workflows?|routing|internal)\b/i,
   /\b(?:compliance|processing|approval|review)\s+queues?\b/i,
   /\b(?:call|invoke)\s+[a-z][a-z0-9_]*\s*\(/i,
 ];
@@ -102,7 +104,7 @@ export function sanitizeAssistantText(text: string): string {
   const withoutDto = withoutFences.replace(/^\s*\{[\s\S]*?^\s*\}\s*$/gm, (block) =>
     /"(?:declarations|taxYear|documentCount|messageCategories|unreadMessageCount|profileComplete)"/.test(block) ? '' : block);
   const safeLines = withoutDto.split(/\r?\n/).filter((line) => {
-    if (SENSITIVE_LINE.test(line) || SENSITIVE_FILENAME.test(line)
+    if (SENSITIVE_LINE.test(line) || SENSITIVE_FILENAME.test(line) || LABELED_PERSONAL_FIELD.test(line)
       || SENSITIVE_PROSE.some((pattern) => pattern.test(line))) return false;
     if (/\{\s*"(?:declarations|taxYear|documentCount|messageCategories|profileComplete)"/.test(line)) return false;
     return true;

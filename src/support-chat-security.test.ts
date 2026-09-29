@@ -146,10 +146,17 @@ describe('support-chat adversarial boundary', () => {
       'General Nigerian tax guidance is available.',
       'Document filename: salary-slip.pdf',
       'private-return.docx',
+      '__salary.pdf',
+      'résumé.pdf',
+      'tax-return.odt',
       'See attachment payslip.jpg for details.',
       'FileSmart sends submissions through its compliance queue.',
       'FileSmart forwards uploaded forms to staff.',
+      'FileSmart stores uploaded returns in a private database.',
+      'FileSmart uses a triage team for returns.',
       'Your TIN is 123-456-789-01.',
+      'Name: Ada Okafor',
+      'Address: 12 Market Street, Lagos',
     ].join('\n'));
 
     const response = await fixture.handler(post({ message: 'What is my declaration status?', history: [] }));
@@ -158,6 +165,6 @@ describe('support-chat adversarial boundary', () => {
     expect(response.status).toBe(200);
     expect(fixture.generateAnswer).toHaveBeenCalledOnce();
     expect(payload.answer).toContain('General Nigerian tax guidance is available.');
-    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|payslip\.jpg|compliance queue|forwards uploaded forms|123-456-789-01/i);
+    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street/i);
   });
 });

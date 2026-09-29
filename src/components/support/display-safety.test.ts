@@ -58,9 +58,16 @@ describe("safeSupportDisplayText", () => {
     const text = [
       "Document filename: salary-slip.pdf",
       "private-return.docx",
+      "__salary.pdf",
+      "résumé.pdf",
+      "tax-return.odt",
       "Open the attachment payslip.jpg.",
       "FileSmart sends submissions through its compliance queue.",
       "FileSmart forwards uploaded forms to staff.",
+      "FileSmart stores uploaded returns in a private database.",
+      "FileSmart uses a triage team for returns.",
+      "Name: Ada Okafor",
+      "Address: 12 Market Street, Lagos",
       "General Nigerian tax guidance is available.",
     ].join("\n");
     expect(safeSupportDisplayText(text, "user")).toBe("General Nigerian tax guidance is available.");

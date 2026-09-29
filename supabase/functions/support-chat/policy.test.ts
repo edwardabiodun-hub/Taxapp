@@ -150,9 +150,16 @@ describe('sanitizeAssistantText', () => {
       'General Nigerian tax guidance is available.',
       'Document filename: salary-slip.pdf',
       'private-return.docx',
+      '__salary.pdf',
+      'résumé.pdf',
+      'tax-return.odt',
       'Open the attachment payslip.jpg.',
       'FileSmart sends submissions through its compliance queue.',
       'FileSmart forwards uploaded forms to staff.',
+      'FileSmart stores uploaded returns in a private database.',
+      'FileSmart uses a triage team for returns.',
+      'Name: Ada Okafor',
+      'Address: 12 Market Street, Lagos',
       'See https://nass.gov.ng/documents/download/11249 for the official source.',
       'The approved source is https://nass.gov.ng/documents/guide.pdf.',
     ].join('\n'));
@@ -160,7 +167,7 @@ describe('sanitizeAssistantText', () => {
     expect(safe).toContain('General Nigerian tax guidance is available.');
     expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
     expect(safe).toContain('https://nass.gov.ng/documents/guide.pdf');
-    expect(safe).not.toMatch(/salary-slip\.pdf|private-return\.docx|payslip\.jpg|compliance queue|forwards uploaded forms/i);
+    expect(safe).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|Ada Okafor|12 Market Street/i);
     expect(sanitizeAssistantText('FileSmart sends submissions through its compliance queue.'))
       .toBe('I can provide general Nigerian tax information and high-level account status only.');
   });

@@ -20,17 +20,19 @@ const assistantPersonalAmountPatterns = [
 ];
 
 const sharedSensitivePatterns = [
-  /(?<![\w/])[a-z0-9][a-z0-9._() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic)\b/i,
+  /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
+  /^\s*(?:full\s+name|name|(?:postal\s+)?address)\s*[:=]/i,
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
   /(?:\+?234|0)[\s.-]?(?:\d[\s.-]?){9,10}\b/,
   /\b\d{9,15}\b/,
   /\b(?:tax\s*(?:identification\s*)?(?:id|number)|TIN|BVN|NIN)\b.{0,25}\d/i,
-  /^\s*(?:name|full name|address|dob|date of birth|email|phone|bank account|account number|bvn|nin)\s*[:=]/i,
+  /^\s*(?:dob|date of birth|email|phone|bank account|account number|bvn|nin)\s*[:=]/i,
   /\b(?:my|your)\s+(?:full\s+)?(?:name|address|date of birth|bank account)\s+(?:is|was|:)\s+/i,
   /\b(?:document\s+(?:contents?|text|body)|(?:uploaded|attached|scanned)\s+(?:document|file|pdf)\s+(?:contents?|text|body)|ocr\s+(?:output|text)|form[_ ]data|payslip\s+contents?)\b/i,
   /\b(?:document|pdf|file)\s+(?:says|reads|contains|states)\b/i,
   /\b(?:internal\s+(?:workflow|routing|prompt|tool|schema|procedure|steps?|logic|queue)|system\s+(?:prompt|instructions?)|developer\s+(?:prompt|instructions?)|service[_ .-]?role|indexeddb|get_my_[a-z_]+|database\s+schema|private\s+queue)\b/i,
-  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\b(?:sends?|routes?|forwards?|handles?|moves?|dispatches?|submits?|process(?:es)?|prepares?|reviews?|verifies?|approves?|calculates?|scores?|queues?|workflows?|operational|proprietary)\b/i,
+  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\b(?:sends?|routes?|forwards?|handles?|moves?|dispatches?|stores?|submits?|process(?:es)?|prepares?|reviews?|verifies?|approves?|calculates?|scores?|queues?|workflows?|operational|proprietary|private\s+database|triage\s+team)\b/i,
+  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\buses?\b.{0,80}\b(?:triage|teams?|private\s+database|queues?|workflows?|routing|internal)\b/i,
   /\b(?:compliance|processing|approval|review)\s+queues?\b/i,
   /\b(?:support_knowledge|auth\.uid|rpc\s*[:=(]|tool\s*[:=])\b/i,
 ];
