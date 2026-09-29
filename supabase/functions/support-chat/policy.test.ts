@@ -58,11 +58,16 @@ describe('classifySupportRequest', () => {
   it.each([
     'What is my declaration status? My tax bill is 4,000,000.',
     'The amount on your account is 4,000,000.',
+    'What is my declaration status? My account contains 4,000,000.',
+    'My account has 4,000,000.',
+    'My account holds 4,000,000.',
     'My salary is 4000000.',
     'Your account balance is NGN 500,000.',
     'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
     'How does FileSmart process uploaded documents?',
     'What happens to my uploaded documents in FileSmart?',
+    'What is my declaration status? How are my uploaded documents stored?',
+    'What is my declaration status? What happens to my uploaded files?',
   ])('refuses private amounts and FileSmart document-process probes: %s', (message) => {
     expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
   });
@@ -243,6 +248,8 @@ describe('sanitizeAssistantText', () => {
     expect(sanitizeAssistantText([
       'The amount on your account is 4,000,000.',
       'Your tax bill is 4,000,000.',
+      'Your account contains 4,000,000.',
+      'Your account has\n4,000,000.',
       'The VAT registration threshold is NGN 25,000,000.',
     ].join('\n'))).toBe('The VAT registration threshold is NGN 25,000,000.');
   });

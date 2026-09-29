@@ -69,3 +69,15 @@ Starting HEAD: `4642c641e83a88365ffa64d922dbb8fb7b3e40dc`. The shared classifier
 - `npx tsc --noEmit -p tsconfig.app.json` — exit 1 with 14 diagnostics: `App.test.tsx` (1), `DocumentsStep.tsx` (2), `SyncContext.test.tsx` (1), `account-deletion.test.ts` (1), `api.test.ts` (2), `auth-gateway.test.ts` (3), `auth.ts` (1), `SubmissionDetail.tsx` (2), and the existing `Object.hasOwn`/ES2022 target diagnostic in `support-chat/handler.ts` (1). None is in a file changed by this fix. The app-wide type check is not claimed green.
 
 No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed in this round. The earlier deployment checklist remains pending.
+
+## Final fix round — residual account and workflow bypasses
+
+Starting HEAD: `cd356cfe4eec71b04da520b4a4f17596b32be8a1`. The shared classifier now catches account-specific amounts after account verb variants such as `contains`, `has`, and `holds`, and refuses account-status questions mixed with uploaded-document storage, retention, or process handling probes even without the product name. Server and client sanitizers remove all matching account-amount spans across line breaks while retaining public VAT threshold explanations. Existing authenticated read-only, workflow, document-content, PII, transcript, CORS, rate-limit, DTO, AppLayout, Messages, accessibility, and deployment boundaries remain unchanged.
+
+- RED: `npm test -- supabase/functions/support-chat/policy.test.ts supabase/functions/support-chat/handler.test.ts src/support-chat-security.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 1; `Test Files 4 failed (4); Tests 17 failed | 136 passed (153)`. The new account-verb, product-name-free mixed-workflow, and cross-line sanitizer regressions failed as expected.
+- Final serial focused command: `npm test -- src/support-chat-security.test.ts supabase/functions/support-chat/handler.test.ts supabase/functions/support-chat/policy.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx src/lib/support-chat.test.ts src/App.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 0; `Test Files 7 passed (7); Tests 169 passed (169)`. React Router future-flag warnings only.
+- Focused ESLint over changed support code/tests — exit 0, no findings.
+- Focused Edge TypeScript check with ES2022 target — exit 0, no diagnostics.
+- `npx tsc --noEmit -p tsconfig.app.json` — exit 1 with the same 14 existing diagnostics outside this fix, including the pre-existing `Object.hasOwn` target diagnostic in `supabase/functions/support-chat/handler.ts`; no new app type claim is made.
+
+No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed.

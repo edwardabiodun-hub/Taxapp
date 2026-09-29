@@ -181,8 +181,13 @@ describe('support-chat security boundary', () => {
   it.each([
     'What is my declaration status? My tax bill is 4,000,000.',
     'The amount on your account is 4,000,000.',
+    'What is my declaration status? My account contains 4,000,000.',
+    'My account has 4,000,000.',
+    'My account holds 4,000,000.',
     'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
     'How does FileSmart process uploaded documents?',
+    'What is my declaration status? How are my uploaded documents stored?',
+    'What is my declaration status? What happens to my uploaded files?',
   ])('refuses %s before summary, retrieval, or provider input', async (message) => {
     const f = fixture();
     const response = await f.handler(request({ message, history: [] }));
@@ -196,6 +201,9 @@ describe('support-chat security boundary', () => {
   it.each([
     'What is my declaration status? My tax bill is 4,000,000.',
     'The amount on your account is 4,000,000.',
+    'What is my declaration status? My account contains 4,000,000.',
+    'My account has 4,000,000.',
+    'My account holds 4,000,000.',
   ])('refuses sensitive user history before provider input: %s', async (content) => {
     const f = fixture();
     const response = await f.handler(request({ message: 'What is my declaration status?', history: [
@@ -218,9 +226,19 @@ describe('support-chat security boundary', () => {
     });
     const handler = createSupportChatHandler({ ...f.dependencies, provider });
 
-    await handler(request({ message: 'What is my declaration status? My tax bill is 4,000,000.', history: [] }));
-    await handler(request({ message: 'What is my declaration status?', history: [
-      { role: 'user', content: 'The amount on your account is 4,000,000.' },
+    for (const message of [
+      'What is my declaration status? My tax bill is 4,000,000.',
+      'What is my declaration status? My account contains 4,000,000.',
+      'My account has 4,000,000.',
+      'My account holds 4,000,000.',
+    ]) await handler(request({ message, history: [] }));
+    for (const content of [
+      'The amount on your account is 4,000,000.',
+      'My account contains 4,000,000.',
+      'My account has 4,000,000.',
+      'My account holds 4,000,000.',
+    ]) await handler(request({ message: 'What is my declaration status?', history: [
+      { role: 'user', content },
       { role: 'assistant', content: 'I can explain general tax rules.' },
     ] }));
     expect(fetcher).not.toHaveBeenCalled();

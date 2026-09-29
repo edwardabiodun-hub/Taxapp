@@ -9,6 +9,8 @@ describe("safeSupportDisplayText", () => {
     ["assistant", "The VAT registration threshold is NGN 25,000,000.", true],
     ["assistant", "The amount on your account is 4,000,000.", false],
     ["user", "The amount on your account is 4,000,000.", false],
+    ["assistant", "Your account contains 4,000,000.", false],
+    ["assistant", "Your account has\n4,000,000.", false],
   ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
     expect(safeSupportDisplayText(line, role) === line).toBe(visible);
   });
@@ -43,6 +45,8 @@ describe("safeSupportDisplayText", () => {
     expect(safeSupportDisplayText(text, "assistant")).toBe(text);
     expect(safeSupportDisplayText("A TIN is a taxpayer identifier; VAT may apply at 7.5% under the relevant law.", "assistant"))
       .toContain("VAT may apply at 7.5%");
+    expect(safeSupportDisplayText("VAT registration threshold is NGN 25,000,000.", "assistant"))
+      .toBe("VAT registration threshold is NGN 25,000,000.");
   });
 
   it("keeps the existing PII, document-content, and internal-workflow boundary on both roles", () => {

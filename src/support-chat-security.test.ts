@@ -158,6 +158,9 @@ describe('support-chat adversarial boundary', () => {
       'Name: Ada Okafor',
       'Address: 12 Market Street, Lagos',
       'The amount on your account is 4,000,000.',
+      'Your account contains 4,000,000.',
+      'Your account has',
+      '4,000,000.',
       'The VAT registration threshold is NGN 25,000,000.',
     ].join('\n'));
 
@@ -168,6 +171,6 @@ describe('support-chat adversarial boundary', () => {
     expect(fixture.generateAnswer).toHaveBeenCalledOnce();
     expect(payload.answer).toContain('General Nigerian tax guidance is available.');
     expect(payload.answer).toContain('The VAT registration threshold is NGN 25,000,000.');
-    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|4,000,000/i);
+    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|account contains|account has|4,000,000/i);
   });
 });

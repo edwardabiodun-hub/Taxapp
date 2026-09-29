@@ -21,6 +21,7 @@ const REFUSAL_PATTERNS = [
   /\b(?:my|mine|me)\b.{0,60}\b(?:tax id|tin|phone number|email address|exact (?:income|salary|tax|amount|balance|financial figures?))\b/,
   /\b(?:my|your|our)\b.{0,80}\b(?:income|salary|tax\s+(?:bill|liability|due|paid)|earnings|refund|balance|amount)\b.{0,50}\b(?:NGN\s*|naira\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/,
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|naira\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/,
+  /\b(?:the\s+)?(?:amount\s+on\s+)?(?:my|your|our)\s+account\b.{0,80}?\b(?:contains?|has|holds?|includes?|shows?|lists?|reflects?|is|was|equals?|comes?\s+to|amounts?\s+to)\b.{0,40}?(?:[₦$£€]\s*|(?:NGN|USD|naira)\s*)?\d[\d,]*(?:\.\d+)?\b/,
 ];
 
 const ACCOUNT_STATUS_PATTERNS = [
@@ -32,6 +33,12 @@ const ACCOUNT_STATUS_PATTERNS = [
   /\b(?:my|our)\b.{0,30}\bprofile\b.{0,30}\b(?:complete|completion|status|missing)\b/,
 ];
 
+const DOCUMENT_WORKFLOW_PATTERNS = [
+  /\bwhat\s+happens?\b.{0,120}\b(?:my\s+)?(?:uploaded?|documents?|files?)\b/,
+  /\b(?:how|where|when)\b.{0,120}\b(?:my\s+)?(?:uploaded?|documents?|files?)\b.{0,80}\b(?:stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|process(?:es|ed|ing)?|handle(?:s|d|ing)?|keep(?:s|ing)?|save(?:s|d|ing)?)\b/,
+  /\bwhat\s+does\b.{0,120}\b(?:uploaded?|documents?|files?)\b.{0,80}\b(?:do|with|after|stor(?:e|ed|es|ing)|retain(?:s|ed|ing)?|process(?:es|ed|ing)?|handle(?:s|d|ing)?)\b/,
+];
+
 export function classifySupportRequest(message: string): SupportRequestClassification {
   const normalized = message.normalize('NFKC')
     .replace(/[\s\u200B-\u200D\uFEFF]+/gu, ' ')
@@ -41,6 +48,8 @@ export function classifySupportRequest(message: string): SupportRequestClassific
   if (normalized.length > 2_000) return { kind: 'refusal' };
 
   if (REFUSAL_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
-  if (ACCOUNT_STATUS_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'account_status' };
+  const isAccountStatus = ACCOUNT_STATUS_PATTERNS.some((pattern) => pattern.test(normalized));
+  if (isAccountStatus && DOCUMENT_WORKFLOW_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
+  if (isAccountStatus) return { kind: 'account_status' };
   return { kind: 'education' };
 }

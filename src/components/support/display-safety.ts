@@ -19,6 +19,7 @@ const assistantPersonalAmountPatterns = [
   /^\s*(?:[₦$£€]|NGN|USD|naira)\s*\d[\d,]*(?:\.\d+)?\s*\.?$/i,
 ];
 
+const accountAmountPattern = /\b(?:the\s+)?(?:amount\s+on\s+)?(?:my|your|our)\s+account\b[\s\S]{0,80}?\b(?:contains?|has|holds?|includes?|shows?|lists?|reflects?|is|was|equals?|comes?\s+to|amounts?\s+to)\b[\s\S]{0,40}?(?:[₦$£€]\s*|(?:NGN|USD|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[.!?]?/gi;
 const sharedSensitivePatterns = [
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
@@ -39,7 +40,8 @@ const sharedSensitivePatterns = [
 ];
 
 export function safeSupportDisplayText(text: string, role: SupportDisplayRole): string {
-  const safe = text.split(/\r?\n/)
+  const withoutAccountAmounts = text.replace(accountAmountPattern, "");
+  const safe = withoutAccountAmounts.split(/\r?\n/)
     .filter((line) => !sharedSensitivePatterns.some((pattern) => pattern.test(line))
       && !assistantPersonalAmountPatterns.some((pattern) => pattern.test(line))
       && (role !== "user" || !userAmountPatterns.some((pattern) => pattern.test(line))))
