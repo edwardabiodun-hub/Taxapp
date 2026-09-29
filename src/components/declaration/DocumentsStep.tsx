@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
+import { validateDocumentFile } from "@/lib/file-validation";
 
 export interface UploadedDoc {
   /** The persisted documentFiles record id (see document-storage.ts) — the
@@ -33,18 +34,6 @@ interface DocumentsStepProps {
   onDocumentsChange: (docs: UploadedDoc[]) => void;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-];
-
 const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: DocumentsStepProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState("receipt");
@@ -57,11 +46,12 @@ const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: Document
     setSaving(true);
     try {
       for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) {
+        const validation = validateDocumentFile(file);
+        if (validation.reason === "too-large") {
           toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
           continue;
         }
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        if (validation.reason === "unsupported-type") {
           toast({ title: "Unsupported format", description: `${file.name} is not a supported file type.`, variant: "destructive" });
           continue;
         }

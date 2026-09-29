@@ -29,6 +29,7 @@ import { recordActivity } from "@/lib/activity-log";
 import { buildFilingSummary } from "@/lib/filing-summary";
 import { renderFilingSummaryPdf } from "@/lib/filing-summary-pdf";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
+import { validateDocumentFile } from "@/lib/file-validation";
 
 const statusConfig = {
   draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -52,18 +53,6 @@ const categories = [
   { id: "rent_agreement", label: "Rent Agreement" },
   { id: "pension_cert", label: "Pension Certificate" },
   { id: "other", label: "Other" },
-];
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
 const formatSize = (bytes: number) => {
@@ -114,11 +103,12 @@ const SubmissionDetail = () => {
     try {
       const added: UploadedFile[] = [];
       for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) {
+        const validation = validateDocumentFile(file);
+        if (validation.reason === "too-large") {
           toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
           continue;
         }
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        if (validation.reason === "unsupported-type") {
           toast({ title: "Unsupported format", description: `${file.name} is not supported.`, variant: "destructive" });
           continue;
         }

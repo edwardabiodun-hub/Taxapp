@@ -22,6 +22,9 @@ dist-ssr
 # per se, but not something to commit either.
 supabase/.temp
 
+# Netlify demo-deploy scratch space (token .env + zipped build artifact)
+.netlify-deploy
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -32,3 +35,4 @@ supabase/.temp
 *.njsproj
 *.sln
 *.sw?
+.supabase-deploy

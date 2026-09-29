@@ -64,6 +64,14 @@ function fillRequiredFields() {
 }
 
 describe("Onboarding consent gate", () => {
+  it("describes the actual server and device storage boundaries", async () => {
+    await renderOnboarding();
+
+    expect(screen.getByText(/account and profile information is encrypted in transit and stored securely in your FileSmart account/i)).toBeInTheDocument();
+    expect(screen.getByText(/uploaded document files remain encrypted on this device/i)).toBeInTheDocument();
+    expect(screen.queryByText(/placeholder notice/i)).not.toBeInTheDocument();
+  });
+
   it("toggles the password fields independently", async () => {
     await renderOnboarding();
 
