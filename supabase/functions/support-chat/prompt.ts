@@ -1,4 +1,4 @@
-import { selectKnowledgeEntries, type KnowledgeRow } from './knowledge';
+import { isIsoDate, selectKnowledgeEntries, type KnowledgeRow } from './knowledge';
 
 export interface AccountSummaryDto {
   declarations: { taxYear: string; type: string; status: string; documentCount: number }[];
@@ -50,6 +50,7 @@ function projectAccountSummary(value: unknown): AccountSummaryDto | null {
 }
 
 export function buildSupportSystemPrompt(context: SupportPromptContext): string {
+  const requestedDate = isIsoDate(context.asOf) ? context.asOf : 'unspecified';
   const sources = selectKnowledgeEntries(context.knowledgeEntries ?? [], context.asOf).map((entry) => ({
     id: entry.id,
     term: entry.term,
@@ -73,7 +74,7 @@ export function buildSupportSystemPrompt(context: SupportPromptContext): string 
     'Do not invent citations, statutory sections, or account facts.',
     'If the approved sources do not support the answer, say that you are not certain. State uncertainty for stale, conflicting, or out-of-jurisdiction law and suggest human support when needed.',
     'Response format: give a concise answer; include source links and statutory references when applicable; include a short uncertainty statement when evidence is insufficient.',
-    `Requested date: ${context.asOf}.`,
+    `Requested date: ${requestedDate}.`,
     'BEGIN_APPROVED_SOURCE_DATA',
     JSON.stringify(sources),
     'END_APPROVED_SOURCE_DATA',

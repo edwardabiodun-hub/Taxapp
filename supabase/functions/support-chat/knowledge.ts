@@ -13,7 +13,7 @@ export interface KnowledgeRow {
   review_status: 'verified' | 'needs_review';
 }
 
-function isIsoDate(value: string): boolean {
+export function isIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
@@ -22,6 +22,7 @@ function isIsoDate(value: string): boolean {
 function containsWorkflowContent(row: KnowledgeRow): boolean {
   const content = [row.term, ...row.aliases, row.definition, row.statutory_reference, row.source_url].join(' ');
   return /\bfilesmart\b|\b(?:internal|proprietary|private)\s+(?:workflows?|process(?:es)?|routing|tools?|schemas?|procedures?|queues?|scoring|product)\b/i.test(content)
+    || /\b(?:BEGIN|END)_(?:APPROVED_SOURCE|ACCOUNT_STATUS)_DATA\b/i.test(content)
     || /\b(?:ignore|disregard|override|bypass|forget)\b.{0,80}\b(?:prior|previous|system|developer|instructions?|rules?|policy)\b|\b(?:system|developer)\s+(?:prompts?|instructions?|messages?)\b|\b(?:you are now|act as|follow these instructions|new instructions)\b/i.test(content);
 }
 
