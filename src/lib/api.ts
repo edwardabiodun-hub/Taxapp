@@ -17,7 +17,7 @@ async function getCurrentUserId(): Promise<string> {
 
 // ── Profile ──────────────────────────────────────────────
 
-interface ProfileRow {
+export interface ProfileRow {
   id: string;
   name: string;
   phone: string;
@@ -28,6 +28,22 @@ interface ProfileRow {
   gender: string | null;
   nationality: string | null;
   consent_accepted_at: string | null;
+}
+
+export function rowToProfile(row: ProfileRow, email = ""): LocalProfile {
+  return {
+    id: row.id,
+    name: row.name,
+    email,
+    phone: row.phone,
+    taxId: row.tax_id,
+    country: row.country,
+    dateOfBirth: row.date_of_birth ?? undefined,
+    countryOfBirth: row.country_of_birth ?? undefined,
+    gender: row.gender ?? undefined,
+    nationality: row.nationality ?? undefined,
+    consentAcceptedAt: row.consent_accepted_at ?? undefined,
+  };
 }
 
 /** Returns null if this user has never pushed a profile yet (e.g. the very
@@ -46,19 +62,7 @@ export async function fetchProfileFromServer(): Promise<LocalProfile | null> {
   if (error) throw error;
   if (!data) return null;
 
-  return {
-    id: data.id,
-    name: data.name,
-    email: userData.user?.email ?? "",
-    phone: data.phone,
-    taxId: data.tax_id,
-    country: data.country,
-    dateOfBirth: data.date_of_birth ?? undefined,
-    countryOfBirth: data.country_of_birth ?? undefined,
-    gender: data.gender ?? undefined,
-    nationality: data.nationality ?? undefined,
-    consentAcceptedAt: data.consent_accepted_at ?? undefined,
-  };
+  return rowToProfile(data, userData.user?.email ?? "");
 }
 
 export async function pushProfileToServer(profile: LocalProfile): Promise<void> {
@@ -94,7 +98,7 @@ export async function pseudonymizeProfileOnServer(): Promise<void> {
 
 // ── Declarations ─────────────────────────────────────────
 
-interface DeclarationRow {
+export interface DeclarationRow {
   id: string;
   tax_year: string;
   country: string;
@@ -108,7 +112,7 @@ interface DeclarationRow {
   updated_at: string;
 }
 
-function rowToDeclaration(row: DeclarationRow): LocalDeclaration {
+export function rowToDeclaration(row: DeclarationRow): LocalDeclaration {
   return {
     id: row.id,
     taxYear: row.tax_year,
@@ -177,7 +181,7 @@ export async function pushDeclarationsToServer(declarations: LocalDeclaration[])
 
 // ── Activities ───────────────────────────────────────────
 
-interface ActivityRow {
+export interface ActivityRow {
   id: string;
   declaration_id: string;
   type: LocalActivity["type"];
@@ -195,7 +199,11 @@ export async function fetchActivitiesFromServer(): Promise<LocalActivity[]> {
     .eq("user_id", userId)
     .returns<ActivityRow[]>();
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map(rowToActivity);
+}
+
+export function rowToActivity(row: ActivityRow): LocalActivity {
+  return {
     id: row.id,
     declarationId: row.declaration_id,
     type: row.type,
@@ -203,10 +211,8 @@ export async function fetchActivitiesFromServer(): Promise<LocalActivity[]> {
     description: row.description ?? undefined,
     meta: row.meta ?? undefined,
     timestamp: row.timestamp,
-    // Already on the server, so there's nothing pending about it — matches
-    // rowToDeclaration's own pendingSync: 0 for pulled rows.
     pendingSync: 0,
-  }));
+  };
 }
 
 export async function pushActivitiesToServer(activities: LocalActivity[]): Promise<void> {
@@ -227,7 +233,7 @@ export async function pushActivitiesToServer(activities: LocalActivity[]): Promi
 
 // ── Messages ─────────────────────────────────────────────
 
-interface MessageRow {
+export interface MessageRow {
   id: string;
   declaration_id: string | null;
   category: LocalMessage["category"];
@@ -245,7 +251,11 @@ export async function fetchMessagesFromServer(): Promise<LocalMessage[]> {
     .eq("recipient_user_id", userId)
     .returns<MessageRow[]>();
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map(rowToMessage);
+}
+
+export function rowToMessage(row: MessageRow): LocalMessage {
+  return {
     id: row.id,
     declarationId: row.declaration_id ?? undefined,
     category: row.category,
@@ -254,7 +264,7 @@ export async function fetchMessagesFromServer(): Promise<LocalMessage[]> {
     readAt: row.read_at ?? undefined,
     createdAt: row.created_at,
     pendingSync: 0,
-  }));
+  };
 }
 
 /** Pushes only the read_at change for one message. The server's column

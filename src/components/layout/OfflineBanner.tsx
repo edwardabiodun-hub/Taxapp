@@ -17,11 +17,12 @@ const OfflineBanner = () => {
       )}
     >
       <WifiOff className="w-3.5 h-3.5" />
-      <span>{!online ? "You are offline — changes will sync when reconnected" : "Sync failed — retrying…"}</span>
+      <span>{!online ? "You are offline — changes will sync when reconnected" : "Sync failed — retry manually"}</span>
       {online && (
         <button
           onClick={runSync}
           disabled={status === "syncing"}
+          aria-label="Retry sync"
           className="ml-1 p-1 rounded hover:bg-warning/10 transition-colors"
         >
           <RefreshCw className={cn("w-3.5 h-3.5", status === "syncing" && "animate-spin")} />
