@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { createAuthGatewayHandler } from "./handler.ts";
+import { createAuthGatewayHandler, validateAppOrigin } from "./handler.ts";
 
 type DenoRuntime = {
   env: { get(name: string): string | undefined };
@@ -13,11 +13,18 @@ if (runtime) {
   const supabaseAnonKey = runtime.env.get("SUPABASE_ANON_KEY");
   const serviceRoleKey = runtime.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const rateLimitSalt = runtime.env.get("RATE_LIMIT_SALT");
-  const appOrigin = runtime.env.get("APP_ORIGIN") ?? "https://filesmart-demo.netlify.app";
+  const configuredAppOrigin = runtime.env.get("APP_ORIGIN");
+  const environment = runtime.env.get("ENVIRONMENT") ?? "production";
+  const allowLocalDevelopment =
+    environment !== "production" && runtime.env.get("ALLOW_LOCAL_ORIGIN") === "true";
 
-  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey || !rateLimitSalt) {
-    throw new Error("Missing SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or RATE_LIMIT_SALT");
+  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey || !rateLimitSalt || !configuredAppOrigin) {
+    throw new Error(
+      "Missing SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, RATE_LIMIT_SALT, or APP_ORIGIN",
+    );
   }
+
+  const appOrigin = validateAppOrigin(configuredAppOrigin, { allowLocalDevelopment });
 
   const rateLimitClient = createClient(supabaseUrl, serviceRoleKey);
   const handler = createAuthGatewayHandler({
