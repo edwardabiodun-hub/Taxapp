@@ -219,8 +219,9 @@ export function createSupportChatHandler(dependencies: SupportChatDependencies):
       return response(request, appOrigin, 503, { error: { message: 'Support assistant unavailable' } });
     }
 
-    const classification = classifySupportRequest(body.message);
-    if (classification.kind === 'refusal' || body.history.some((turn) => classifySupportRequest(turn.content).kind === 'refusal')) {
+    const classificationInput = [...body.history.map((turn) => turn.content), body.message].join('\n');
+    const classification = classifySupportRequest(classificationInput);
+    if (classification.kind === 'refusal') {
       return response(request, appOrigin, 200, { answer: refusal, citations: [] });
     }
 

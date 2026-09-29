@@ -2,11 +2,14 @@ export type SupportRequestKind = 'education' | 'account_status' | 'refusal';
 export type SupportRequestClassification = { kind: SupportRequestKind };
 
 const PERSONAL_ACCOUNT_TERMS = '(?:account|balance|income|salary|tax\\s+(?:bill|liability|due|paid)|amount|earnings|refund)';
-const FINANCIAL_AMOUNT = '(?:[₦$£€]\\s*|(?:NGN|USD|GBP|naira)\\s*)?(?:\\d{1,3}(?:,\\d{3})+|\\d{4,})(?:\\.\\d+)?';
+const FINANCIAL_AMOUNT = '(?:[₦$£€]\\s*|(?:NGN|USD|GBP|naira)\\s*)?\\d[\\d,]*(?:\\.\\d+)?';
 const PERSONAL_AMOUNT_PATTERNS = [
   new RegExp(`\\b(?:my|your|our)\\s+${PERSONAL_ACCOUNT_TERMS}\\b[\\s\\S]{0,100}?${FINANCIAL_AMOUNT}\\b`, 'i'),
   new RegExp(`${FINANCIAL_AMOUNT}\\b[\\s\\S]{0,100}?\\b(?:my|your|our)\\s+${PERSONAL_ACCOUNT_TERMS}\\b`, 'i'),
 ];
+
+const DOCUMENT_REFERENCES = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?)?\s*(?:documents?|files?|pdfs?|attachments?)\b/i;
+const DOCUMENT_HANDLING = /\b(?:stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|destination|go|what\s+happens?|do\s+with)\b/i;
 
 const REFUSAL_PATTERNS = [
   ...PERSONAL_AMOUNT_PATTERNS,
@@ -27,6 +30,7 @@ const REFUSAL_PATTERNS = [
   /\b(?:can|could|would|will)\s+you\s+(?:submit|file|send|delete|remove|approve|create|edit|update|change|modify|upload|sign)\b/,
   /\b(?:want|need|would like)\s+(?:you|the assistant|filesmart)\s+to\s+(?:submit|file|send|delete|remove|approve|create|edit|update|change|modify|upload|sign)\b/,
   /\b(?:my|mine|me)\b.{0,60}\b(?:tax id|tin|phone number|email address|exact (?:income|salary|tax|amount|balance|financial figures?))\b/,
+  /^\s*(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/,
   /\b(?:my|your|our)\b.{0,80}\b(?:income|salary|tax\s+(?:bill|liability|due|paid)|earnings|refund|balance|amount)\b.{0,50}\b(?:NGN\s*|naira\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/,
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|naira\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/,
   /\b(?:the\s+)?(?:amount\s+on\s+)?(?:my|your|our)\s+account\b.{0,80}?\b(?:contains?|has|holds?|includes?|shows?|lists?|reflects?|is|was|equals?|comes?\s+to|amounts?\s+to)\b.{0,40}?(?:[₦$£€]\s*|(?:NGN|USD|naira)\s*)?\d[\d,]*(?:\.\d+)?\b/,
@@ -59,7 +63,8 @@ export function classifySupportRequest(message: string): SupportRequestClassific
   if (normalized.length > 2_000) return { kind: 'refusal' };
 
   if (REFUSAL_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
-  if (DOCUMENT_WORKFLOW_PATTERNS.some((pattern) => pattern.test(normalized))) return { kind: 'refusal' };
+  if (DOCUMENT_WORKFLOW_PATTERNS.some((pattern) => pattern.test(normalized))
+    || (DOCUMENT_REFERENCES.test(normalized) && DOCUMENT_HANDLING.test(normalized))) return { kind: 'refusal' };
   const isAccountStatus = ACCOUNT_STATUS_PATTERNS.some((pattern) => pattern.test(normalized));
   if (isAccountStatus) return { kind: 'account_status' };
   return { kind: 'education' };

@@ -20,24 +20,13 @@ const assistantPersonalAmountPatterns = [
 ];
 
 const accountAmountPatterns = [
-  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b/i,
-  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
+  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?\d[\d,]*(?:\.\d+)?\b/i,
+  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
 ];
 
-function stripAccountAmountLines(text: string): string {
-  const lines = text.split(/\r?\n/);
-  const blocked = new Set<number>();
-  for (let start = 0; start < lines.length; start += 1) {
-    for (let end = start; end < Math.min(lines.length, start + 4); end += 1) {
-      if (end > start && /[.!?]\s*$/.test(lines[end - 1])) break;
-      if (accountAmountPatterns.some((pattern) => pattern.test(lines.slice(start, end + 1).join(" ")))) {
-        for (let line = start; line <= end; line += 1) blocked.add(line);
-        break;
-      }
-    }
-  }
-  return lines.filter((_, index) => !blocked.has(index)).join("\n");
-}
+const documentReferences = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?)?\s*(?:documents?|files?|pdfs?|attachments?)\b/i;
+const documentHandling = /\b(?:stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|destination|go|what\s+happens?|do\s+with)\b/i;
+const labeledPersonalField = /(?:^|\b)(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
 const sharedSensitivePatterns = [
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
@@ -58,12 +47,12 @@ const sharedSensitivePatterns = [
 ];
 
 export function safeSupportDisplayText(text: string, role: SupportDisplayRole): string {
-  const withoutAccountAmounts = stripAccountAmountLines(text);
-  const safe = withoutAccountAmounts.split(/\r?\n/)
-    .filter((line) => !sharedSensitivePatterns.some((pattern) => pattern.test(line))
-      && !assistantPersonalAmountPatterns.some((pattern) => pattern.test(line))
-      && (role !== "user" || !userAmountPatterns.some((pattern) => pattern.test(line))))
-    .join("\n")
-    .trim();
-  return safe || fallback;
+  const normalized = text.normalize("NFKC").replace(/[\s\u200B-\u200D\uFEFF]+/gu, " ").trim();
+  const containsForbidden = accountAmountPatterns.some((pattern) => pattern.test(normalized))
+    || (documentReferences.test(normalized) && documentHandling.test(normalized))
+    || labeledPersonalField.test(normalized)
+    || sharedSensitivePatterns.some((pattern) => pattern.test(normalized))
+    || assistantPersonalAmountPatterns.some((pattern) => pattern.test(normalized))
+    || (role === "user" && userAmountPatterns.some((pattern) => pattern.test(normalized)));
+  return containsForbidden || !normalized ? fallback : text.trim();
 }

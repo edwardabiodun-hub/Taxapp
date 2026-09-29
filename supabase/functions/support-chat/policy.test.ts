@@ -66,6 +66,9 @@ describe('classifySupportRequest', () => {
     'What is my declaration status? NGN 4,000,000 is in my account.',
     'What is my declaration status?\n₦4,000,000 is in my account.',
     'What is my declaration status? My account had\n4,000,000 naira.',
+    'Your account had 999.',
+    '999 is in your account.',
+    'Your account\nhad\nthis\nmonth\n4,000,000.',
     'My salary is 4000000.',
     'Your account balance is NGN 500,000.',
     'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
@@ -78,6 +81,10 @@ describe('classifySupportRequest', () => {
   });
 
   it.each([
+    'Do you store my uploaded documents?',
+    'Where are my uploaded documents kept?',
+    'Are uploaded files stored?',
+    'What do you do with my uploaded documents?',
     'Where do my uploaded documents go?',
     'What do you do with my uploaded documents?',
     'How are uploaded files stored?',
@@ -98,6 +105,10 @@ describe('classifySupportRequest', () => {
     'Explain the general tax treatment of a salary of NGN 4,000,000.',
   ])('retains public tax education: %s', (message) => {
     expect(classifySupportRequest(message)).toEqual({ kind: 'education' });
+  });
+
+  it('refuses personal identity labels in classification input', () => {
+    expect(classifySupportRequest('Account holder: Ada Okafor')).toEqual({ kind: 'refusal' });
   });
 });
 
@@ -190,7 +201,7 @@ describe('buildSupportSystemPrompt', () => {
 });
 
 describe('sanitizeAssistantText', () => {
-  it('removes provider filenames and proprietary operations while retaining source guidance', () => {
+  it('fails closed for provider filenames, proprietary operations, and labeled PII', () => {
     const safe = sanitizeAssistantText([
       'General Nigerian tax guidance is available.',
       'Document filename: salary-slip.pdf',
@@ -209,12 +220,18 @@ describe('sanitizeAssistantText', () => {
       'The approved source is https://nass.gov.ng/documents/guide.pdf.',
     ].join('\n'));
 
-    expect(safe).toContain('General Nigerian tax guidance is available.');
-    expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
-    expect(safe).toContain('https://nass.gov.ng/documents/guide.pdf');
-    expect(safe).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|Ada Okafor|12 Market Street/i);
+    expect(safe).toBe('I can provide general Nigerian tax information and high-level account status only.');
     expect(sanitizeAssistantText('FileSmart sends submissions through its compliance queue.'))
       .toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
+  it('preserves public VAT explanations and official citation URLs when the whole response is safe', () => {
+    const safe = sanitizeAssistantText([
+      'The VAT registration threshold is NGN 25,000,000.',
+      'See https://nass.gov.ng/documents/guide.pdf for the official source.',
+    ].join('\n'));
+    expect(safe).toContain('The VAT registration threshold is NGN 25,000,000.');
+    expect(safe).toContain('https://nass.gov.ng/documents/guide.pdf');
   });
 
   it('removes system disclosures, tool names, raw DTOs, and direct identifiers', () => {
@@ -230,12 +247,10 @@ describe('sanitizeAssistantText', () => {
     ].join('\n');
 
     const safe = sanitizeAssistantText(unsafe);
-    expect(safe).toContain('General Nigerian tax guidance is available.');
-    expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
-    expect(safe).not.toMatch(/system prompt|internal assistant|get_my_declaration_status|declarations|messageCategories|12345678901|eddie@example.com|234 801/i);
+    expect(safe).toBe('I can provide general Nigerian tax information and high-level account status only.');
   });
 
-  it('removes a multiline account DTO and a phone number without losing safe guidance', () => {
+  it('fails closed for a multiline account DTO and phone number', () => {
     const safe = sanitizeAssistantText([
       'Check the official Nigerian tax source for the general rule.',
       '{',
@@ -245,7 +260,7 @@ describe('sanitizeAssistantText', () => {
       'Your phone number is +234 801 234 5678.',
     ].join('\n'));
 
-    expect(safe).toBe('Check the official Nigerian tax source for the general rule.');
+    expect(safe).toBe('I can provide general Nigerian tax information and high-level account status only.');
   });
 
   it('removes exact personal financial figures, separated TINs, and other internal names', () => {
@@ -260,9 +275,7 @@ describe('sanitizeAssistantText', () => {
       'Cite https://nass.gov.ng/documents/download/11249.',
     ].join('\n'));
 
-    expect(safe).toContain('General filing concepts can be explained from approved sources.');
-    expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
-    expect(safe).not.toMatch(/1,250,000|245,000|175,000|123-456-789-01|resolve_private_status_tool|internal routing/i);
+    expect(safe).toBe('I can provide general Nigerian tax information and high-level account status only.');
   });
 
   it('removes account-specific amount phrasing and retains a public VAT threshold', () => {
@@ -276,6 +289,31 @@ describe('sanitizeAssistantText', () => {
       'Your account had\nNGN 4,000,000.',
       '₦4,000,000\nis in your account.',
       'The VAT registration threshold is NGN 25,000,000.',
-    ].join('\n'))).toBe('The VAT registration threshold is NGN 25,000,000.');
+    ].join('\n'))).toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
+  it('fails closed across long normalized line breaks for account amounts and document handling', () => {
+    expect(sanitizeAssistantText([
+      'General Nigerian tax guidance is available.',
+      'Your account',
+      'had',
+      'this',
+      'month',
+      '999.',
+      'Where are',
+      'my uploaded',
+      'documents',
+      'kept?',
+    ].join('\n'))).toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
+  it('fails closed for document handling across long normalized line breaks', () => {
+    expect(sanitizeAssistantText([
+      'General Nigerian tax guidance is available.',
+      'Where are',
+      'my uploaded',
+      'documents',
+      'kept?',
+    ].join('\n'))).toBe('I can provide general Nigerian tax information and high-level account status only.');
   });
 });

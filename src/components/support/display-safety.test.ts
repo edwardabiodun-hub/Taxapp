@@ -15,6 +15,9 @@ describe("safeSupportDisplayText", () => {
     ["assistant", "4,000,000 is in your account.", false],
     ["assistant", "Your account had\nNGN 4,000,000.", false],
     ["assistant", "₦4,000,000\nis in your account.", false],
+    ["assistant", "Your account had 999.", false],
+    ["assistant", "999 is in your account.", false],
+    ["assistant", "Account holder: Ada Okafor", false],
   ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
     expect(safeSupportDisplayText(line, role) === line).toBe(visible);
   });
@@ -29,7 +32,7 @@ describe("safeSupportDisplayText", () => {
       "Email: eddie@example.com",
       "What is income tax?",
     ].join("\n");
-    expect(safeSupportDisplayText(text, "user")).toBe("What is income tax?");
+    expect(safeSupportDisplayText(text, "user")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
   });
 
   it("redacts direct personal financial statements in assistant messages", () => {
@@ -41,7 +44,7 @@ describe("safeSupportDisplayText", () => {
       "Income tax applies to taxable earnings in Nigeria.",
     ].join("\n");
     const safe = safeSupportDisplayText(text, "assistant");
-    expect(safe).toBe("Income tax applies to taxable earnings in Nigeria.");
+    expect(safe).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
   });
 
   it("preserves public statutory monetary explanations in assistant messages", () => {
@@ -51,6 +54,8 @@ describe("safeSupportDisplayText", () => {
       .toContain("VAT may apply at 7.5%");
     expect(safeSupportDisplayText("VAT registration threshold is NGN 25,000,000.", "assistant"))
       .toBe("VAT registration threshold is NGN 25,000,000.");
+    expect(safeSupportDisplayText("See https://firs.gov.ng/guides/vat.pdf for the official source.", "assistant"))
+      .toBe("See https://firs.gov.ng/guides/vat.pdf for the official source.");
   });
 
   it("keeps the existing PII, document-content, and internal-workflow boundary on both roles", () => {
@@ -60,11 +65,11 @@ describe("safeSupportDisplayText", () => {
       "Internal workflow: invoke get_my_declaration_status()",
       "General Nigerian tax guidance is available.",
     ].join("\n");
-    expect(safeSupportDisplayText(text, "user")).toBe("General Nigerian tax guidance is available.");
-    expect(safeSupportDisplayText(text, "assistant")).toBe("General Nigerian tax guidance is available.");
+    expect(safeSupportDisplayText(text, "user")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+    expect(safeSupportDisplayText(text, "assistant")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
   });
 
-  it("filters filenames and FileSmart operations on both roles while preserving general guidance", () => {
+  it("fails closed for filenames and FileSmart operations on both roles", () => {
     const text = [
       "Document filename: salary-slip.pdf",
       "private-return.docx",
@@ -80,7 +85,23 @@ describe("safeSupportDisplayText", () => {
       "Address: 12 Market Street, Lagos",
       "General Nigerian tax guidance is available.",
     ].join("\n");
-    expect(safeSupportDisplayText(text, "user")).toBe("General Nigerian tax guidance is available.");
-    expect(safeSupportDisplayText(text, "assistant")).toBe("General Nigerian tax guidance is available.");
+    expect(safeSupportDisplayText(text, "user")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+    expect(safeSupportDisplayText(text, "assistant")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+  });
+
+  it("fails closed across long normalized line breaks for account amounts and document handling", () => {
+    const text = [
+      "General Nigerian tax guidance is available.",
+      "Your account",
+      "had",
+      "this",
+      "month",
+      "999.",
+      "Where are",
+      "my uploaded",
+      "documents",
+      "kept?",
+    ].join("\n");
+    expect(safeSupportDisplayText(text, "assistant")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
   });
 });

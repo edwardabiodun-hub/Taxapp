@@ -86,27 +86,13 @@ export function buildSupportSystemPrompt(context: SupportPromptContext): string 
 
 const FALLBACK = 'I can provide general Nigerian tax information and high-level account status only.';
 const SENSITIVE_FILENAME = /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu;
-const LABELED_PERSONAL_FIELD = /^\s*(?:full\s+name|name|(?:postal\s+)?address)\s*[:=]/i;
-const SENSITIVE_LINE = /\b(?:system prompt|system instructions?|developer instructions?|hidden instructions?|internal assistant|get_my_declaration_status|get_my_support_message_summary|get_my_profile_completion|search_support_knowledge|form_data|messageCategories|unreadMessageCount|profileComplete)\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b|\b\d{9,15}\b|\+?234[\s-]?(?:\d[\s-]?){10}\b|\b(?:your|my)\b[^\n]{0,80}(?:₦|NGN\s*)[\d,]+/i;
+const LABELED_PERSONAL_FIELD = /(?:^|\b)(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
 const ACCOUNT_AMOUNT_PATTERNS = [
-  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b/i,
-  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?(?:\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
+  /\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b[\s\S]{0,100}?(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?\d[\d,]*(?:\.\d+)?\b/i,
+  /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
 ];
-
-function stripAccountAmountLines(text: string): string {
-  const lines = text.split(/\r?\n/);
-  const blocked = new Set<number>();
-  for (let start = 0; start < lines.length; start += 1) {
-    for (let end = start; end < Math.min(lines.length, start + 4); end += 1) {
-      if (end > start && /[.!?]\s*$/.test(lines[end - 1])) break;
-      if (ACCOUNT_AMOUNT_PATTERNS.some((pattern) => pattern.test(lines.slice(start, end + 1).join(' ')))) {
-        for (let line = start; line <= end; line += 1) blocked.add(line);
-        break;
-      }
-    }
-  }
-  return lines.filter((_, index) => !blocked.has(index)).join('\n');
-}
+const DOCUMENT_REFERENCES = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?)?\s*(?:documents?|files?|pdfs?|attachments?)\b/i;
+const DOCUMENT_HANDLING = /\b(?:stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|destination|go|what\s+happens?|do\s+with)\b/i;
 const SENSITIVE_PROSE = [
   /\b(?:your|you|my)\b.{0,80}\b(?:income|salary|tax bill|tax due|balance|refund|liability|amount|owe|earned)\b.{0,50}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?(?:\s*naira)?\b/i,
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
@@ -120,16 +106,20 @@ const SENSITIVE_PROSE = [
 ];
 
 export function sanitizeAssistantText(text: string): string {
-  const withoutFences = text.replace(/```(?:system|developer|json)?\s*[\s\S]*?```/gi, '');
-  const withoutAccountAmounts = stripAccountAmountLines(withoutFences);
-  const withoutDto = withoutAccountAmounts.replace(/^\s*\{[\s\S]*?^\s*\}\s*$/gm, (block) =>
-    /"(?:declarations|taxYear|documentCount|messageCategories|unreadMessageCount|profileComplete)"/.test(block) ? '' : block);
-  const safeLines = withoutDto.split(/\r?\n/).filter((line) => {
-    if (SENSITIVE_LINE.test(line) || SENSITIVE_FILENAME.test(line) || LABELED_PERSONAL_FIELD.test(line)
-      || SENSITIVE_PROSE.some((pattern) => pattern.test(line))) return false;
-    if (/\{\s*"(?:declarations|taxYear|documentCount|messageCategories|profileComplete)"/.test(line)) return false;
-    return true;
-  });
-  const safe = safeLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  const normalized = text.normalize('NFKC').replace(/[\s\u200B-\u200D\uFEFF]+/gu, ' ').trim();
+  const containsForbidden = ACCOUNT_AMOUNT_PATTERNS.some((pattern) => pattern.test(normalized))
+    || (DOCUMENT_REFERENCES.test(normalized) && DOCUMENT_HANDLING.test(normalized))
+    || SENSITIVE_FILENAME.test(normalized)
+    || LABELED_PERSONAL_FIELD.test(normalized)
+    || SENSITIVE_PROSE.some((pattern) => pattern.test(normalized))
+    || /\b(?:system prompt|system instructions?|developer instructions?|hidden instructions?|internal assistant|get_my_declaration_status|get_my_support_message_summary|get_my_profile_completion|search_support_knowledge|form_data|messageCategories|unreadMessageCount|profileComplete)\b/i.test(normalized)
+    || /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(normalized)
+    || /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i.test(normalized)
+    || /\b\d{9,15}\b/.test(normalized)
+    || /\+?234[\s-]?(?:\d[\s-]?){10}\b/.test(normalized)
+    || /\{\s*"(?:declarations|taxYear|documentCount|messageCategories|unreadMessageCount|profileComplete)"/i.test(normalized);
+  if (containsForbidden) return FALLBACK;
+
+  const safe = text.replace(/```(?:system|developer|json)?\s*[\s\S]*?```/gi, '').trim();
   return safe || FALLBACK;
 }

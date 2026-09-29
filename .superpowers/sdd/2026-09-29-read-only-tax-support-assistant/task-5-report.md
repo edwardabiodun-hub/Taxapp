@@ -93,3 +93,17 @@ Starting HEAD: `51ad5469650be5745eae04f7a0a0083be4d778e6`. The policy classifier
 - Focused Edge TypeScript check with ES2022 target — exit 0, no diagnostics.
 
 No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed. Pre-existing untracked artifacts were not touched.
+
+## Final hardening round — arbitrary amounts, cross-turn reconstruction, and v1 document boundary
+
+Starting HEAD: `3c8e93c`. The support classifier now treats any numeric token as sensitive when associated with personal/account ownership terms in either order, after Unicode whitespace/newline normalization, while retaining public VAT threshold education. The handler classifies the normalized current message plus all history before knowledge retrieval, summary RPCs, or provider input; cross-turn reconstruction is refused and raw sensitive history is not forwarded. Document/file handling questions are refused regardless of product name or word order. Server and client response sanitizers now inspect the entire normalized response, fail closed to their safe fallback for forbidden account amounts, workflow/document handling, PII, filenames, DTOs, or internal content, and recognize labels such as `Account holder:` while retaining safe public VAT explanations and official citation URLs.
+
+Regression evidence completed before the user-directed stop:
+
+- Initial focused RED: `npm test -- supabase/functions/support-chat/policy.test.ts supabase/functions/support-chat/handler.test.ts src/support-chat-security.test.ts src/components/support/display-safety.test.ts --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 1; 21 failures and 159 passes.
+- Intermediate focused RED after the first implementation: same command — exit 1; 2 failures and 178 passes. The remaining issues were the irregular verb `kept` and one stale partial-redaction expectation.
+- Focused GREEN before the final UI expectation update: same command — exit 0; 4 files, 180 tests passed.
+- Requested 7-file serial run before the final UI expectation update: `npm test -- src/support-chat-security.test.ts supabase/functions/support-chat/handler.test.ts supabase/functions/support-chat/policy.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx src/lib/support-chat.test.ts src/App.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot` — exit 1; 6 files passed, 210 tests passed, and 2 existing UI assertions failed because they still expected partial redaction.
+- The two UI assertions were updated to the new fail-closed fallback contract after that run. Per the user request, no rerun, focused ESLint, Edge TypeScript check, or additional verification was performed after this final edit.
+
+The commit therefore contains the implementation and regression coverage, but the final post-edit verification is incomplete. Pre-existing untracked artifacts were not touched.

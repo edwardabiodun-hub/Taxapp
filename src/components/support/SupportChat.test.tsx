@@ -84,7 +84,7 @@ describe("SupportChat surface", () => {
     expect(!!screen.queryByText("Based on your synced FileSmart records.")).toBe(expected);
   });
 
-  it("filters exact values and sensitive text from both sides while keeping general tax guidance", async () => {
+  it("fails closed for exact values and sensitive text from both sides", async () => {
     send.mockResolvedValue({ answer: [
       "Income tax applies to taxable earnings in Nigeria.",
       "Income: ₦4,000,000",
@@ -103,15 +103,12 @@ describe("SupportChat surface", () => {
     openChat();
     fireEvent.change(screen.getByRole("textbox", { name: "Ask a tax question" }), { target: { value: "Income: ₦4,000,000\nWhat is income tax?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send question" }));
-    expect(await screen.findByText(/Income tax applies to taxable earnings/)).toBeInTheDocument();
     const conversation = screen.getByLabelText("Tax support conversation");
-    expect(conversation).toHaveTextContent("What is income tax?");
-    expect(conversation).toHaveTextContent("VAT is a consumption tax.");
-    expect(conversation).toHaveTextContent("A TIN is a taxpayer identifier; VAT may apply at 7.5% under the relevant law.");
+    expect(await screen.findAllByText("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.")).not.toHaveLength(0);
     expect(conversation).not.toHaveTextContent(/₦4,000,000|250,000|123-456-789-01|234 801|eddie@example.com|Private Street|private payslip|get_my_declaration_status|internal workflow|confidential record/i);
   });
 
-  it("shows a public statutory threshold but hides direct personal financial answers", async () => {
+  it("fails closed when a response combines a public threshold with personal financial answers", async () => {
     send.mockResolvedValue({ answer: [
       "The VAT registration threshold is NGN 25,000,000.",
       "Your tax bill is NGN 4,000,000.",
@@ -129,8 +126,7 @@ describe("SupportChat surface", () => {
     openChat();
     fireEvent.change(screen.getByRole("textbox", { name: "Ask a tax question" }), { target: { value: "My salary 4000000\nWhat is the VAT registration threshold?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send question" }));
-    const answer = await screen.findByText("The VAT registration threshold is NGN 25,000,000.");
-    expect(answer).toBeInTheDocument();
+    expect(await screen.findAllByText("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.")).not.toHaveLength(0);
     expect(screen.getByLabelText("Tax support conversation")).not.toHaveTextContent(/My salary 4000000|Your tax bill is NGN 4,000,000|tax liability for 2025 is 4000000|Your income is NGN 4,000,000|amount on your account|account contains|account has|account had|is in your account|4,000,000/i);
   });
 
