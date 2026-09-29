@@ -22,8 +22,13 @@ export interface ProviderConfig {
 }
 
 export function createOpenAiAnswerProvider(config: ProviderConfig): AnswerProvider {
-  const endpoint = new URL(config.apiUrl);
-  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || !config.apiKey || !config.model) {
+  let endpoint: URL;
+  try { endpoint = new URL(config.apiUrl); } catch { throw new Error('Invalid provider configuration'); }
+  const hostname = endpoint.hostname.toLowerCase().replace(/\.$/, '');
+  const internalSuffix = /\.(?:localhost|local|internal|lan|home|corp|intranet|localdomain)$/;
+  const ipLiteral = /^\[|^[0-9.]+$/;
+  if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || !config.apiKey || !config.model
+    || !hostname.includes('.') || internalSuffix.test(hostname) || ipLiteral.test(hostname)) {
     throw new Error('Invalid provider configuration');
   }
 
@@ -34,6 +39,7 @@ export function createOpenAiAnswerProvider(config: ProviderConfig): AnswerProvid
       try {
         const response = await (config.fetcher ?? fetch)(endpoint.href, {
           method: 'POST',
+          redirect: 'error',
           headers: { authorization: `Bearer ${config.apiKey}`, 'content-type': 'application/json' },
           body: JSON.stringify({
             model: config.model,

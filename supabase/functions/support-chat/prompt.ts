@@ -1,4 +1,4 @@
-import { isIsoDate, selectKnowledgeEntries, type KnowledgeRow } from './knowledge';
+import { isIsoDate, selectKnowledgeEntries, type KnowledgeRow } from './knowledge.ts';
 
 export interface AccountSummaryDto {
   declarations: { taxYear: string; type: string; status: string; documentCount: number }[];

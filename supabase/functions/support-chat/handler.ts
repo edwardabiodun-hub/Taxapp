@@ -1,8 +1,8 @@
 import { enforceDualLimit, getTrustedClientIp, type DualLimitInput, type RateLimitClient } from '../_shared/rate-limit.ts';
-import { selectKnowledgeEntries, type KnowledgeRow } from './knowledge';
-import { classifySupportRequest } from './policy';
-import { buildSupportSystemPrompt, sanitizeAssistantText, type AccountSummaryDto } from './prompt';
-import type { AnswerProvider, ChatTurn } from './provider';
+import { selectKnowledgeEntries, type KnowledgeRow } from './knowledge.ts';
+import { classifySupportRequest } from './policy.ts';
+import { buildSupportSystemPrompt, sanitizeAssistantText, type AccountSummaryDto } from './prompt.ts';
+import type { AnswerProvider, ChatTurn } from './provider.ts';
 
 type RpcResult = { data: unknown; error: unknown };
 type RpcClient = { rpc: (name: string, args?: Record<string, unknown>) => Promise<RpcResult> };
@@ -47,7 +47,7 @@ function hasExactKeys(value: Record<string, unknown>, names: string[]): boolean 
 function parseBody(value: unknown): SupportChatRequest | null {
   if (!isRecord(value) || !hasExactKeys(value, ['message', 'history'])
     || typeof value.message !== 'string' || !value.message.trim() || value.message.length > 2_000
-    || !Array.isArray(value.history) || value.history.length > 12) return null;
+    || !Array.isArray(value.history) || value.history.length > 12 || value.history.length % 2 !== 0) return null;
   const history: ChatTurn[] = [];
   for (const [index, turn] of value.history.entries()) {
     if (!isRecord(turn) || !hasExactKeys(turn, ['role', 'content'])
@@ -220,7 +220,9 @@ export function createSupportChatHandler(dependencies: SupportChatDependencies):
     }
 
     const classification = classifySupportRequest(body.message);
-    if (classification.kind === 'refusal') return response(request, appOrigin, 200, { answer: refusal, citations: [] });
+    if (classification.kind === 'refusal' || body.history.some((turn) => classifySupportRequest(turn.content).kind === 'refusal')) {
+      return response(request, appOrigin, 200, { answer: refusal, citations: [] });
+    }
 
     const asOf = (dependencies.now ?? (() => new Date()))().toISOString().slice(0, 10);
     let knowledgeEntries: KnowledgeRow[] = [];
