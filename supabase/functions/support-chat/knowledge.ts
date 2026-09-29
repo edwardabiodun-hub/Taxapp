@@ -21,14 +21,23 @@ function isIsoDate(value: string): boolean {
 
 function containsWorkflowContent(row: KnowledgeRow): boolean {
   const content = [row.term, ...row.aliases, row.definition, row.statutory_reference, row.source_url].join(' ');
-  return /\bfilesmart\b|\b(?:internal|proprietary|private)\s+(?:workflows?|process(?:es)?|routing|tools?|schemas?|procedures?|queues?|scoring|product)\b/i.test(content);
+  return /\bfilesmart\b|\b(?:internal|proprietary|private)\s+(?:workflows?|process(?:es)?|routing|tools?|schemas?|procedures?|queues?|scoring|product)\b/i.test(content)
+    || /\b(?:ignore|disregard|override|bypass|forget)\b.{0,80}\b(?:prior|previous|system|developer|instructions?|rules?|policy)\b|\b(?:system|developer)\s+(?:prompts?|instructions?|messages?)\b|\b(?:you are now|act as|follow these instructions|new instructions)\b/i.test(content);
+}
+
+function hasSourceFields(row: KnowledgeRow): boolean {
+  return [row.id, row.term, row.definition, row.statutory_reference, row.source_url]
+    .every((field) => typeof field === 'string')
+    && Array.isArray(row.aliases)
+    && row.aliases.every((alias) => typeof alias === 'string');
 }
 
 export function selectKnowledgeEntries(rows: KnowledgeRow[], asOf: string): KnowledgeRow[] {
   if (!isIsoDate(asOf)) return [];
 
   return rows
-    .filter((row) => row.jurisdiction === 'NG'
+    .filter((row) => hasSourceFields(row)
+      && row.jurisdiction === 'NG'
       && row.review_status === 'verified'
       && isIsoDate(row.effective_from)
       && row.effective_from <= asOf
