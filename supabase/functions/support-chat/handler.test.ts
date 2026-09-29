@@ -49,6 +49,12 @@ describe('deployed runtime imports', () => {
       for (const specifier of relativeImports) expect(specifier, `${file}: ${specifier}`).toMatch(/\.ts$/);
     }
   });
+
+  it('requires the operator hostname allowlist in Edge Function configuration', () => {
+    const entrypoint = readFileSync(resolve(process.cwd(), 'supabase/functions/support-chat/index.ts'), 'utf8');
+    expect(entrypoint).toContain("'LLM_ALLOWED_HOSTS'");
+    expect(entrypoint).toContain('allowedHosts: values.LLM_ALLOWED_HOSTS');
+  });
 });
 
 describe('support-chat security boundary', () => {
@@ -219,7 +225,7 @@ describe('OpenAI-compatible provider adapter', () => {
       expect(JSON.parse(init.body as string)).toMatchObject({ model: 'model-1', temperature: 0.1, max_tokens: 500 });
       return new Response(JSON.stringify({ choices: [{ message: { content: 'Answer' } }], extra: 'secret' }), { status: 200 });
     });
-    const provider = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'provider-key', model: 'model-1', fetcher });
+    const provider = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'provider-key', model: 'model-1', allowedHosts: 'backup.example, provider.example', fetcher });
     expect(await provider.generateAnswer({ system: 'System', history: [], userMessage: 'Question' })).toBe('Answer');
     expect(fetcher).toHaveBeenCalledOnce();
   });
@@ -235,13 +241,31 @@ describe('OpenAI-compatible provider adapter', () => {
     'https://169.254.169.254/chat/completions',
     'https://[::1]/chat/completions',
   ])('rejects unsafe provider endpoint %s', (apiUrl) => {
-    expect(() => createOpenAiAnswerProvider({ apiUrl, apiKey: 'key', model: 'model' })).toThrow('Invalid provider configuration');
+    expect(() => createOpenAiAnswerProvider({ apiUrl, apiKey: 'key', model: 'model', allowedHosts: new URL(apiUrl).hostname })).toThrow('Invalid provider configuration');
+  });
+
+  it.each([
+    undefined, '', 'different.example', 'api.provider.example', '*.example',
+    'provider.example,', 'provider.example,service.internal',
+    'provider.example,10.0.0.1', 'provider.example,localhost',
+    'provider.example,https://other.example', 'provider.example,other.example:443',
+    'provider.example,provider..example',
+  ])('fails closed for absent, nonmatching, or malformed allowlist %s', (allowedHosts) => {
+    expect(() => createOpenAiAnswerProvider({
+      apiUrl: 'https://provider.example/chat/completions', apiKey: 'key', model: 'model', allowedHosts: allowedHosts as string,
+    })).toThrow('Invalid provider configuration');
+  });
+
+  it('uses the exact configured provider hostname without accepting a subdomain', () => {
+    expect(() => createOpenAiAnswerProvider({
+      apiUrl: 'https://sub.provider.example/chat/completions', apiKey: 'key', model: 'model', allowedHosts: 'provider.example',
+    })).toThrow('Invalid provider configuration');
   });
 
   it('maps non-2xx and timeout failures to a generic error', async () => {
-    const bad = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'key', model: 'm', fetcher: async () => new Response('provider-secret', { status: 503 }) });
+    const bad = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'key', model: 'm', allowedHosts: 'provider.example', fetcher: async () => new Response('provider-secret', { status: 503 }) });
     await expect(bad.generateAnswer({ system: 's', history: [], userMessage: 'u' })).rejects.toThrow('Provider unavailable');
-    const timeout = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'key', model: 'm', timeoutMs: 1, fetcher: (_url, init) => new Promise<Response>((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(new Error('abort-secret')))) });
+    const timeout = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'key', model: 'm', allowedHosts: 'provider.example', timeoutMs: 1, fetcher: (_url, init) => new Promise<Response>((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(new Error('abort-secret')))) });
     await expect(timeout.generateAnswer({ system: 's', history: [], userMessage: 'u' })).rejects.toThrow('Provider unavailable');
   });
 });

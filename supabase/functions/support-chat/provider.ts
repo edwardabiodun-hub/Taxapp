@@ -17,18 +17,27 @@ export interface ProviderConfig {
   apiUrl: string;
   apiKey: string;
   model: string;
+  allowedHosts: string;
   fetcher?: typeof fetch;
   timeoutMs?: number;
+}
+
+function isSafeProviderHostname(hostname: string): boolean {
+  if (hostname.length > 253 || !hostname.includes('.') || /^\[|^[0-9.]+$/.test(hostname)
+    || /\.(?:localhost|local|internal|lan|home|corp|intranet|localdomain|invalid)$/.test(hostname)) return false;
+  return hostname.split('.').every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
 }
 
 export function createOpenAiAnswerProvider(config: ProviderConfig): AnswerProvider {
   let endpoint: URL;
   try { endpoint = new URL(config.apiUrl); } catch { throw new Error('Invalid provider configuration'); }
-  const hostname = endpoint.hostname.toLowerCase().replace(/\.$/, '');
-  const internalSuffix = /\.(?:localhost|local|internal|lan|home|corp|intranet|localdomain)$/;
-  const ipLiteral = /^\[|^[0-9.]+$/;
+  const hostname = endpoint.hostname.toLowerCase();
+  const allowedHosts = typeof config.allowedHosts === 'string'
+    ? config.allowedHosts.split(',').map((entry) => entry.trim().toLowerCase())
+    : [];
   if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || !config.apiKey || !config.model
-    || !hostname.includes('.') || internalSuffix.test(hostname) || ipLiteral.test(hostname)) {
+    || !isSafeProviderHostname(hostname) || allowedHosts.length === 0
+    || !allowedHosts.every(isSafeProviderHostname) || !allowedHosts.includes(hostname)) {
     throw new Error('Invalid provider configuration');
   }
 

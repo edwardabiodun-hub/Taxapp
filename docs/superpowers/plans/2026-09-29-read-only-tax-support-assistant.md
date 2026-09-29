@@ -423,7 +423,7 @@ method/CORS validation
 -> sanitize and return answer with citations
 ```
 
-The entrypoint should load `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RATE_LIMIT_SALT`, `APP_ORIGIN`, `LLM_API_URL`, `LLM_API_KEY`, and `LLM_MODEL`, failing closed if any is missing. The service-role client may query only `support_knowledge`; it must never be used for user summaries.
+The entrypoint should load `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RATE_LIMIT_SALT`, `APP_ORIGIN`, `LLM_API_URL`, `LLM_API_KEY`, `LLM_MODEL`, and `LLM_ALLOWED_HOSTS`, failing closed if any is missing. `LLM_ALLOWED_HOSTS` is a comma-separated list of exact, operator-configured provider hostnames without wildcards; the configured URL hostname must match one entry. The service-role client may query only `support_knowledge`; it must never be used for user summaries.
 
 - [ ] **Step 7: Run handler and migration tests**
 
@@ -588,9 +588,10 @@ RATE_LIMIT_SALT
 LLM_API_URL
 LLM_API_KEY
 LLM_MODEL
+LLM_ALLOWED_HOSTS
 ```
 
-Document that `SUPABASE_SERVICE_ROLE_KEY` is used only by the Edge Function for public knowledge retrieval and must never be exposed to Vite or committed. Document that the chatbot is deployed only after the support migration is applied and the function is deployed.
+Document that `LLM_ALLOWED_HOSTS` contains exact provider hostnames only, without schemes, ports, paths, or wildcards. Verify the deployed egress/firewall policy prevents access to private and link-local destinations even if an allowlisted hostname's DNS answers change; a one-time DNS lookup does not prevent rebinding. Document that `SUPABASE_SERVICE_ROLE_KEY` is used only by the Edge Function for public knowledge retrieval and rate-limit counters, never for caller summaries, and must never be exposed to Vite or committed. Document that the chatbot is deployed only after the support migration is applied and the function is deployed.
 
 - [ ] **Step 5: Perform a manual browser acceptance pass**
 

@@ -12,7 +12,7 @@ const runtime = (globalThis as typeof globalThis & { Deno?: DenoRuntime }).Deno;
 if (runtime) {
   const required = [
     'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'RATE_LIMIT_SALT',
-    'APP_ORIGIN', 'LLM_API_URL', 'LLM_API_KEY', 'LLM_MODEL',
+    'APP_ORIGIN', 'LLM_API_URL', 'LLM_API_KEY', 'LLM_MODEL', 'LLM_ALLOWED_HOSTS',
   ] as const;
   const values = Object.fromEntries(required.map((name) => [name, runtime.env.get(name)?.trim()]));
   if (required.some((name) => !values[name])) throw new Error('Support chat configuration is incomplete');
@@ -44,6 +44,7 @@ if (runtime) {
       apiUrl: values.LLM_API_URL,
       apiKey: values.LLM_API_KEY,
       model: values.LLM_MODEL,
+      allowedHosts: values.LLM_ALLOWED_HOSTS,
     }),
   });
 
