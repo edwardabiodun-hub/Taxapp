@@ -1,4 +1,5 @@
 import type { NigeriaDeclarationForm } from "@/types/declaration";
+import { calculateRentRelief } from "./rent-relief";
 
 /**
  * Nigerian PIT bands (Personal Income Tax Act, as amended 2011 s.37/6th Schedule).
@@ -79,7 +80,7 @@ export function calculateNigeriaTax(form: NigeriaDeclarationForm): TaxBreakdown 
   // Deductions
   const pensionDeduction = parseAmount(form.employeePension);
   const rentPaid = parseAmount(form.annualRentPaid);
-  const rentRelief = Math.min(rentPaid * 0.2, 500_000);
+  const rentRelief = calculateRentRelief(rentPaid).relief;
   // Consolidated Relief Allowance (CRA): higher of ₦200,000 or 1% of gross + 20% of gross
   const craFixed = Math.max(200_000, grossIncome * 0.01);
   const craVariable = grossIncome * 0.20;

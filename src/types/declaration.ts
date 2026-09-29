@@ -121,6 +121,11 @@ export const africanCountries: CountryOption[] = [
   { code: "et", name: "Ethiopia", flag: "🇪🇹", active: false },
 ];
 
+// Phase 1 launches the declaration flow in Nigeria only. Keep the full
+// country catalogue above for future rollout, but expose only launched
+// countries to the declaration selector until each market is ready.
+export const availableDeclarationCountries = africanCountries.filter((country) => country.code === "ng");
+
 export interface StateOption {
   code: string;
   name: string;
