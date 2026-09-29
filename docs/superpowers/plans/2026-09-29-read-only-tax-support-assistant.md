@@ -400,11 +400,12 @@ type DeclarationStatusDto = {
 type AccountSummaryDto = {
   declarations: DeclarationStatusDto[];
   unreadMessageCount: number;
+  messageCategories: string[];
   profileComplete: boolean;
 };
 ```
 
-Do not include declaration IDs, timestamps, raw JSON, message bodies, categories, profile values, or amounts in the model context or response DTO.
+Do not include declaration IDs, timestamps, raw JSON, message bodies, profile values, or amounts in the model context or response DTO. The only message-derived field is the high-level `messageCategories` array returned by the allowlisted summary RPC.
 
 - [ ] **Step 6: Implement the handler and entrypoint**
 
