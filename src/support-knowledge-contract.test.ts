@@ -30,13 +30,32 @@ describe("support knowledge contract", () => {
   it("projects only approved private summary fields", () => {
     const sql = readFileSync(migration, "utf8").toLowerCase().replace(/\s+/g, " ");
     expect(sql).toContain("returns table ( declaration_id uuid, tax_year text, declaration_type text, status text, document_count integer, created_at timestamptz )");
-    expect(sql).toContain("returns table (unread_count bigint)");
+    expect(sql).toContain("returns table (unread_count bigint, categories text[])");
     expect(sql).toContain("returns table (is_complete boolean, missing_fields text[])");
     for (const forbidden of ["d.form_data", "d.amount", "d.documents as", "m.body", "m.subject", "p.name as", "p.phone as", "p.tax_id as"]) {
       expect(sql).not.toContain(forbidden);
     }
     expect(sql).toContain("jsonb_array_length(d.documents)");
     expect(sql).toContain("m.read_at is null");
+    expect(sql).toContain("array_agg(distinct m.category order by m.category)");
+    expect(sql).toContain("m.recipient_user_id = auth.uid()");
+  });
+
+  it("caps declaration status at the 20 newest rows", () => {
+    const sql = readFileSync(migration, "utf8").toLowerCase().replace(/\s+/g, " ");
+    const declarationFunction = sql.match(/create or replace function public\.get_my_declaration_status\(\)[\s\S]*?\$\$;/)?.[0];
+    expect(declarationFunction).toBeDefined();
+    expect(declarationFunction).toContain("where d.user_id = auth.uid()");
+    expect(declarationFunction).toMatch(/order by d\.created_at desc(?:, d\.id)? limit 20;/);
+  });
+
+  it("seeds exactly the verified glossary upserts generated from the current source", () => {
+    const sql = readFileSync(migration, "utf8");
+    const seed = sql.match(/-- BEGIN GENERATED SUPPORT KNOWLEDGE\r?\n([\s\S]*?)-- END GENERATED SUPPORT KNOWLEDGE/)?.[1];
+    expect(seed).toBeDefined();
+    expect(seed?.trim()).toBe(runGenerator().trim());
+    expect(seed).toContain("'https://nass.gov.ng/documents/download/11249'");
+    expect(seed).toContain("'https://nass.gov.ng/documents/download/11250'");
   });
 
   it("generates repeatable upserts with source and review metadata", () => {
