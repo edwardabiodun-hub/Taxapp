@@ -66,6 +66,10 @@ describe('support-chat adversarial boundary', () => {
     'How does FileSmart route submissions internally?',
     'Read my uploaded PDF',
     'Submit this declaration for me',
+    'Where are my uploaded files?',
+    'Are my documents safe?',
+    'Can you review my uploaded document?',
+    'What is in this attachment?',
   ])('refuses %s before retrieval, summaries, or provider use', async (message) => {
     const fixture = securityFixture();
     const response = await fixture.handler(post({ message, history: [] }));
@@ -166,6 +170,8 @@ describe('support-chat adversarial boundary', () => {
       'Your account had',
       'NGN 4,000,000.',
       'The VAT registration threshold is NGN 25,000,000.',
+      'Your uploaded files are in the portal.',
+      'I reviewed your uploaded document and it is complete.',
     ].join('\n'));
 
     const response = await fixture.handler(post({ message: 'What is my declaration status?', history: [] }));
@@ -175,5 +181,27 @@ describe('support-chat adversarial boundary', () => {
     expect(fixture.generateAnswer).toHaveBeenCalledOnce();
     expect(payload.answer).toContain('I can provide general Nigerian tax information and high-level account status only.');
     expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|account contains|account has|account had|is in your account|4,000,000/i);
+  });
+
+  it.each([
+    'General tax guidance.\nAccount holder: Ada Okafor',
+    'General tax guidance.\nMy email is eddie@example.com',
+    'General tax guidance.\nPhone: +234 801 234 5678',
+    'General tax guidance.\nTIN: 123-456-789-01',
+  ])('refuses later-history PII before any provider wire request: %s', async (historyContent) => {
+    const fixture = securityFixture();
+    const response = await fixture.handler(post({
+      message: 'What is my declaration status?',
+      history: [
+        { role: 'user', content: historyContent },
+        { role: 'assistant', content: 'I can help with general tax information.' },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(fixture.createUserClient.mock.results[0].value.rpc).not.toHaveBeenCalled();
+    expect(fixture.knowledgeRpc).not.toHaveBeenCalled();
+    expect(fixture.generateAnswer).not.toHaveBeenCalled();
   });
 });

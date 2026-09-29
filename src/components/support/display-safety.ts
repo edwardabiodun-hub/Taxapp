@@ -24,9 +24,18 @@ const accountAmountPatterns = [
   /(?:[₦$£€]\s*|(?:NGN|USD|GBP|naira)\s*)?\d[\d,]*(?:\.\d+)?\b[\s\S]{0,100}?\b(?:my|your|our)\s+(?:account|balance|income|salary|tax\s+(?:bill|liability|due|paid)|amount|earnings|refund)\b/i,
 ];
 
-const documentReferences = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?)?\s*(?:documents?|files?|pdfs?|attachments?)\b/i;
-const documentHandling = /\b(?:stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|destination|go|what\s+happens?|do\s+with)\b/i;
-const labeledPersonalField = /(?:^|\b)(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
+const numberWord = "(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)";
+const magnitudeWord = "(?:hundred|thousand|million|billion|trillion)";
+const numberWordAmount = "(?:" + numberWord + "(?:\\s+" + numberWord + ")*\\s+" + magnitudeWord + ")";
+const numericAmount = "(?:\\d[\\d,]*(?:\\.\\d+)?(?:e[+-]?\\d+)?|\\d+(?:\\.\\d+)?[kmb])";
+const amountToken = "(?<![\\p{L}\\p{N}_])(?:(?:[₦$£€]\\s*|(?:NGN|USD|GBP|naira)\\s+)?(?:" + numericAmount + "|" + numberWordAmount + ")(?:\\s+(?:naira|NGN|USD|GBP))?)(?![\\p{L}\\p{N}_])";
+const personalAccountAmountPatterns = [
+  new RegExp("\\b(?:my|your|our)\\s+(?:account|balance|income|salary|tax\\s+(?:bill|liability|due|paid)|amount|earnings|refund)\\b[\\s\\S]{0,100}?" + amountToken, "iu"),
+  new RegExp(amountToken + "[\\s\\S]{0,100}?\\b(?:my|your|our)\\s+(?:account|balance|income|salary|tax\\s+(?:bill|liability|due|paid)|amount|earnings|refund)\\b", "iu"),
+];
+const documentReferences = /\b(?:upload(?:ed|s)?|attach(?:ed|ment|ments?)|scann(?:ed|s)?|documents?|files?|pdfs?|attachments?)\b/i;
+const documentHandling = /\b(?:review(?:ed|s|ing)?|read|open|summari[sz](?:e|ed|es|ing)|extract|quote|analy[sz](?:e|ed|es|ing)|transcrib(?:e|ed|es|ing)|inspect|look\s+at|check|safe|secure|stor(?:e|ed|es|ing)|kept|keep(?:s|ing)?|sav(?:e|ed|es|ing)|process(?:es|ed|ing)?|handl(?:e|ed|es|ing)|upload(?:ed|s)?|download(?:ed|s)?|portal|access|view|see|where|destination|go|retention|retain(?:s|ed|ing)?|share(?:s|d|ing)?|send(?:s|ing)?|forward(?:s|ed|ing)?|route(?:s|d|ing)?|what\s+happens?|do\s+with|what\s+(?:is|'s)\s+(?:in|inside|on|written|contained))\b/i;
+const labeledPersonalField = /\b(?:account holder|full\s+name|name|(?:postal\s+)?address|email|phone|bank\s+account)\s*[:=]/i;
 const sharedSensitivePatterns = [
   /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
@@ -48,10 +57,12 @@ const sharedSensitivePatterns = [
 
 export function safeSupportDisplayText(text: string, role: SupportDisplayRole): string {
   const normalized = text.normalize("NFKC").replace(/[\s\u200B-\u200D\uFEFF]+/gu, " ").trim();
+  const documentSafeText = normalized.replace(/https?:\/\/[^\s<>"'\x60\])}]+/giu, " ");
   const containsForbidden = accountAmountPatterns.some((pattern) => pattern.test(normalized))
-    || (documentReferences.test(normalized) && documentHandling.test(normalized))
+    || personalAccountAmountPatterns.some((pattern) => pattern.test(normalized))
+    || (documentReferences.test(documentSafeText) && documentHandling.test(documentSafeText))
     || labeledPersonalField.test(normalized)
-    || sharedSensitivePatterns.some((pattern) => pattern.test(normalized))
+    || sharedSensitivePatterns.some((pattern) => pattern.test(documentSafeText))
     || assistantPersonalAmountPatterns.some((pattern) => pattern.test(normalized))
     || (role === "user" && userAmountPatterns.some((pattern) => pattern.test(normalized)));
   return containsForbidden || !normalized ? fallback : text.trim();

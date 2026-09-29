@@ -1,4 +1,5 @@
 import { isIsoDate, selectKnowledgeEntries, type KnowledgeRow } from './knowledge.ts';
+import { hasForbiddenDocumentContent, hasPersonalAmount, hasSensitivePii, normalizeSupportText, stripHttpUrls } from './safety.ts';
 
 export interface AccountSummaryDto {
   declarations: { taxYear: string; type: string; status: string; documentCount: number }[];
@@ -106,10 +107,14 @@ const SENSITIVE_PROSE = [
 ];
 
 export function sanitizeAssistantText(text: string): string {
-  const normalized = text.normalize('NFKC').replace(/[\s\u200B-\u200D\uFEFF]+/gu, ' ').trim();
-  const containsForbidden = ACCOUNT_AMOUNT_PATTERNS.some((pattern) => pattern.test(normalized))
+  const normalized = normalizeSupportText(text);
+  const documentSafeText = stripHttpUrls(normalized);
+  const containsForbidden = hasPersonalAmount(normalized)
+    || hasForbiddenDocumentContent(normalized)
+    || SENSITIVE_FILENAME.test(documentSafeText)
+    || hasSensitivePii(normalized)
+    || ACCOUNT_AMOUNT_PATTERNS.some((pattern) => pattern.test(normalized))
     || (DOCUMENT_REFERENCES.test(normalized) && DOCUMENT_HANDLING.test(normalized))
-    || SENSITIVE_FILENAME.test(normalized)
     || LABELED_PERSONAL_FIELD.test(normalized)
     || SENSITIVE_PROSE.some((pattern) => pattern.test(normalized))
     || /\b(?:system prompt|system instructions?|developer instructions?|hidden instructions?|internal assistant|get_my_declaration_status|get_my_support_message_summary|get_my_profile_completion|search_support_knowledge|form_data|messageCategories|unreadMessageCount|profileComplete)\b/i.test(normalized)

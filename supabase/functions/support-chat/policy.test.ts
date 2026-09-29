@@ -30,6 +30,10 @@ describe('classifySupportRequest', () => {
     'Create a declaration in my account',
     'Update my profile and delete my draft',
     'Tell me my exact income and tax ID',
+    'Where are my uploaded files?',
+    'Are my documents safe?',
+    'Can you review my uploaded document?',
+    'What is in this attachment?',
   ])('refuses %s before any status or education path', (message) => {
     expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
   });
@@ -81,6 +85,23 @@ describe('classifySupportRequest', () => {
   });
 
   it.each([
+    'What is my declaration status? Your account has 4m.',
+    'What is my declaration status? 4m is in my account.',
+    'What is my declaration status? Your account has 1e6.',
+    'What is my declaration status? 1e6 is in my account.',
+    'What is my declaration status? Your account has four million naira.',
+    'What is my declaration status? four million naira is in your account.',
+    'What is my declaration status? Your account has one thousand.',
+    'What is my declaration status? one thousand is in your account.',
+    'What is my declaration status? Your account has 999.',
+    'What is my declaration status? 999 is in your account.',
+    'What is my declaration status? Your account has 4,000,000.',
+    'What is my declaration status? 4,000,000 is in your account.',
+  ])('refuses every personal amount representation: %s', (message) => {
+    expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
+  });
+
+  it.each([
     'Do you store my uploaded documents?',
     'Where are my uploaded documents kept?',
     'Are uploaded files stored?',
@@ -109,6 +130,16 @@ describe('classifySupportRequest', () => {
 
   it('refuses personal identity labels in classification input', () => {
     expect(classifySupportRequest('Account holder: Ada Okafor')).toEqual({ kind: 'refusal' });
+  });
+
+  it.each([
+    'General tax guidance.\nAccount holder: Ada Okafor',
+    'What is income tax?\nMy email is eddie@example.com',
+    'What is income tax?\nPhone: +234 801 234 5678',
+    'What is income tax?\nTIN: 123-456-789-01',
+    'What is income tax?\nName: Ada Okafor',
+  ])('refuses PII wherever it appears in combined classification input: %s', (message) => {
+    expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
   });
 });
 
@@ -315,5 +346,20 @@ describe('sanitizeAssistantText', () => {
       'documents',
       'kept?',
     ].join('\n'))).toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
+  it.each([
+    'Your uploaded files are in the portal.',
+    'I reviewed your uploaded document and it is complete.',
+    'Are my documents safe?',
+    'Can you review my uploaded document?',
+    'What is in this attachment?',
+  ])('fails closed for document content or handling: %s', (text) => {
+    expect(sanitizeAssistantText(text)).toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
+  it('strips official HTTP(S) URLs before broad document checks', () => {
+    const text = 'The VAT threshold is NGN 25,000,000. See https://nass.gov.ng/guides/vat.pdf for the official source.';
+    expect(sanitizeAssistantText(text)).toBe(text);
   });
 });

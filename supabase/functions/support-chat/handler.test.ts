@@ -178,6 +178,35 @@ describe('support-chat security boundary', () => {
     expect(f.generateAnswer).not.toHaveBeenCalled();
   });
 
+  it('refuses later-history PII before the provider wire request', async () => {
+    const f = fixture();
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: 'Should not be reached.' } }],
+    }), { status: 200 }));
+    const provider = createOpenAiAnswerProvider({
+      apiUrl: 'https://provider.example/chat/completions',
+      apiKey: 'provider-key',
+      model: 'model-1',
+      allowedHosts: 'provider.example',
+      fetcher,
+    });
+    const handler = createSupportChatHandler({ ...f.dependencies, provider });
+
+    const response = await handler(request({
+      message: 'What is my declaration status?',
+      history: [
+        { role: 'user', content: 'General tax guidance.\\nMy email is eddie@example.com' },
+        { role: 'assistant', content: 'I can help with general tax information.' },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+  });
+
   it.each([
     'What is my declaration status? My tax bill is 4,000,000.',
     'The amount on your account is 4,000,000.',
@@ -193,6 +222,16 @@ describe('support-chat security boundary', () => {
     'How does FileSmart process uploaded documents?',
     'What is my declaration status? How are my uploaded documents stored?',
     'What is my declaration status? What happens to my uploaded files?',
+    'What is my declaration status? Your account has 4m.',
+    'What is my declaration status? 4m is in my account.',
+    'What is my declaration status? Your account has 1e6.',
+    'What is my declaration status? Your account has four million naira.',
+    'What is my declaration status? Your account has one thousand.',
+    'What is my declaration status? Your account has 999.',
+    'Where are my uploaded files?',
+    'Are my documents safe?',
+    'Can you review my uploaded document?',
+    'What is in this attachment?',
     'Where do my uploaded documents go?',
     'What do you do with my uploaded documents?',
     'How are uploaded files stored?',
@@ -202,6 +241,24 @@ describe('support-chat security boundary', () => {
   ])('refuses %s before summary, retrieval, or provider input', async (message) => {
     const f = fixture();
     const response = await f.handler(request({ message, history: [] }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+    expect(f.generateAnswer).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'Account holder: Ada Okafor',
+    'My email is eddie@example.com',
+    'Phone: +234 801 234 5678',
+    'TIN: 123-456-789-01',
+  ])('refuses PII in later history before summary or provider input: %s', async (historyContent) => {
+    const f = fixture();
+    const response = await f.handler(request({ message: 'What is my declaration status?', history: [
+      { role: 'user', content: `General tax guidance.\n${historyContent}` },
+      { role: 'assistant', content: 'I can help with general tax information.' },
+    ] }));
     expect(response.status).toBe(200);
     expect((await response.json()).answer).toMatch(/cannot help/i);
     expect(f.userRpc).not.toHaveBeenCalled();

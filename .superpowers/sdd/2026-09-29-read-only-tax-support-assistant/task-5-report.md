@@ -94,6 +94,28 @@ Starting HEAD: `51ad5469650be5745eae04f7a0a0083be4d778e6`. The policy classifier
 
 No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno, provider-service, DNS/egress, or production-gate pass is claimed. Pre-existing untracked artifacts were not touched.
 
+## Final hardening round — representation-independent amounts, combined-history PII, and document-content refusal
+
+Starting HEAD: 730c76d. The server policy now detects personal/account amounts in numeric, comma-separated, scientific-notation, abbreviated (4m), and number-word (four million, one thousand) forms in either order across normalized whitespace and newlines. Combined current-message/history classification now refuses later-history labeled PII, email addresses, phone numbers, and tax identifiers before knowledge retrieval, summary RPCs, or provider input. Document content and handling requests/outputs refuse regardless of product name or verb, while HTTP(S) URLs are removed before broad document checks so official citation URLs ending in .pdf remain safe. The client display sanitizer mirrors the amount/document boundary and remains fail-closed.
+
+Scoped implementation and regression files:
+
+- supabase/functions/support-chat/safety.ts — shared server-side normalization and safety matchers.
+- supabase/functions/support-chat/policy.ts and prompt.ts — classifier and provider-output sanitizer integration.
+- src/components/support/display-safety.ts — client output-safety integration.
+- supabase/functions/support-chat/policy.test.ts, handler.test.ts, src/support-chat-security.test.ts, and src/components/support/display-safety.test.ts — permanent amount, PII, document, URL, handler, and provider-wire regressions.
+
+Verification:
+
+- Initial focused RED after adding regressions: exit 1; 4 files failed with 49 failed and 192 passed tests. Failures covered the new amount representations, later-history PII, document examples, and client/server output cases.
+- Focused GREEN: npm test -- supabase/functions/support-chat/policy.test.ts supabase/functions/support-chat/handler.test.ts src/support-chat-security.test.ts src/components/support/display-safety.test.ts --no-file-parallelism --testTimeout=10000 --reporter=dot — exit 0; 4 files passed, 241 tests passed.
+- Provider-wire regression: npm test -- supabase/functions/support-chat/handler.test.ts -t "later-history PII before the provider wire request" --no-file-parallelism --testTimeout=10000 --reporter=dot — exit 0; 1 test passed and 92 tests skipped.
+- Final serial focused suite: npm test -- src/support-chat-security.test.ts supabase/functions/support-chat/handler.test.ts supabase/functions/support-chat/policy.test.ts src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx src/lib/support-chat.test.ts src/App.test.tsx --no-file-parallelism --testTimeout=10000 --reporter=dot — exit 0; 7 files passed, 273 tests passed. React Router future-flag warnings only.
+- Focused ESLint over changed support code/tests — exit 0 with no findings.
+- Focused Edge TypeScript check covering support-chat knowledge/provider/safety/policy/prompt/handler with ES2022 and allowImportingTsExtensions — exit 0 with no diagnostics.
+
+The sandboxed first Vitest attempt again failed before test execution because the linked worktree ancestor was inaccessible; the identical focused commands were rerun successfully through the approved external execution path. No full-suite, repository-wide lint, live deployment, browser-preview, Supabase/RLS, Deno runtime, provider-service, DNS/egress, or production-gate pass is claimed. .gstack/, .npm-cache/, handoff.md, and reports/edge-origin-security-audit-2026-09-29.md were not modified.
+
 ## Final hardening round — arbitrary amounts, cross-turn reconstruction, and v1 document boundary
 
 Starting HEAD: `3c8e93c`. The support classifier now treats any numeric token as sensitive when associated with personal/account ownership terms in either order, after Unicode whitespace/newline normalization, while retaining public VAT threshold education. The handler classifies the normalized current message plus all history before knowledge retrieval, summary RPCs, or provider input; cross-turn reconstruction is refused and raw sensitive history is not forwarded. Document/file handling questions are refused regardless of product name or word order. Server and client response sanitizers now inspect the entire normalized response, fail closed to their safe fallback for forbidden account amounts, workflow/document handling, PII, filenames, DTOs, or internal content, and recognize labels such as `Account holder:` while retaining safe public VAT explanations and official citation URLs.

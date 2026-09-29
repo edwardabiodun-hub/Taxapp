@@ -18,6 +18,16 @@ describe("safeSupportDisplayText", () => {
     ["assistant", "Your account had 999.", false],
     ["assistant", "999 is in your account.", false],
     ["assistant", "Account holder: Ada Okafor", false],
+    ["assistant", "Your account has 4m.", false],
+    ["assistant", "4m is in your account.", false],
+    ["assistant", "Your account has 1e6.", false],
+    ["assistant", "Your account has four million naira.", false],
+    ["assistant", "Your account has one thousand.", false],
+    ["assistant", "Your account has 999.", false],
+    ["assistant", "Where are my uploaded files?", false],
+    ["assistant", "Are my documents safe?", false],
+    ["assistant", "I reviewed your uploaded document and it is complete.", false],
+    ["assistant", "What is in this attachment?", false],
   ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
     expect(safeSupportDisplayText(line, role) === line).toBe(visible);
   });
@@ -103,5 +113,12 @@ describe("safeSupportDisplayText", () => {
       "kept?",
     ].join("\n");
     expect(safeSupportDisplayText(text, "assistant")).toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
+  });
+
+  it("preserves an official PDF citation while rejecting non-URL document content", () => {
+    const citation = "See https://nass.gov.ng/guides/vat.pdf for the official source.";
+    expect(safeSupportDisplayText(citation, "assistant")).toBe(citation);
+    expect(safeSupportDisplayText("Your uploaded files are in the portal.", "assistant"))
+      .toBe("I can help with general Nigerian tax information and high-level account status. Please contact human support for other needs.");
   });
 });
