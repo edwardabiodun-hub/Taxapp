@@ -145,6 +145,26 @@ describe('buildSupportSystemPrompt', () => {
 });
 
 describe('sanitizeAssistantText', () => {
+  it('removes provider filenames and proprietary operations while retaining source guidance', () => {
+    const safe = sanitizeAssistantText([
+      'General Nigerian tax guidance is available.',
+      'Document filename: salary-slip.pdf',
+      'private-return.docx',
+      'Open the attachment payslip.jpg.',
+      'FileSmart sends submissions through its compliance queue.',
+      'FileSmart forwards uploaded forms to staff.',
+      'See https://nass.gov.ng/documents/download/11249 for the official source.',
+      'The approved source is https://nass.gov.ng/documents/guide.pdf.',
+    ].join('\n'));
+
+    expect(safe).toContain('General Nigerian tax guidance is available.');
+    expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
+    expect(safe).toContain('https://nass.gov.ng/documents/guide.pdf');
+    expect(safe).not.toMatch(/salary-slip\.pdf|private-return\.docx|payslip\.jpg|compliance queue|forwards uploaded forms/i);
+    expect(sanitizeAssistantText('FileSmart sends submissions through its compliance queue.'))
+      .toBe('I can provide general Nigerian tax information and high-level account status only.');
+  });
+
   it('removes system disclosures, tool names, raw DTOs, and direct identifiers', () => {
     const unsafe = [
       'General Nigerian tax guidance is available.',

@@ -53,4 +53,17 @@ describe("safeSupportDisplayText", () => {
     expect(safeSupportDisplayText(text, "user")).toBe("General Nigerian tax guidance is available.");
     expect(safeSupportDisplayText(text, "assistant")).toBe("General Nigerian tax guidance is available.");
   });
+
+  it("filters filenames and FileSmart operations on both roles while preserving general guidance", () => {
+    const text = [
+      "Document filename: salary-slip.pdf",
+      "private-return.docx",
+      "Open the attachment payslip.jpg.",
+      "FileSmart sends submissions through its compliance queue.",
+      "FileSmart forwards uploaded forms to staff.",
+      "General Nigerian tax guidance is available.",
+    ].join("\n");
+    expect(safeSupportDisplayText(text, "user")).toBe("General Nigerian tax guidance is available.");
+    expect(safeSupportDisplayText(text, "assistant")).toBe("General Nigerian tax guidance is available.");
+  });
 });

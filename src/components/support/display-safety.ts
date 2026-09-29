@@ -20,6 +20,7 @@ const assistantPersonalAmountPatterns = [
 ];
 
 const sharedSensitivePatterns = [
+  /(?<![\w/])[a-z0-9][a-z0-9._() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic)\b/i,
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
   /(?:\+?234|0)[\s.-]?(?:\d[\s.-]?){9,10}\b/,
   /\b\d{9,15}\b/,
@@ -29,6 +30,8 @@ const sharedSensitivePatterns = [
   /\b(?:document\s+(?:contents?|text|body)|(?:uploaded|attached|scanned)\s+(?:document|file|pdf)\s+(?:contents?|text|body)|ocr\s+(?:output|text)|form[_ ]data|payslip\s+contents?)\b/i,
   /\b(?:document|pdf|file)\s+(?:says|reads|contains|states)\b/i,
   /\b(?:internal\s+(?:workflow|routing|prompt|tool|schema|procedure|steps?|logic|queue)|system\s+(?:prompt|instructions?)|developer\s+(?:prompt|instructions?)|service[_ .-]?role|indexeddb|get_my_[a-z_]+|database\s+schema|private\s+queue)\b/i,
+  /\b(?:FileSmart(?:'s)?|our)\b.{0,120}\b(?:sends?|routes?|forwards?|handles?|moves?|dispatches?|submits?|process(?:es)?|prepares?|reviews?|verifies?|approves?|calculates?|scores?|queues?|workflows?|operational|proprietary)\b/i,
+  /\b(?:compliance|processing|approval|review)\s+queues?\b/i,
   /\b(?:support_knowledge|auth\.uid|rpc\s*[:=(]|tool\s*[:=])\b/i,
 ];
 

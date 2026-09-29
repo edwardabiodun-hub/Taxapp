@@ -139,4 +139,25 @@ describe('support-chat adversarial boundary', () => {
       expect(output, `HTTP response leaked ${sensitive}`).not.toContain(sensitive);
     }
   });
+
+  it('filters unsafe provider output before returning a status answer', async () => {
+    const fixture = securityFixture();
+    fixture.generateAnswer.mockResolvedValue([
+      'General Nigerian tax guidance is available.',
+      'Document filename: salary-slip.pdf',
+      'private-return.docx',
+      'See attachment payslip.jpg for details.',
+      'FileSmart sends submissions through its compliance queue.',
+      'FileSmart forwards uploaded forms to staff.',
+      'Your TIN is 123-456-789-01.',
+    ].join('\n'));
+
+    const response = await fixture.handler(post({ message: 'What is my declaration status?', history: [] }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(fixture.generateAnswer).toHaveBeenCalledOnce();
+    expect(payload.answer).toContain('General Nigerian tax guidance is available.');
+    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|payslip\.jpg|compliance queue|forwards uploaded forms|123-456-789-01/i);
+  });
 });
