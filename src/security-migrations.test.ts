@@ -10,6 +10,10 @@ const rateLimitMigrationPath = resolve(
   process.cwd(),
   "supabase/migrations/20260927010000_rate_limits.sql",
 );
+const realtimeMigrationPath = resolve(
+  process.cwd(),
+  "supabase/migrations/20260928000000_enable_realtime_sync.sql",
+);
 
 describe("security remediation migration", () => {
   it("enforces activity declaration ownership on insert and update", () => {
@@ -53,5 +57,15 @@ describe("security remediation migration", () => {
     expect(sql).toContain("create or replace function public.mark_message_email_sent");
     expect(sql).toContain("create or replace function public.mark_message_email_failed");
     expect(sql).toContain("for update");
+  });
+
+  it("publishes every user-scoped sync table and preserves ownership on deletes", () => {
+    expect(existsSync(realtimeMigrationPath)).toBe(true);
+    const sql = readFileSync(realtimeMigrationPath, "utf8").replace(/\s+/g, " ");
+
+    expect(sql).toContain("alter publication supabase_realtime add table public.%I");
+    expect(sql).toContain("array['profiles', 'declarations', 'activities', 'messages']");
+    expect(sql).toContain("alter table public.profiles replica identity full");
+    expect(sql).toContain("alter table public.messages replica identity full");
   });
 });
