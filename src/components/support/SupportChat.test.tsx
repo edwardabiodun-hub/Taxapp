@@ -114,15 +114,16 @@ describe("SupportChat surface", () => {
   it("shows a public statutory threshold but hides direct personal financial answers", async () => {
     send.mockResolvedValue({ answer: [
       "The VAT registration threshold is NGN 25,000,000.",
+      "Your tax bill is NGN 4,000,000.",
       "Your tax liability for 2025 is 4000000.",
       "Your income is NGN 4,000,000.",
     ].join("\n"), citations: [] });
     openChat();
-    fireEvent.change(screen.getByRole("textbox", { name: "Ask a tax question" }), { target: { value: "What is the VAT registration threshold?" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Ask a tax question" }), { target: { value: "My salary 4000000\nWhat is the VAT registration threshold?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send question" }));
     const answer = await screen.findByText("The VAT registration threshold is NGN 25,000,000.");
     expect(answer).toBeInTheDocument();
-    expect(screen.getByLabelText("Tax support conversation")).not.toHaveTextContent(/tax liability for 2025 is 4000000|Your income is NGN 4,000,000/i);
+    expect(screen.getByLabelText("Tax support conversation")).not.toHaveTextContent(/My salary 4000000|Your tax bill is NGN 4,000,000|tax liability for 2025 is 4000000|Your income is NGN 4,000,000/i);
   });
 
   it("shows safe offline and provider errors without revealing details", async () => {

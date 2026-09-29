@@ -51,3 +51,9 @@ The display filter now requires an explicit `user` or `assistant` role. User-ent
 Changed files: `src/components/support/display-safety.ts`, new `display-safety.test.ts`, `SupportChat.tsx`, `SupportChatMessage.tsx`, and `SupportChat.test.tsx`. No unrelated source or pre-existing untracked artifact was changed.
 
 Verification: `npm test -- src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx --no-file-parallelism` — exit 0, 2 files and 19 tests passed. Focused ESLint on the five Task 4 files — exit 0, no findings. `npx tsc --noEmit -p tsconfig.app.json` still exits 1 on the same diagnostics outside Task 4 (`App.test.tsx`, `DocumentsStep.tsx`, `SyncContext.test.tsx`, `account-deletion.test.ts`, `api.test.ts`, `auth-gateway.test.ts`, `auth.ts`, and `SubmissionDetail.tsx`); it reports no Task 4 diagnostic.
+
+## Fix round 3 — tax-bill and unformatted salary privacy cases
+
+The role-aware display patterns now suppress assistant text `Your tax bill is NGN 4,000,000.` and user text `My salary 4000000`. Direct regression cases also retain suppression of `Your tax liability for 2025 is 4000000.` and visibility of the public statement `The VAT registration threshold is NGN 25,000,000.` The UI test exercises both new privacy cases in a rendered conversation. Existing account-label, 44px close, 401/429, and AppLayout/Messages coverage remains in the focused UI suite.
+
+Changed files: `src/components/support/display-safety.ts`, `display-safety.test.ts`, and `SupportChat.test.tsx`. Verification: `npm test -- src/components/support/display-safety.test.ts src/components/support/SupportChat.test.tsx --no-file-parallelism` — exit 0, 2 files and 23 tests passed. Focused ESLint on those three files — exit 0, no findings. TypeScript was not rerun in this round; the prior app check reported only diagnostics outside Task 4.

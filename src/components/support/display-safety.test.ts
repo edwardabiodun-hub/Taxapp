@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import { safeSupportDisplayText } from "./display-safety";
 
 describe("safeSupportDisplayText", () => {
+  it.each([
+    ["assistant", "Your tax bill is NGN 4,000,000.", false],
+    ["user", "My salary 4000000", false],
+    ["assistant", "Your tax liability for 2025 is 4000000.", false],
+    ["assistant", "The VAT registration threshold is NGN 25,000,000.", true],
+  ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
+    expect(safeSupportDisplayText(line, role) === line).toBe(visible);
+  });
+
   it("redacts user-entered amounts and identifiers while retaining the general question", () => {
     const text = [
       "Income: ₦4,000,000",

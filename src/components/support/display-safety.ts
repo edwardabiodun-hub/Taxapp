@@ -9,11 +9,12 @@ const userAmountPatterns = [
   /\b(?:income|salary|amount|refund|balance|tax\s+liability|earnings|revenue)\b\s+(?:of\s+)?\d{1,3}(?:,\d{3})+(?:\.\d+)?/i,
   /\b(?:income|salary|amount|refund|balance|earnings|revenue)\b.{0,30}\b\d[\d,]*(?:\.\d+)?\s*(?:thousand|million|billion)\b/i,
   /\b(?:my|your|our)\b.{0,60}\b\d{1,3}(?:,\d{3})+(?:\.\d+)?/i,
+  /\b(?:my|your|our)\b.{0,40}\b(?:income|salary|tax\s+(?:liability|bill|due)|earnings|refund|balance)\b\s+\d[\d,]*(?:\.\d+)?\b/i,
 ];
 
 const assistantPersonalAmountPatterns = [
   /^\s*(?:income|salary|amount|refund(?:\s+amount)?|balance|tax\s+liability|tax\s+due|tax\s+paid|taxable\s+income|earnings|revenue)\b\s*(?::|=|is|was|of|at)?\s*(?:[₦$£€]|NGN|USD|naira)?\s*\d[\d,]*(?:\.\d+)?/i,
-  /\b(?:my|your|our)\b.{0,80}\b(?:income|salary|tax\s+liability|tax\s+due|tax\s+paid|taxable\s+income|earnings|revenue|refund|balance|amount)\b.{0,80}\b(?:is|was|equals?|amounts?\s+to|of|:)\s*(?:[₦$£€]|NGN|USD|naira)?\s*\d/i,
+  /\b(?:my|your|our)\b.{0,80}\b(?:income|salary|tax\s+liability|tax\s+bill|tax\s+due|tax\s+paid|taxable\s+income|earnings|revenue|refund|balance|amount)\b.{0,80}\b(?:is|was|equals?|amounts?\s+to|of|:)\s*(?:[₦$£€]|NGN|USD|naira)?\s*\d/i,
   /\b(?:you|i|we)\b.{0,20}\b(?:owe|earned|received|paid|refunded)\b.{0,40}(?:[₦$£€]|NGN|USD|naira)?\s*\d/i,
   /^\s*(?:[₦$£€]|NGN|USD|naira)\s*\d[\d,]*(?:\.\d+)?\s*\.?$/i,
 ];
