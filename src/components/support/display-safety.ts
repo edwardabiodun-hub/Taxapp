@@ -20,6 +20,7 @@ const assistantPersonalAmountPatterns = [
 ];
 
 const sharedSensitivePatterns = [
+  /\b(?:amount|balance|tax\s+(?:bill|liability|due|paid))\b.{0,40}\b(?:my|your|our)\s+account\b.{0,30}\b(?:NGN\s*|₦\s*)?\d[\d,]*(?:\.\d+)?\b/i,
   /(?<![\p{L}\p{N}\p{M}_/])[\p{L}\p{N}_][\p{L}\p{N}\p{M}_.() -]{0,100}\.(?:pdf|docx?|xlsx?|csv|txt|png|jpe?g|heic|odt)\b/iu,
   /^\s*(?:full\s+name|name|(?:postal\s+)?address)\s*[:=]/i,
   /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,

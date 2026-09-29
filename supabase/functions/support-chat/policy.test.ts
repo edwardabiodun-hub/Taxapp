@@ -54,6 +54,25 @@ describe('classifySupportRequest', () => {
     expect(classifySupportRequest('What does filing a tax return mean?')).toEqual({ kind: 'education' });
     expect(classifySupportRequest('File my return now')).toEqual({ kind: 'refusal' });
   });
+
+  it.each([
+    'What is my declaration status? My tax bill is 4,000,000.',
+    'The amount on your account is 4,000,000.',
+    'My salary is 4000000.',
+    'Your account balance is NGN 500,000.',
+    'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
+    'How does FileSmart process uploaded documents?',
+    'What happens to my uploaded documents in FileSmart?',
+  ])('refuses private amounts and FileSmart document-process probes: %s', (message) => {
+    expect(classifySupportRequest(message)).toEqual({ kind: 'refusal' });
+  });
+
+  it.each([
+    'What is the VAT registration threshold of NGN 25,000,000?',
+    'Explain the general tax treatment of a salary of NGN 4,000,000.',
+  ])('retains public tax education: %s', (message) => {
+    expect(classifySupportRequest(message)).toEqual({ kind: 'education' });
+  });
 });
 
 describe('buildSupportSystemPrompt', () => {
@@ -218,5 +237,13 @@ describe('sanitizeAssistantText', () => {
     expect(safe).toContain('General filing concepts can be explained from approved sources.');
     expect(safe).toContain('https://nass.gov.ng/documents/download/11249');
     expect(safe).not.toMatch(/1,250,000|245,000|175,000|123-456-789-01|resolve_private_status_tool|internal routing/i);
+  });
+
+  it('removes account-specific amount phrasing and retains a public VAT threshold', () => {
+    expect(sanitizeAssistantText([
+      'The amount on your account is 4,000,000.',
+      'Your tax bill is 4,000,000.',
+      'The VAT registration threshold is NGN 25,000,000.',
+    ].join('\n'))).toBe('The VAT registration threshold is NGN 25,000,000.');
   });
 });

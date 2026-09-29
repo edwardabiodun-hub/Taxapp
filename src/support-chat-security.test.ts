@@ -157,6 +157,8 @@ describe('support-chat adversarial boundary', () => {
       'Your TIN is 123-456-789-01.',
       'Name: Ada Okafor',
       'Address: 12 Market Street, Lagos',
+      'The amount on your account is 4,000,000.',
+      'The VAT registration threshold is NGN 25,000,000.',
     ].join('\n'));
 
     const response = await fixture.handler(post({ message: 'What is my declaration status?', history: [] }));
@@ -165,6 +167,7 @@ describe('support-chat adversarial boundary', () => {
     expect(response.status).toBe(200);
     expect(fixture.generateAnswer).toHaveBeenCalledOnce();
     expect(payload.answer).toContain('General Nigerian tax guidance is available.');
-    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street/i);
+    expect(payload.answer).toContain('The VAT registration threshold is NGN 25,000,000.');
+    expect(payload.answer).not.toMatch(/salary-slip\.pdf|private-return\.docx|__salary\.pdf|résumé\.pdf|tax-return\.odt|payslip\.jpg|compliance queue|forwards uploaded forms|private database|triage team|123-456-789-01|Ada Okafor|12 Market Street|4,000,000/i);
   });
 });

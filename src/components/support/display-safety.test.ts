@@ -7,6 +7,8 @@ describe("safeSupportDisplayText", () => {
     ["user", "My salary 4000000", false],
     ["assistant", "Your tax liability for 2025 is 4000000.", false],
     ["assistant", "The VAT registration threshold is NGN 25,000,000.", true],
+    ["assistant", "The amount on your account is 4,000,000.", false],
+    ["user", "The amount on your account is 4,000,000.", false],
   ] as const)("applies the %s privacy boundary to %s", (role, line, visible) => {
     expect(safeSupportDisplayText(line, role) === line).toBe(visible);
   });

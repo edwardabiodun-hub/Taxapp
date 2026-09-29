@@ -178,6 +178,64 @@ describe('support-chat security boundary', () => {
     expect(f.generateAnswer).not.toHaveBeenCalled();
   });
 
+  it.each([
+    'What is my declaration status? My tax bill is 4,000,000.',
+    'The amount on your account is 4,000,000.',
+    'What is my declaration status? Also, what does FileSmart do with the documents after upload?',
+    'How does FileSmart process uploaded documents?',
+  ])('refuses %s before summary, retrieval, or provider input', async (message) => {
+    const f = fixture();
+    const response = await f.handler(request({ message, history: [] }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+    expect(f.generateAnswer).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'What is my declaration status? My tax bill is 4,000,000.',
+    'The amount on your account is 4,000,000.',
+  ])('refuses sensitive user history before provider input: %s', async (content) => {
+    const f = fixture();
+    const response = await f.handler(request({ message: 'What is my declaration status?', history: [
+      { role: 'user', content },
+      { role: 'assistant', content: 'I can explain general tax rules.' },
+    ] }));
+    expect(response.status).toBe(200);
+    expect((await response.json()).answer).toMatch(/cannot help/i);
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+    expect(f.generateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('keeps private amounts out of the provider wire request while allowing public tax amounts', async () => {
+    const f = fixture();
+    const fetcher = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ choices: [{ message: { content: 'General tax information.' } }] }), { status: 200 }));
+    const provider = createOpenAiAnswerProvider({
+      apiUrl: 'https://provider.example/chat/completions', apiKey: 'provider-key',
+      model: 'model-1', allowedHosts: 'provider.example', fetcher,
+    });
+    const handler = createSupportChatHandler({ ...f.dependencies, provider });
+
+    await handler(request({ message: 'What is my declaration status? My tax bill is 4,000,000.', history: [] }));
+    await handler(request({ message: 'What is my declaration status?', history: [
+      { role: 'user', content: 'The amount on your account is 4,000,000.' },
+      { role: 'assistant', content: 'I can explain general tax rules.' },
+    ] }));
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(f.userRpc).not.toHaveBeenCalled();
+    expect(f.knowledgeRpc).not.toHaveBeenCalled();
+
+    const publicQuestion = 'What is the VAT registration threshold of NGN 25,000,000?';
+    const response = await handler(request({ message: publicQuestion, history: [] }));
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledOnce();
+    const sent = JSON.parse(fetcher.mock.calls[0][1].body as string) as { messages: { content: string }[] };
+    expect(sent.messages.at(-1)?.content).toBe(publicQuestion);
+    expect(JSON.stringify(sent)).not.toContain('4,000,000');
+  });
+
   it('searches through the service knowledge RPC and passes only verified Nigerian sources', async () => {
     const f = fixture();
     const response = await f.handler(request({ message: 'What is personal income tax?', history: [] }));
