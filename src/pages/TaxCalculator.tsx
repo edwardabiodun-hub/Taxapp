@@ -77,7 +77,7 @@ const TaxCalculator = () => {
       <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Deductions</GlossaryText></p>
         <Field label="Employee Pension" hint="8% of employment income" value={form.employeePension} onChange={(v) => update("employeePension", v)} />
-        <Field label="Annual Rent Paid" hint="20% relief, max ₦500,000" value={form.annualRentPaid} onChange={(v) => update("annualRentPaid", v)} />
+        <Field label="Annual Rent Paid" hint="20% of rent, with the rent base capped at ₦500,000" value={form.annualRentPaid} onChange={(v) => update("annualRentPaid", v)} />
       </div>
 
       <Button onClick={compute} className="w-full gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">

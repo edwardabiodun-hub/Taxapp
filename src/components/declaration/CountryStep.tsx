@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { africanCountries, nigerianStates, type NigeriaDeclarationForm } from "@/types/declaration";
+import { availableDeclarationCountries, nigerianStates, type NigeriaDeclarationForm } from "@/types/declaration";
 import { Lock, MapPin } from "lucide-react";
 import { useCountryTheme } from "@/contexts/CountryThemeContext";
 
@@ -47,7 +47,7 @@ const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
       <div className="space-y-3">
         <Label className={cn("text-sm font-semibold", hasCountryError && "text-destructive")}>Select Country *</Label>
         <div className="grid grid-cols-2 gap-2">
-          {africanCountries.map((country) => (
+          {availableDeclarationCountries.map((country) => (
             <button
               key={country.code}
               disabled={!country.active}

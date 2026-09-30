@@ -40,12 +40,19 @@ describe("calculateNigeriaTax", () => {
     expect(result.finalTax).toBe(1000);
   });
 
-  it("caps rent relief at NGN 500,000 even when 20% of rent paid exceeds it", () => {
+  it("caps recognized rent at NGN 500,000 before applying the 20% relief rate", () => {
     const withCap = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "3000000" }));
     const atCap = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "2500000" }));
-    // CRA = max(200000, 50000) + 1000000 = 1200000; rent relief capped at 500000 in both cases
-    expect(withCap.totalDeductions).toBe(1700000);
-    expect(atCap.totalDeductions).toBe(1700000);
+    // CRA = max(200000, 50000) + 1000000 = 1200000; capped rent base = 500000,
+    // so recognized relief is 100000 (20%) in both cases.
+    expect(withCap.totalDeductions).toBe(1300000);
+    expect(atCap.totalDeductions).toBe(1300000);
+  });
+
+  it("applies 20% relief to rent below the NGN 500,000 cap", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "250000" }));
+
+    expect(result.totalDeductions).toBe(1250000);
   });
 
   it("taxes 10% of company vehicle cost as a benefit in kind", () => {

@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
+import { calculateRentRelief, RENT_RELIEF_RECOGNITION_CAP } from "@/lib/rent-relief";
 
 interface DeductionsStepProps {
   form: NigeriaDeclarationForm;
@@ -11,7 +12,8 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
   const salaryNum = parseFloat(form.annualSalary?.replace(/,/g, "") || "0");
   const pensionCalc = salaryNum > 0 ? (salaryNum * 0.08).toLocaleString() : "";
   const rentNum = parseFloat(form.annualRentPaid?.replace(/,/g, "") || "0");
-  const rentRelief = rentNum > 0 ? Math.min(rentNum * 0.2, 500000).toLocaleString() : "";
+  const rentCalculation = calculateRentRelief(rentNum);
+  const rentRelief = rentNum > 0 ? rentCalculation.relief.toLocaleString() : "";
 
   return (
     <div className="space-y-4">
@@ -62,12 +64,12 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            <GlossaryText>20% of rent paid — max ₦500,000. Attach documentation.</GlossaryText>
+            <GlossaryText>20% of recognized rent, with the rent base capped at ₦500,000. Attach documentation.</GlossaryText>
           </p>
           {rentRelief && (
             <div className="flex items-center gap-2 bg-primary/5 rounded-lg px-3 py-2">
               <span className="text-[10px] text-primary font-semibold">
-                <GlossaryText>Relief</GlossaryText>: ₦{rentRelief} (20% of ₦{rentNum.toLocaleString()}, capped at ₦500,000)
+                <GlossaryText>Relief</GlossaryText>: ₦{rentRelief} (20% of ₦{rentCalculation.recognizedRent.toLocaleString()} rent base, capped at ₦{RENT_RELIEF_RECOGNITION_CAP.toLocaleString()})
               </span>
             </div>
           )}

@@ -24,14 +24,10 @@ async function hashKey(salt: string, key: string): Promise<string> {
   return toHex(new Uint8Array(digest));
 }
 
-/** Uses the trusted platform header and never accepts an arbitrary client value as a fallback. */
+/** The deployment boundary must overwrite cf-connecting-ip before requests reach this function. */
 export function getTrustedClientIp(request: Request): string {
   const cloudflareIp = request.headers.get("cf-connecting-ip")?.trim();
   if (cloudflareIp) return cloudflareIp;
-
-  const trustedProxyIp = request.headers.get("x-real-ip")?.trim();
-  if (trustedProxyIp) return trustedProxyIp;
-
   return "unknown-client-ip";
 }
 

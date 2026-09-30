@@ -14,6 +14,10 @@ const realtimeMigrationPath = resolve(
   process.cwd(),
   "supabase/migrations/20260928000000_enable_realtime_sync.sql",
 );
+const supportMigrationPath = resolve(
+  process.cwd(),
+  "supabase/migrations/20260929000000_support_chat_contract.sql",
+);
 
 describe("security remediation migration", () => {
   it("enforces activity declaration ownership on insert and update", () => {
@@ -67,5 +71,25 @@ describe("security remediation migration", () => {
     expect(sql).toContain("array['profiles', 'declarations', 'activities', 'messages']");
     expect(sql).toContain("alter table public.profiles replica identity full");
     expect(sql).toContain("alter table public.messages replica identity full");
+  });
+
+  it("keeps public knowledge service-only and private summaries JWT/RLS scoped", () => {
+    expect(existsSync(supportMigrationPath)).toBe(true);
+    const sql = readFileSync(supportMigrationPath, "utf8").toLowerCase().replace(/\s+/g, " ");
+    expect(sql).toContain("alter table public.support_knowledge enable row level security");
+    expect(sql).toContain("revoke all on table public.support_knowledge from public, anon, authenticated");
+    expect(sql).toContain("grant select on table public.support_knowledge to service_role");
+    expect(sql).toContain("revoke all on function public.search_support_knowledge(text, date, integer) from public, anon, authenticated");
+    expect(sql).toContain("grant execute on function public.search_support_knowledge(text, date, integer) to service_role");
+    for (const name of ["get_my_declaration_status", "get_my_support_message_summary", "get_my_profile_completion"]) {
+      expect(sql).toContain(`create or replace function public.${name}()`);
+      expect(sql).toContain(`revoke all on function public.${name}() from public, anon, authenticated`);
+      expect(sql).toContain(`grant execute on function public.${name}() to authenticated`);
+    }
+    expect(sql).toContain("d.user_id = auth.uid()");
+    expect(sql).toContain("m.recipient_user_id = auth.uid()");
+    expect(sql).toContain("p.id = auth.uid()");
+    expect(sql).toContain("security invoker");
+    expect(sql).not.toContain("security definer");
   });
 });

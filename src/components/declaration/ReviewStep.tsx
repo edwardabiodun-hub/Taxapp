@@ -2,6 +2,7 @@ import { FileText, Paperclip, Calculator } from "lucide-react";
 import { stateName, type NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
 import { calculateStateTax } from "@/lib/tax/state-tax";
+import { calculateRentRelief } from "@/lib/rent-relief";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface ReviewStepProps {
@@ -37,6 +38,7 @@ const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionD
 
 const ReviewStep = ({ form, documents }: ReviewStepProps) => {
   const tax = calculateStateTax(form, form.state);
+  const rentRelief = calculateRentRelief(Number(form.annualRentPaid.replace(/,/g, "")) || 0).relief;
 
   return (
     <div className="space-y-4">
@@ -157,7 +159,8 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
 
         <Section title="Deductions">
           <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
-          <SummaryRow label="Rent Relief" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="Rent Relief" value={rentRelief > 0 ? fmtN(rentRelief) : "—"} />
         </Section>
 
         {documents && documents.length > 0 && (

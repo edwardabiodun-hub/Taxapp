@@ -42,12 +42,66 @@ function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+const allowedCorsHeaders = new Set(["authorization", "apikey", "content-type"]);
+
+export interface AppOriginValidationOptions {
+  allowLocalDevelopment?: boolean;
+}
+
+export function validateAppOrigin(
+  value: string,
+  options: AppOriginValidationOptions = {},
+): string {
+  const url = new URL(value);
+  const isLocalHost =
+    url.hostname === "localhost" ||
+    url.hostname.endsWith(".localhost") ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "[::1]" ||
+    url.hostname === "::1";
+  const isAllowedLocalDevelopment = options.allowLocalDevelopment && isLocalHost;
+
+  if (
+    (url.protocol !== "https:" && !isAllowedLocalDevelopment) ||
+    (!isAllowedLocalDevelopment && isLocalHost) ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error("APP_ORIGIN must be a trusted HTTPS origin");
+  }
+
+  return url.origin;
+}
+
+function isAllowedOrigin(origin: string | null, appOrigin: string): boolean {
+  return Boolean(origin && origin !== "null" && origin === appOrigin);
+}
+
+function isAllowedPreflight(request: Request, appOrigin: string): boolean {
+  if (!isAllowedOrigin(request.headers.get("origin"), appOrigin)) return false;
+
+  const requestedMethod = request.headers.get("access-control-request-method");
+  if (requestedMethod && requestedMethod !== "POST") return false;
+
+  const requestedHeaders = request.headers.get("access-control-request-headers");
+  if (!requestedHeaders) return true;
+
+  return requestedHeaders
+    .split(",")
+    .map((header) => header.trim().toLowerCase())
+    .filter(Boolean)
+    .every((header) => allowedCorsHeaders.has(header));
+}
+
 function corsHeaders(origin: string | null, appOrigin: string): HeadersInit {
-  if (!origin || origin !== appOrigin) return {};
+  if (!isAllowedOrigin(origin, appOrigin)) return {};
   return {
     "Access-Control-Allow-Origin": appOrigin,
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type",
     Vary: "Origin",
   };
 }
@@ -62,6 +116,7 @@ function jsonResponse(
     status,
     headers: {
       "Content-Type": "application/json",
+      "Cache-Control": "no-store",
       ...corsHeaders(request.headers.get("origin"), appOrigin),
     },
   });
@@ -86,21 +141,33 @@ function operationFromRequest(request: Request): Operation | null {
 export function createAuthGatewayHandler(
   dependencies: AuthGatewayDependencies,
 ): (request: Request) => Promise<Response> {
+  const appOrigin = validateAppOrigin(dependencies.appOrigin);
+
   return async (request) => {
     if (request.method === "OPTIONS") {
+      if (!isAllowedPreflight(request, appOrigin)) {
+        return new Response(null, {
+          status: 403,
+          headers: { "Cache-Control": "no-store", Vary: "Origin" },
+        });
+      }
+
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(request.headers.get("origin"), dependencies.appOrigin),
+        headers: {
+          "Cache-Control": "no-store",
+          ...corsHeaders(request.headers.get("origin"), appOrigin),
+        },
       });
     }
 
     if (request.method !== "POST") {
-      return jsonResponse({ error: { message: "Method not allowed" } }, 405, request, dependencies.appOrigin);
+      return jsonResponse({ error: { message: "Method not allowed" } }, 405, request, appOrigin);
     }
 
     const operation = operationFromRequest(request);
     if (!operation) {
-      return jsonResponse({ error: { message: "Unknown auth operation" } }, 404, request, dependencies.appOrigin);
+      return jsonResponse({ error: { message: "Unknown auth operation" } }, 404, request, appOrigin);
     }
 
     let body: Record<string, unknown>;
@@ -109,14 +176,14 @@ export function createAuthGatewayHandler(
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid body");
       body = parsed as Record<string, unknown>;
     } catch {
-      return jsonResponse({ error: { message: "Invalid JSON payload" } }, 400, request, dependencies.appOrigin);
+      return jsonResponse({ error: { message: "Invalid JSON payload" } }, 400, request, appOrigin);
     }
 
     const email = typeof body.email === "string" ? normalizeEmail(body.email) : undefined;
     const authorization = request.headers.get("authorization") ?? undefined;
 
-    if (operation === "reset" && !isAllowedRedirect(dependencies.appOrigin, body.redirectTo)) {
-      return jsonResponse({ error: { message: "Invalid password reset redirect" } }, 400, request, dependencies.appOrigin);
+    if (operation === "reset" && !isAllowedRedirect(appOrigin, body.redirectTo)) {
+      return jsonResponse({ error: { message: "Invalid password reset redirect" } }, 400, request, appOrigin);
     }
 
     try {
@@ -129,19 +196,19 @@ export function createAuthGatewayHandler(
 
       if (operation === "update") {
         if (!authorization?.toLowerCase().startsWith("bearer ")) {
-          return jsonResponse({ error: { message: "Auth session missing" } }, 401, request, dependencies.appOrigin);
+          return jsonResponse({ error: { message: "Auth session missing" } }, 401, request, appOrigin);
         }
 
         const userResult = await authClient.auth.getUser();
         const userId = userResult.data?.user?.id;
         if (userResult.error || !userId) {
-          return jsonResponse({ error: { message: "Auth session invalid" } }, 401, request, dependencies.appOrigin);
+          return jsonResponse({ error: { message: "Auth session invalid" } }, 401, request, appOrigin);
         }
         accountKey = `user:${userId}`;
       }
 
       if (!accountKey) {
-        return jsonResponse({ error: { message: "Authentication identity missing" } }, 401, request, dependencies.appOrigin);
+        return jsonResponse({ error: { message: "Authentication identity missing" } }, 401, request, appOrigin);
       }
 
       const limit = limits[operation];
@@ -152,7 +219,7 @@ export function createAuthGatewayHandler(
         salt: dependencies.rateLimitSalt,
       });
       if (!rateLimitResult.allowed) {
-        return jsonResponse({ error: { message: "Too many attempts. Try again later." } }, 429, request, dependencies.appOrigin);
+        return jsonResponse({ error: { message: "Too many attempts. Try again later." } }, 429, request, appOrigin);
       }
 
       let result: AuthResult<unknown>;
@@ -182,11 +249,11 @@ export function createAuthGatewayHandler(
         { data: result.data, error: result.error ? { message: result.error.message } : null },
         result.error ? 400 : 200,
         request,
-        dependencies.appOrigin,
+        appOrigin,
       );
     } catch (error) {
       console.error("[auth-gateway] request failed:", error);
-      return jsonResponse({ error: { message: "Authentication service unavailable" } }, 503, request, dependencies.appOrigin);
+      return jsonResponse({ error: { message: "Authentication service unavailable" } }, 503, request, appOrigin);
     }
   };
 }

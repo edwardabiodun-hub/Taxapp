@@ -267,15 +267,11 @@ const Onboarding = () => {
                     <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
                       <p className="font-semibold text-foreground text-xs">How we handle your data</p>
                       <p>
-                        The details you enter — including your name, contact
-                        information, and tax identification number — are
-                        encrypted and stored only on this device. They are
-                        not uploaded or shared with anyone unless and until
-                        you submit a tax declaration for filing.
-                      </p>
-                      <p className="italic">
-                        Placeholder notice — pending final legal/compliance
-                        review before this app collects real user data.
+                        Your account and profile information is encrypted in
+                        transit and stored securely in your FileSmart account
+                        so you can use the app across devices. Uploaded
+                        document files remain encrypted on this device and are
+                        not uploaded by this app.
                       </p>
                     </div>
                   </div>
