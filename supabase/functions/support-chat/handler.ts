@@ -22,7 +22,7 @@ export interface SupportChatDependencies {
 }
 
 type SupportChatRequest = { message: string; history: ChatTurn[] };
-const allowedCorsHeaders = new Set(['authorization', 'apikey', 'content-type']);
+const allowedCorsHeaders = new Set(['authorization', 'apikey', 'content-type', 'x-client-info']);
 const allowedCategories = new Set(['refund_status', 'document_request', 'general']);
 const allowedStatuses = new Set(['draft', 'submitted', 'processing', 'audit_request', 'approved']);
 const refusal = 'I cannot help with that request. I can provide general Nigerian tax information or high-level account status; please contact human support for other needs.';
@@ -88,7 +88,7 @@ function response(request: Request, appOrigin: string, status: number, body?: Re
   if (isAllowedOrigin(request, appOrigin)) {
     headers.set('Access-Control-Allow-Origin', appOrigin);
     headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'authorization, apikey, content-type');
+    headers.set('Access-Control-Allow-Headers', 'authorization, apikey, content-type, x-client-info');
   }
   if (body) headers.set('Content-Type', 'application/json');
   return new Response(body ? JSON.stringify(body) : null, { status, headers });

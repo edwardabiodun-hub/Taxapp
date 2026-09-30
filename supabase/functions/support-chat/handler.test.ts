@@ -71,10 +71,10 @@ describe('support-chat security boundary', () => {
       { 'access-control-request-method': 'DELETE' },
       { 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization, x-secret' },
     ]) expect((await handler(new Request(url, { method: 'OPTIONS', headers: { origin, ...headers } }))).status).toBe(403);
-    const preflight = await handler(new Request(url, { method: 'OPTIONS', headers: { origin, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization, apikey, content-type' } }));
+    const preflight = await handler(new Request(url, { method: 'OPTIONS', headers: { origin, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization, apikey, content-type, x-client-info' } }));
     expect(preflight.status).toBe(204);
     expect(preflight.headers.get('access-control-allow-origin')).toBe(origin);
-    expect(preflight.headers.get('access-control-allow-headers')).toBe('authorization, apikey, content-type');
+    expect(preflight.headers.get('access-control-allow-headers')).toBe('authorization, apikey, content-type, x-client-info');
     expect(preflight.headers.get('cache-control')).toBe('no-store');
   });
 
