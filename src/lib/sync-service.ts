@@ -38,7 +38,7 @@ export async function syncAll(): Promise<SyncResult> {
       const syncedAt = new Date().toISOString();
       await Promise.all(
         pendingPreparations.map((preparation) =>
-          markPreparationSynced(preparation.id, preparation.updatedAt, syncedAt),
+          markPreparationSynced(preparation, syncedAt),
         ),
       );
     }

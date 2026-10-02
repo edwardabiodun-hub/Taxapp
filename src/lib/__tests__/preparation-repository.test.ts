@@ -6,6 +6,7 @@ import {
   getPreparation,
   listPreparations,
   isValidPreparationStatusTransition,
+  markPreparationSynced,
   migrateLegacyDeclarationsToPreparations,
   savePreparationFromSync,
   savePreparation,
@@ -15,7 +16,7 @@ import { db, type LocalDeclaration } from "@/lib/local-db";
 const preparation = (
   id: string,
   updatedAt: string,
-  status: "draft" | "ready_for_review" = "draft",
+  status: "draft" | "ready_for_review" | "exported" = "draft",
 ) =>
   createPreparationRecord(
     {
@@ -86,12 +87,34 @@ describe("preparation repository", () => {
   });
 
   it("rejects status skips while preserving same-status updates", () => {
+    expect(isValidPreparationStatusTransition(undefined, "draft")).toBe(true);
+    expect(isValidPreparationStatusTransition(undefined, "ready_for_review")).toBe(false);
+    expect(isValidPreparationStatusTransition(undefined, "exported")).toBe(false);
+    expect(isValidPreparationStatusTransition(undefined, "user_submitted")).toBe(false);
     expect(isValidPreparationStatusTransition("draft", "draft")).toBe(true);
     expect(isValidPreparationStatusTransition("draft", "ready_for_review")).toBe(true);
     expect(isValidPreparationStatusTransition("draft", "exported")).toBe(false);
     expect(isValidPreparationStatusTransition("draft", "user_submitted")).toBe(false);
     expect(isValidPreparationStatusTransition("ready_for_review", "authority_confirmed")).toBe(false);
     expect(isValidPreparationStatusTransition("authority_confirmed", "authority_confirmed")).toBe(true);
+  });
+
+  it("does not acknowledge a same-timestamp edit made while a push is in flight", async () => {
+    await db.delete();
+    await db.open();
+
+    const pushed = preparation("prep-ack", "2026-02-01T00:00:00.000Z");
+    await savePreparation(pushed);
+    const edited = { ...pushed, formData: { country: "ng", annualSalary: "new" } };
+    await savePreparation(edited);
+
+    await expect(
+      markPreparationSynced(pushed, "2026-02-02T00:00:00.000Z"),
+    ).resolves.toBe(false);
+    await expect(db.preparations.get(pushed.id)).resolves.toMatchObject({
+      pendingSync: true,
+      formData: { country: "ng", annualSalary: "new" },
+    });
   });
 
   it("does not let stale sync data overwrite a pending local preparation", async () => {
@@ -144,6 +167,66 @@ describe("preparation repository", () => {
       formData: { annualSalary: "1000000", country: "ng" },
     });
     await expect(db.preparations.get(legacy.id)).resolves.toMatchObject({
+      pendingSync: true,
+    });
+  });
+
+  it("preserves a newer local preparation instead of downgrading it during migration", async () => {
+    await db.delete();
+    await db.open();
+
+    const local = preparation("local-newer", "2026-02-01T00:00:00.000Z");
+    await savePreparation(local);
+    const legacy: LocalDeclaration = {
+      id: local.id,
+      taxYear: "2025",
+      country: "ng",
+      type: "Income Tax",
+      status: "submitted",
+      formData: { annualSalary: "old" },
+      documents: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      pendingSync: false,
+      syncedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    await migrateLegacyDeclarationsToPreparations([legacy]);
+
+    await expect(db.preparations.get(local.id)).resolves.toMatchObject({
+      pendingSync: true,
+      updatedAt: local.updatedAt,
+      formData: { country: "ng" },
+    });
+  });
+
+  it("does not downgrade an exported preparation when legacy data is newer", async () => {
+    await db.delete();
+    await db.open();
+
+    const draft = preparation("exported-local", "2026-01-01T00:00:00.000Z");
+    await savePreparation(draft);
+    const ready = { ...draft, status: "ready_for_review" as const, updatedAt: "2026-01-02T00:00:00.000Z" };
+    await savePreparation(ready);
+    const exported = { ...ready, status: "exported" as const, updatedAt: "2026-01-03T00:00:00.000Z" };
+    await savePreparation(exported);
+
+    await migrateLegacyDeclarationsToPreparations([{
+      id: exported.id,
+      taxYear: "2025",
+      country: "ng",
+      type: "Income Tax",
+      status: "submitted",
+      formData: { annualSalary: "legacy" },
+      documents: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-04T00:00:00.000Z",
+      pendingSync: false,
+    }]);
+
+    await expect(db.preparations.get(exported.id)).resolves.toMatchObject({
+      status: "exported",
+      formData: exported.formData,
       pendingSync: true,
     });
   });

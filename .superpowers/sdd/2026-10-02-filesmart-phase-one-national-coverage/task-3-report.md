@@ -13,7 +13,7 @@ passes.
 
 ## Commit hash
 
-`a4b5011` (amended once after report finalization to include this hash).
+`ef88c35bdf647c36690a485510a5d30cd14c8239`.
 
 ## Files changed
 

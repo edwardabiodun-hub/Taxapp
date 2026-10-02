@@ -42,4 +42,19 @@ describe("receipt persistence validation", () => {
       }),
     ).toBe(false);
   });
+
+  it.each([
+    "data:application/pdf;base64,JVBERi0xLjQ=",
+    "blob:https://example.test/receipt-1",
+    "base64:JVBERi0xLjQ=",
+    "SGVsbG8=",
+  ])("rejects inline asset reference %s", (assetRef) => {
+    expect(isReceiptRecordPersistable({ ...receipt, assetRef })).toBe(false);
+  });
+
+  it("rejects raw byte values in the asset reference field", () => {
+    expect(
+      isReceiptRecordPersistable({ ...receipt, assetRef: new Uint8Array([1, 2, 3]) }),
+    ).toBe(false);
+  });
 });

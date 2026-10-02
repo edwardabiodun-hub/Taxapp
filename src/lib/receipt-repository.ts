@@ -28,7 +28,7 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
   if (
     !isNonEmptyString(value.id) ||
     !isNonEmptyString(value.preparationId) ||
-    !isNonEmptyString(value.assetRef) ||
+    !isOpaqueAssetReference(value.assetRef) ||
     !isNonEmptyString(value.fileName) ||
     !isNonEmptyString(value.mimeType) ||
     typeof value.size !== "number" ||
@@ -81,4 +81,22 @@ function hasOnlyKeys(value: Record<string, unknown>, allowed: Set<string>): bool
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function isOpaqueAssetReference(value: unknown): value is string {
+  if (!isNonEmptyString(value)) return false;
+
+  const reference = value.trim();
+  if (/^(data|blob):/i.test(reference) || /^base64(?:[:,])/i.test(reference)) {
+    return false;
+  }
+
+  // A raw base64 payload has no storage boundary and must not be persisted as
+  // an asset reference. Opaque paths/URLs/IDs contain a delimiter or are not
+  // valid padded base64, so they remain allowed.
+  return !(
+    reference.length >= 8 &&
+    reference.length % 4 === 0 &&
+    /^[A-Za-z0-9+/]+={0,2}$/.test(reference)
+  );
 }

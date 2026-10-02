@@ -26,9 +26,6 @@ const allowedTransitions: Readonly<
 
 const initialStatuses: readonly PreparationStatus[] = [
   "draft",
-  "ready_for_review",
-  "exported",
-  "user_submitted",
 ];
 
 export function isValidPreparationStatusTransition(
@@ -93,10 +90,11 @@ export async function migrateLegacyDeclarationsToPreparations(
       const migrated = migrateLegacyDeclaration(declaration);
       const existing = await db.preparations.get(migrated.id);
 
-      if (
-        existing &&
-        (existing.pendingSync || existing.updatedAt >= migrated.updatedAt)
-      ) {
+      if (existing && (existing.pendingSync || existing.updatedAt >= migrated.updatedAt)) {
+        continue;
+      }
+
+      if (!isValidMigratedPreparationTransition(existing?.status, migrated)) {
         continue;
       }
 
@@ -154,21 +152,20 @@ export async function listPendingPreparations(): Promise<StoredPreparation[]> {
 }
 
 export async function markPreparationSynced(
-  id: string,
-  expectedUpdatedAt: string,
+  expected: PreparationRecord | StoredPreparation,
   syncedAt = new Date().toISOString(),
 ): Promise<boolean> {
   return db.transaction("rw", db.preparations, async () => {
-    const current = await db.preparations.get(id);
+    const current = await db.preparations.get(expected.id);
     if (
       !current ||
       !current.pendingSync ||
-      current.updatedAt !== expectedUpdatedAt
+      serializePreparationSnapshot(current) !== serializePreparationSnapshot(expected)
     ) {
       return false;
     }
 
-    await db.preparations.update(id, { pendingSync: false, syncedAt });
+    await db.preparations.update(expected.id, { pendingSync: false, syncedAt });
     return true;
   });
 }
@@ -185,7 +182,7 @@ export async function savePreparationFromSync(
     ) {
       return;
     }
-    if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
+    if (!isValidMigratedPreparationTransition(existing?.status, preparation)) {
       return;
     }
     assertAuthorityConfirmation(preparation);
@@ -221,8 +218,46 @@ function assertAuthorityConfirmation(preparation: PreparationRecord): void {
   }
 }
 
-function stripSyncMetadata({ pendingSync: _pendingSync, syncedAt: _syncedAt, ...record }: StoredPreparation) {
+function isValidMigratedPreparationTransition(
+  from: PreparationStatus | undefined,
+  preparation: PreparationRecord,
+): boolean {
+  if (isValidPreparationStatusTransition(from, preparation.status)) return true;
+
+  // Legacy records may carry a non-draft lifecycle label, but migration must
+  // still follow the explicit draft -> ready_for_review path. A legacy row
+  // cannot establish an authority-confirmed lifecycle without local history.
+  return (
+    from === undefined &&
+    preparation.status === "ready_for_review" &&
+    isValidPreparationStatusTransition(undefined, "draft") &&
+    isValidPreparationStatusTransition("draft", preparation.status)
+  );
+}
+
+function stripSyncMetadata(
+  { pendingSync: _pendingSync, syncedAt: _syncedAt, ...record }: StoredPreparation,
+) {
   return record as PreparationRecord;
+}
+
+function serializePreparationSnapshot(
+  preparation: PreparationRecord | StoredPreparation,
+): string {
+  return stableSerialize(stripSyncMetadata(preparation as StoredPreparation));
+}
+
+function stableSerialize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableSerialize).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value as Record<string, unknown>)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableSerialize((value as Record<string, unknown>)[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function getAuthorityReference(record: LocalDeclaration): string | undefined {
