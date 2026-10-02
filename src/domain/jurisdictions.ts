@@ -13,6 +13,13 @@ export interface EvidenceMetadata {
   readonly confidence: EvidenceConfidence;
 }
 
+export interface DeadlineEvidenceMetadata extends EvidenceMetadata {
+  readonly dueAt: string;
+  readonly taxYear: string;
+  readonly timezone: string;
+  readonly recurrence?: string;
+}
+
 /** Review metadata for the generic national baseline, not state verification. */
 export interface BaselineMetadata {
   readonly status?: "configured" | "unconfigured";
@@ -58,7 +65,7 @@ export type ApiStatus =
 export type DeadlineProfile =
   | {
       kind: "verified_state" | "national_baseline";
-      evidence: EvidenceMetadata;
+      evidence: DeadlineEvidenceMetadata;
     }
   | {
       kind: "unverified";
@@ -77,6 +84,8 @@ export interface JurisdictionCapability {
   readonly submissionModes: readonly SubmissionMode[];
   readonly apiStatus: ApiStatus;
   readonly deadlineProfile: DeadlineProfile;
+  /** Optional national fallback carried by a jurisdiction capability snapshot. */
+  readonly nationalDeadlineProfile?: DeadlineProfile;
   readonly exportFormats: readonly ExportFormat[];
   readonly evidence: CapabilityEvidence;
   readonly notes: string;

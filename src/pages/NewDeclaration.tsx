@@ -20,6 +20,8 @@ import {
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
+import DeadlineCard from "@/components/deadlines/DeadlineCard";
+import { resolveDeadline } from "@/lib/deadline-service";
 import { validateStep } from "@/lib/validation";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import JurisdictionStep from "@/components/declaration/JurisdictionStep";
@@ -58,6 +60,13 @@ const NewDeclaration = () => {
         capability ?? getJurisdictionCapability("NG-UNKNOWN"),
       ),
     [capability, form, jurisdictionCode],
+  );
+  const deadline = useMemo(
+    () =>
+      capability && form.taxYear
+        ? resolveDeadline(capability, form.taxYear)
+        : null,
+    [capability, form.taxYear],
   );
 
   const update = (key: string, value: string) =>
@@ -227,6 +236,10 @@ const NewDeclaration = () => {
         status={savedStatus}
         lastSavedAt={lastSavedAt}
       />
+
+      <div className="mt-4">
+        <DeadlineCard deadline={deadline} />
+      </div>
 
       <motion.div
         key={currentStep}

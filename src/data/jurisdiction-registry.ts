@@ -10,7 +10,7 @@ const REGISTRY_VERSION = "2026.1";
 const GENERIC_RULE_PROFILE_VERSION = "";
 const GENERIC_RULE_SOURCE = "";
 
-const freezeEvidence = (evidence: EvidenceMetadata): EvidenceMetadata =>
+const freezeEvidence = <T extends EvidenceMetadata>(evidence: T): T =>
   Object.freeze({ ...evidence });
 
 const freezeRuleProfile = (profile: RuleProfile): RuleProfile =>
@@ -47,6 +47,9 @@ const freezeCapability = (
     ...capability,
     ruleProfile: freezeRuleProfile(capability.ruleProfile),
     deadlineProfile: freezeDeadlineProfile(capability.deadlineProfile),
+    ...(capability.nationalDeadlineProfile
+      ? { nationalDeadlineProfile: freezeDeadlineProfile(capability.nationalDeadlineProfile) }
+      : {}),
     submissionModes: Object.freeze([...capability.submissionModes]),
     exportFormats: Object.freeze([...capability.exportFormats]),
     evidence: freezeCapabilityEvidence(capability.evidence),

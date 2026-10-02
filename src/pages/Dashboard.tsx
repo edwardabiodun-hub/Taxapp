@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
-import { useProfile, useDeclarations } from "@/hooks/use-local-data";
+import DeadlineCard from "@/components/deadlines/DeadlineCard";
+import { useProfile, useDeclarations, usePreparations } from "@/hooks/use-local-data";
 import { useSync } from "@/hooks/use-sync";
+import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
+import { resolveDeadline } from "@/lib/deadline-service";
 
 const container = {
   hidden: {},
@@ -20,7 +23,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const profile = useProfile();
   const declarations = useDeclarations();
+  const preparations = usePreparations();
   const { status: syncStatus, runSync } = useSync();
+
+  const latestPreparation = preparations[0];
+  const dashboardDeadline = latestPreparation?.jurisdictionCode
+    ? resolveDeadline(
+        getJurisdictionCapability(latestPreparation.jurisdictionCode),
+        latestPreparation.taxYear,
+      )
+    : null;
 
   const approved = declarations.filter((d) => d.status === "approved").length;
   const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing" || d.status === "audit_request").length;
@@ -60,6 +72,10 @@ const Dashboard = () => {
           Syncing data…
         </motion.div>
       )}
+
+      <motion.div variants={item}>
+        <DeadlineCard deadline={dashboardDeadline} />
+      </motion.div>
 
       {/* Audit Request Banner */}
       {auditRequests.length > 0 && (
