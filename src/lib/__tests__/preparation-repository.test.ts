@@ -5,9 +5,12 @@ import {
   appendSubmissionEvent,
   getPreparation,
   listPreparations,
+  isValidPreparationStatusTransition,
+  migrateLegacyDeclarationsToPreparations,
+  savePreparationFromSync,
   savePreparation,
 } from "@/lib/preparation-repository";
-import { db } from "@/lib/local-db";
+import { db, type LocalDeclaration } from "@/lib/local-db";
 
 const preparation = (
   id: string,
@@ -80,6 +83,69 @@ describe("preparation repository", () => {
         },
       }),
     ).rejects.toThrow(/invalid preparation status transition/i);
+  });
+
+  it("rejects status skips while preserving same-status updates", () => {
+    expect(isValidPreparationStatusTransition("draft", "draft")).toBe(true);
+    expect(isValidPreparationStatusTransition("draft", "ready_for_review")).toBe(true);
+    expect(isValidPreparationStatusTransition("draft", "exported")).toBe(false);
+    expect(isValidPreparationStatusTransition("draft", "user_submitted")).toBe(false);
+    expect(isValidPreparationStatusTransition("ready_for_review", "authority_confirmed")).toBe(false);
+    expect(isValidPreparationStatusTransition("authority_confirmed", "authority_confirmed")).toBe(true);
+  });
+
+  it("does not let stale sync data overwrite a pending local preparation", async () => {
+    await db.delete();
+    await db.open();
+
+    const local = preparation("prep-stale", "2026-02-01T00:00:00.000Z");
+    await savePreparation(local);
+
+    await savePreparationFromSync(
+      {
+        ...local,
+        status: "ready_for_review",
+        formData: { country: "ng", annualSalary: "stale" },
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      } as PreparationRecord,
+      "2026-02-02T00:00:00.000Z",
+    );
+
+    const stored = await db.preparations.get(local.id);
+    expect(stored).toMatchObject({
+      formData: { country: "ng" },
+      pendingSync: true,
+      updatedAt: "2026-02-01T00:00:00.000Z",
+    });
+  });
+
+  it("migrates local legacy declarations even when the server does not return them", async () => {
+    await db.delete();
+    await db.open();
+
+    const legacy: LocalDeclaration = {
+      id: "local-only",
+      taxYear: "2025",
+      country: "ng",
+      type: "Income Tax",
+      status: "submitted",
+      formData: { annualSalary: "1000000" },
+      documents: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+      pendingSync: true,
+    };
+    await db.declarations.put(legacy);
+
+    await migrateLegacyDeclarationsToPreparations([legacy]);
+
+    await expect(getPreparation(legacy.id)).resolves.toMatchObject({
+      status: "ready_for_review",
+      formData: { annualSalary: "1000000", country: "ng" },
+    });
+    await expect(db.preparations.get(legacy.id)).resolves.toMatchObject({
+      pendingSync: true,
+    });
   });
 
   it("appends immutable submission events and requires authority references", async () => {

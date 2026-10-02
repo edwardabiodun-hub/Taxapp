@@ -56,6 +56,16 @@ export interface DeadlineRecord {
 
 export type ReceiptStatus = "needs_review" | "confirmed" | "rejected";
 
+export interface ReceiptExtractedData {
+  vendorName?: string;
+  receiptNumber?: string;
+  receiptDate?: string;
+  currency?: string;
+  subtotal?: number;
+  taxAmount?: number;
+  totalAmount?: number;
+}
+
 export interface ReceiptRecord {
   id: string;
   preparationId: string;
@@ -64,7 +74,7 @@ export interface ReceiptRecord {
   mimeType: string;
   size: number;
   status: ReceiptStatus;
-  extractedData?: Record<string, unknown>;
+  extractedData?: ReceiptExtractedData;
   createdAt: string;
   updatedAt: string;
 }

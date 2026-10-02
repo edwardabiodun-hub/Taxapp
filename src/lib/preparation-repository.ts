@@ -14,51 +14,48 @@ import {
   type StoredPreparation,
 } from "@/lib/local-db";
 
-const statusOrder: readonly PreparationStatus[] = [
+const allowedTransitions: Readonly<
+  Record<PreparationStatus, readonly PreparationStatus[]>
+> = {
+  draft: ["draft", "ready_for_review"],
+  ready_for_review: ["ready_for_review", "exported"],
+  exported: ["exported", "user_submitted"],
+  user_submitted: ["user_submitted", "authority_confirmed"],
+  authority_confirmed: ["authority_confirmed"],
+};
+
+const initialStatuses: readonly PreparationStatus[] = [
   "draft",
   "ready_for_review",
   "exported",
   "user_submitted",
-  "authority_confirmed",
 ];
-
-const statusIndex = (status: PreparationStatus) => statusOrder.indexOf(status);
 
 export function isValidPreparationStatusTransition(
   from: PreparationStatus | undefined,
   to: PreparationStatus,
 ): boolean {
-  if (from === undefined) return to !== "authority_confirmed";
-  return to === from || statusIndex(to) >= statusIndex(from);
+  if (from === undefined) return initialStatuses.includes(to);
+  return allowedTransitions[from].includes(to);
 }
 
 export async function savePreparation(preparation: PreparationRecord): Promise<void> {
-  const existing = await db.preparations.get(preparation.id);
-  if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
-    throw new Error(
-      `Invalid preparation status transition from ${existing?.status ?? "new"} to ${preparation.status}.`,
-    );
-  }
+  await db.transaction("rw", db.preparations, async () => {
+    const existing = await db.preparations.get(preparation.id);
+    assertValidPreparationSave(existing, preparation);
 
-  if (
-    preparation.status === "authority_confirmed" &&
-    (!preparation.authorityConfirmation.authorityReference.trim() ||
-      !preparation.authorityConfirmation.confirmedAt.trim())
-  ) {
-    throw new Error("Authority confirmation requires an authority reference.");
-  }
+    const record: StoredPreparation = {
+      ...preparation,
+      createdAt: existing?.createdAt ?? preparation.createdAt,
+      updatedAt:
+        existing && existing.updatedAt > preparation.updatedAt
+          ? existing.updatedAt
+          : preparation.updatedAt,
+      pendingSync: true,
+    };
 
-  const record: StoredPreparation = {
-    ...preparation,
-    createdAt: existing?.createdAt ?? preparation.createdAt,
-    updatedAt:
-      existing && existing.updatedAt > preparation.updatedAt
-        ? existing.updatedAt
-        : preparation.updatedAt,
-    pendingSync: true,
-  };
-
-  await db.preparations.put(record);
+    await db.preparations.put(record);
+  });
 }
 
 export async function getPreparation(
@@ -86,6 +83,33 @@ export async function appendSubmissionEvent(event: SubmissionEvent): Promise<voi
   }
 
   await db.submissionEvents.add(event);
+}
+
+export async function migrateLegacyDeclarationsToPreparations(
+  declarations: readonly LocalDeclaration[],
+): Promise<void> {
+  await db.transaction("rw", db.preparations, async () => {
+    for (const declaration of declarations) {
+      const migrated = migrateLegacyDeclaration(declaration);
+      const existing = await db.preparations.get(migrated.id);
+
+      if (
+        existing &&
+        (existing.pendingSync || existing.updatedAt >= migrated.updatedAt)
+      ) {
+        continue;
+      }
+
+      await db.preparations.put({
+        ...migrated,
+        createdAt: existing?.createdAt ?? migrated.createdAt,
+        pendingSync: declaration.pendingSync,
+        ...(declaration.pendingSync || !declaration.syncedAt
+          ? {}
+          : { syncedAt: declaration.syncedAt }),
+      });
+    }
+  });
 }
 
 export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationRecord {
@@ -129,35 +153,72 @@ export async function listPendingPreparations(): Promise<StoredPreparation[]> {
   return db.preparations.where("pendingSync").equals(1).toArray();
 }
 
-export async function markPreparationSynced(id: string, syncedAt = new Date().toISOString()) {
-  await db.preparations.update(id, { pendingSync: false, syncedAt });
+export async function markPreparationSynced(
+  id: string,
+  expectedUpdatedAt: string,
+  syncedAt = new Date().toISOString(),
+): Promise<boolean> {
+  return db.transaction("rw", db.preparations, async () => {
+    const current = await db.preparations.get(id);
+    if (
+      !current ||
+      !current.pendingSync ||
+      current.updatedAt !== expectedUpdatedAt
+    ) {
+      return false;
+    }
+
+    await db.preparations.update(id, { pendingSync: false, syncedAt });
+    return true;
+  });
 }
 
 export async function savePreparationFromSync(
   preparation: PreparationRecord,
   syncedAt = new Date().toISOString(),
 ): Promise<void> {
-  const existing = await db.preparations.get(preparation.id);
-  if (
-    existing?.status === "authority_confirmed" &&
-    preparation.status !== "authority_confirmed"
-  ) {
-    return;
-  }
-  if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
-    return;
-  }
+  await db.transaction("rw", db.preparations, async () => {
+    const existing = await db.preparations.get(preparation.id);
+    if (
+      existing &&
+      (existing.pendingSync || existing.updatedAt >= preparation.updatedAt)
+    ) {
+      return;
+    }
+    if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
+      return;
+    }
+    assertAuthorityConfirmation(preparation);
 
-  await db.preparations.put({
-    ...preparation,
-    createdAt: existing?.createdAt ?? preparation.createdAt,
-    updatedAt:
-      existing && existing.updatedAt > preparation.updatedAt
-        ? existing.updatedAt
-        : preparation.updatedAt,
-    pendingSync: false,
-    syncedAt,
+    await db.preparations.put({
+      ...preparation,
+      createdAt: existing?.createdAt ?? preparation.createdAt,
+      pendingSync: false,
+      syncedAt,
+    });
   });
+}
+
+function assertValidPreparationSave(
+  existing: StoredPreparation | undefined,
+  preparation: PreparationRecord,
+): void {
+  if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
+    throw new Error(
+      `Invalid preparation status transition from ${existing?.status ?? "new"} to ${preparation.status}.`,
+    );
+  }
+  assertAuthorityConfirmation(preparation);
+}
+
+function assertAuthorityConfirmation(preparation: PreparationRecord): void {
+  if (
+    preparation.status === "authority_confirmed" &&
+    (!preparation.authorityConfirmation.authorityReference.trim() ||
+      !preparation.authorityConfirmation.confirmedAt.trim())
+  ) {
+    throw new Error("Authority confirmation requires an authority reference.");
+  }
 }
 
 function stripSyncMetadata({ pendingSync: _pendingSync, syncedAt: _syncedAt, ...record }: StoredPreparation) {

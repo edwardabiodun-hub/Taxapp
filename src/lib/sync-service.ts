@@ -9,9 +9,9 @@ import {
   pushPreparationsToServer,
 } from "./mock-api";
 import {
-  getPreparation,
   listPendingPreparations,
   markPreparationSynced,
+  migrateLegacyDeclarationsToPreparations,
   migrateLegacyDeclaration,
   savePreparationFromSync,
 } from "./preparation-repository";
@@ -31,13 +31,14 @@ export async function syncAll(): Promise<SyncResult> {
   try {
     // Preparation synchronization is local lifecycle synchronization only; it
     // never promotes a preparation to an authority status.
+    await migrateLegacyDeclarationsToPreparations(await db.declarations.toArray());
     const pendingPreparations = await listPendingPreparations();
     if (pendingPreparations.length > 0) {
       await pushPreparationsToServer(pendingPreparations);
       const syncedAt = new Date().toISOString();
       await Promise.all(
         pendingPreparations.map((preparation) =>
-          markPreparationSynced(preparation.id, syncedAt),
+          markPreparationSynced(preparation.id, preparation.updatedAt, syncedAt),
         ),
       );
     }
@@ -80,19 +81,19 @@ export async function syncAll(): Promise<SyncResult> {
 
     for (const decl of serverDeclarations) {
       const local = await db.declarations.get(decl.id);
-      if (!local || !local.pendingSync) {
+      const shouldApplyLegacy =
+        !local || (!local.pendingSync && decl.updatedAt > local.updatedAt);
+      if (shouldApplyLegacy) {
         // Check if status changed to audit_request
         if (decl.status === "audit_request" && (!local || local.status !== "audit_request")) {
           newAuditRequests.push({ id: decl.id, type: decl.type, taxYear: decl.taxYear });
         }
         await db.declarations.put(decl);
-
-        const migrated = migrateLegacyDeclaration(decl);
-        const localPreparation = await getPreparation(decl.id);
-        if (localPreparation?.status !== "authority_confirmed") {
-          await savePreparationFromSync(migrated, now);
-        }
       }
+
+      // The preparation repository independently rejects pending or newer
+      // local data, so a legacy pull cannot clear local preparation changes.
+      await savePreparationFromSync(migrateLegacyDeclaration(decl), now);
     }
 
     for (const [key, value] of Object.entries(refData)) {
