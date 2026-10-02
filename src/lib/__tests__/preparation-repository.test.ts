@@ -142,6 +142,61 @@ describe("preparation repository", () => {
     });
   });
 
+  it("materializes a synced user submission from an existing draft", async () => {
+    await db.delete();
+    await db.open();
+
+    const local = preparation("prep-synced-submission", "2026-02-01T00:00:00.000Z");
+    await db.preparations.put({ ...local, pendingSync: false });
+
+    await savePreparationFromSync(
+      {
+        ...local,
+        status: "user_submitted",
+        updatedAt: "2026-02-02T00:00:00.000Z",
+      } as PreparationRecord,
+      "2026-02-03T00:00:00.000Z",
+    );
+
+    await expect(getPreparation(local.id)).resolves.toMatchObject({
+      status: "user_submitted",
+      updatedAt: "2026-02-02T00:00:00.000Z",
+    });
+  });
+
+  it("materializes synced authority confirmation from an existing ready record", async () => {
+    await db.delete();
+    await db.open();
+
+    const local = preparation(
+      "prep-synced-confirmation",
+      "2026-02-01T00:00:00.000Z",
+      "ready_for_review",
+    );
+    await db.preparations.put({ ...local, pendingSync: false });
+
+    await savePreparationFromSync(
+      {
+        ...local,
+        status: "authority_confirmed",
+        authorityConfirmation: {
+          authorityReference: "NRS-2025-0001",
+          confirmedAt: "2026-02-02T00:00:00.000Z",
+        },
+        updatedAt: "2026-02-03T00:00:00.000Z",
+      },
+      "2026-02-04T00:00:00.000Z",
+    );
+
+    await expect(getPreparation(local.id)).resolves.toMatchObject({
+      status: "authority_confirmed",
+      authorityConfirmation: {
+        authorityReference: "NRS-2025-0001",
+        confirmedAt: "2026-02-02T00:00:00.000Z",
+      },
+    });
+  });
+
   it("migrates local legacy declarations even when the server does not return them", async () => {
     await db.delete();
     await db.open();

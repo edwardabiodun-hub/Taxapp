@@ -39,6 +39,29 @@ describe("legacy declaration migration", () => {
     });
   });
 
+  it("does not synthesize an authority confirmation timestamp", () => {
+    const migrated = migrateLegacyDeclaration(
+      legacyDeclaration({
+        authorityReference: "NRS-2025-0001",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+      }),
+    );
+
+    expect(migrated.status).toBe("ready_for_review");
+    expect(migrated.authorityConfirmation).toBeUndefined();
+  });
+
+  it("requires an explicit authority reference as well as a timestamp", () => {
+    const migrated = migrateLegacyDeclaration(
+      legacyDeclaration({
+        authorityConfirmedAt: "2026-01-02T00:00:00.000Z",
+      }),
+    );
+
+    expect(migrated.status).toBe("ready_for_review");
+    expect(migrated.authorityConfirmation).toBeUndefined();
+  });
+
   it("does not guess a state when migrating a country-only Nigerian record", () => {
     const migrated = migrateLegacyDeclaration(legacyDeclaration());
 

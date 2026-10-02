@@ -114,9 +114,8 @@ export async function migrateLegacyDeclarationsToPreparations(
 }
 
 export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationRecord {
-  const authorityReference = getAuthorityReference(record);
-  const confirmedAt = getAuthorityConfirmedAt(record) || record.updatedAt;
-  const status: PreparationStatus = authorityReference
+  const authorityConfirmation = getAuthorityConfirmation(record);
+  const status: PreparationStatus = authorityConfirmation
     ? "authority_confirmed"
     : record.status === "draft"
       ? "draft"
@@ -132,14 +131,7 @@ export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationR
       taxYear: record.taxYear,
       ruleProfileVersion: "",
       status,
-      ...(authorityReference
-        ? {
-            authorityConfirmation: {
-              authorityReference,
-              confirmedAt,
-            },
-          }
-        : {}),
+      ...(authorityConfirmation ? { authorityConfirmation } : {}),
       formData: { ...record.formData, country: record.country },
       confirmedReceiptIds: [],
       confirmedReceiptInputs: {},
@@ -228,15 +220,6 @@ function getMigratedPreparationLifecycle(
   from: PreparationStatus | undefined,
   preparation: PreparationRecord,
 ): readonly PreparationRecord[] | undefined {
-  if (from !== undefined) {
-    return isValidPreparationStatusTransition(from, preparation.status)
-      ? [preparation]
-      : undefined;
-  }
-
-  // A first-time legacy/sync record must materialize the local lifecycle one
-  // valid transition at a time. This also preserves explicit authority
-  // evidence without treating the legacy status label as proof by itself.
   const statuses: readonly PreparationStatus[] = [
     "draft",
     "ready_for_review",
@@ -247,8 +230,21 @@ function getMigratedPreparationLifecycle(
   const targetIndex = statuses.indexOf(preparation.status);
   if (targetIndex < 0) return undefined;
 
+  if (from === undefined) {
+    // A first-time legacy/sync record must materialize the local lifecycle one
+    // valid transition at a time. This also preserves explicit authority
+    // evidence without treating the legacy status label as proof by itself.
+    return statuses
+      .slice(0, targetIndex + 1)
+      .map((status) => preparationAtStatus(preparation, status));
+  }
+
+  const fromIndex = statuses.indexOf(from);
+  if (fromIndex < 0 || targetIndex < fromIndex) return undefined;
+  if (targetIndex === fromIndex) return [preparation];
+
   return statuses
-    .slice(0, targetIndex + 1)
+    .slice(fromIndex + 1, targetIndex + 1)
     .map((status) => preparationAtStatus(preparation, status));
 }
 
@@ -302,4 +298,14 @@ function getAuthorityConfirmedAt(record: LocalDeclaration): string | undefined {
   return (
     record.authorityConfirmedAt ?? record.authorityConfirmation?.confirmedAt
   )?.trim() || undefined;
+}
+
+function getAuthorityConfirmation(
+  record: LocalDeclaration,
+): { authorityReference: string; confirmedAt: string } | undefined {
+  const authorityReference = getAuthorityReference(record);
+  const confirmedAt = getAuthorityConfirmedAt(record);
+  if (!authorityReference || !confirmedAt) return undefined;
+
+  return { authorityReference, confirmedAt };
 }
