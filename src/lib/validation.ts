@@ -5,13 +5,17 @@ interface ValidationResult {
   errors: string[];
 }
 
-export function validateStep(step: number, form: NigeriaDeclarationForm): ValidationResult {
+export function validateStep(
+  step: number,
+  form: NigeriaDeclarationForm,
+  jurisdictionCode = "",
+): ValidationResult {
   const errors: string[] = [];
 
   switch (step) {
-    case 0: // Country
-      if (!form.taxYear) errors.push("Tax Year is required");
-      if (!form.country) errors.push("Country is required");
+    case 0: // Jurisdiction
+      if (!form.taxYear.trim()) errors.push("Tax year is required.");
+      if (!jurisdictionCode.trim()) errors.push("Tax jurisdiction is required.");
       break;
 
     case 1: // Earned Income — at least one income source required
@@ -21,7 +25,7 @@ export function validateStep(step: number, form: NigeriaDeclarationForm): Valida
         const hasAnnuity = form.pensionReceived.trim() || form.annuityInsurance.trim() || form.gratuities.trim();
         const hasForeign = form.foreignIncome.trim();
         if (!hasEmployment && !hasBusiness && !hasAnnuity && !hasForeign) {
-          errors.push("At least one income source is required");
+          errors.push("At least one income source is required to prepare this return.");
         }
       }
       break;

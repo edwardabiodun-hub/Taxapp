@@ -2,10 +2,14 @@ import { FileText, Paperclip, Calculator } from "lucide-react";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
 import { calculateNigeriaTax } from "@/lib/tax-calculator";
+import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import type { CalculationResult } from "@/lib/calculation-service";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
   documents?: UploadedDoc[];
+  capability?: JurisdictionCapability;
+  calculation?: Pick<CalculationResult, "label" | "ruleProfile" | "ruleProfileVersion" | "source" | "missingInputWarnings">;
 }
 
 const SummaryRow = ({ label, value, badge }: { label: string; value: string; badge?: string }) => (
@@ -34,14 +38,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-const ReviewStep = ({ form, documents }: ReviewStepProps) => {
+const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProps) => {
   const tax = calculateNigeriaTax(form);
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-display font-bold text-foreground text-sm">Review & Submit</h3>
-        <p className="text-[11px] text-muted-foreground">Please review all information before submitting</p>
+        <h3 className="font-display font-bold text-foreground text-sm">Review preparation</h3>
+        <p className="text-[11px] text-muted-foreground">Review the local preparation before saving or exporting it.</p>
       </div>
 
       {/* Tax Calculation Card */}
@@ -116,8 +120,24 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
       <div className="bg-card rounded-xl p-4 shadow-card space-y-4">
         <Section title="General">
           <SummaryRow label="Tax Year" value={form.taxYear} />
-          <SummaryRow label="Country" value="Nigeria 🇳🇬" />
+          <SummaryRow label="Jurisdiction" value={capability?.name || "Not selected"} />
+          <SummaryRow label="Readiness" value={capability?.primaryReadiness || "Not yet supported"} />
+          <SummaryRow label="Calculation" value={calculation?.label || "Not filing-ready"} />
+          <SummaryRow label="Rule profile" value={calculation?.ruleProfile.profileId || "Not configured"} />
+          <SummaryRow label="Rule version" value={calculation?.ruleProfileVersion || "Not configured"} />
+          <SummaryRow label="Rule source" value={calculation?.source || "Not configured"} />
         </Section>
+
+        {calculation && calculation.missingInputWarnings.length > 0 && (
+          <>
+            <div className="border-t border-border" />
+            <Section title="Unresolved items">
+              <ul className="list-disc space-y-1 pl-4 text-xs text-warning">
+                {calculation.missingInputWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+              </ul>
+            </Section>
+          </>
+        )}
 
         <div className="border-t border-border" />
 
@@ -186,8 +206,8 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
         )}
       </div>
 
-      <p className="text-[10px] text-muted-foreground text-center">
-        By submitting, you confirm all information is accurate and complete per the Personal Income Tax Act 2025.
+      <p className="text-center text-[10px] text-muted-foreground">
+        Saving creates a local preparation only. It does not file a tax return or confirm acceptance by an authority.
       </p>
     </div>
   );
