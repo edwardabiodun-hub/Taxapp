@@ -44,3 +44,22 @@ Implemented and committed as `fix: tighten receipt schema validation`.
 - The focused Vitest command was attempted after adding the regressions but was blocked before test discovery by the existing esbuild/worktree access error while resolving `vitest.config.ts`.
 - A quick application TypeScript check was also attempted; it reported existing unrelated preparation-repository and OCR asset typing errors. No long test suite, build, lint, or environment repair was run per request.
 - `git diff --check` passed before the final report-only update, with only normal LF-to-CRLF working-copy warnings.
+
+## Security Review Fix Round 3
+
+### Status
+
+Implemented with verification constrained by the existing test-runner environment failure.
+
+### Findings addressed
+
+- Optional OCR contract metadata is now accepted when omitted. When present, provenance and contract objects still require only their explicitly supported keys; missing contract metadata does not authorize retention or no-training claims.
+- Receipt correction-history `previousValue` and `correctedValue` now use the same safe scalar and field-semantic validation as receipt values, including payload/secret-like string rejection, size limits, and currency/category/date/amount validation. Correction entries still require the exact supported schema.
+- Added regressions for contract-less managed OCR responses and unsafe/invalid correction-history values.
+
+### Verification limitations
+
+- Focused Vitest command:
+  `npm run test -- src/domain/__tests__/receipts.test.ts src/lib/__tests__/managed-ocr-provider.test.ts`
+- Result: blocked before test discovery by the existing esbuild/worktree access error: `Cannot read directory "../../../../..": Access is denied` and unresolved `vitest.config.ts`.
+- No long test suite or environment repair was run. Temporary configs were not created in this fix round.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isConfirmedReceiptRecord,
+  isReceiptCorrectionHistorySafe,
   isReceiptFieldsValid,
   isReceiptProvenanceSafe,
   type ReceiptFields,
@@ -83,6 +84,14 @@ describe("receipt nested schema validation", () => {
     ).toBe(false);
   });
 
+  it("allows provenance without optional contract metadata", () => {
+    expect(isReceiptProvenanceSafe({
+      provider: "managed-test",
+      model: "receipt-v1",
+      version: "1",
+    })).toBe(true);
+  });
+
   it("rejects unknown properties in original OCR fields and correction history", () => {
     expect(
       isConfirmedReceiptRecord({
@@ -105,5 +114,25 @@ describe("receipt nested schema validation", () => {
         }],
       } as unknown as ReceiptRecord),
     ).toBe(false);
+  });
+
+  it.each([
+    ["vendor", "data:text/plain;base64,cmF3LXJlY2VpcHQ="],
+    ["vendor", "blob:https://example.test/receipt"],
+    ["vendor", "base64-encoded-receipt-payload"],
+    ["vendor", "raw-receipt-bytes"],
+    ["vendor", "api-key=client-secret"],
+    ["vendor", "x".repeat(201)],
+    ["currency", "JPY"],
+    ["category", "travel"],
+    ["date", "2026-02-30"],
+    ["amount", "not-a-number"],
+  ] as const)("rejects unsafe or invalid %s correction values", (field, value) => {
+    expect(isReceiptCorrectionHistorySafe([{
+      field,
+      previousValue: value,
+      correctedValue: null,
+      at: "2026-10-02T00:05:00.000Z",
+    }])).toBe(false);
   });
 });

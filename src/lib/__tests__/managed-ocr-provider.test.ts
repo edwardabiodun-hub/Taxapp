@@ -73,6 +73,22 @@ describe("managed OCR boundary", () => {
     expect(extraction.metadata.contract?.noTraining).toBe(true);
   });
 
+  it("accepts OCR results when the managed boundary omits optional contract metadata", () => {
+    const { contract: _contract, ...metadataWithoutContract } = payload.metadata;
+    const extraction = parseManagedOcrResponse({
+      ...payload,
+      metadata: metadataWithoutContract,
+    });
+
+    expect(extraction.fields.vendor).toBe("Acme Foods");
+    expect(extraction.metadata).toEqual({
+      provider: "managed-test",
+      model: "receipt-v1",
+      version: "1",
+    });
+    expect(extraction.metadata.contract).toBeUndefined();
+  });
+
   it("fails closed when no managed boundary endpoint is configured", async () => {
     await expect(new ManagedOcrProvider({ fetchImpl: vi.fn() }).extract(asset)).rejects.toThrow(
       /not configured/i,
