@@ -64,7 +64,7 @@ export function usePreparation(id: string | undefined): PreparationRecord | unde
   );
 }
 
-export function useReferenceData<T = any>(key: string): T | undefined {
+export function useReferenceData<T = unknown>(key: string): T | undefined {
   return useLiveQuery(async () => {
     const row = await db.referenceData.get(key);
     return row?.value as T | undefined;

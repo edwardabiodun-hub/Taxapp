@@ -205,6 +205,8 @@ export function isSafeReceiptText(value: unknown): value is string {
 }
 
 function isSafeReceiptScalar(value: string): boolean {
+  // Intentional control-character rejection for persisted receipt text.
+  // eslint-disable-next-line no-control-regex
   return !/[\u0000-\u001f\u007f]/.test(value) && !UNSAFE_RECEIPT_VALUE.test(value);
 }
 
@@ -223,7 +225,7 @@ function hasExactKeys(
     keys.every((key) => required.includes(key) || optional.includes(key));
 }
 
-function isPlainObject(value: unknown): value is Record<string, any> {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;

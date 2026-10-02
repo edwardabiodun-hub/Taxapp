@@ -10,6 +10,7 @@ This is a bounded evidence gate for the local-first Phase One release. It record
 | --- | --- | --- | --- |
 | Focused security boundaries | `npm run test -- src/lib/__tests__/security-boundaries.test.ts` | PASS; executable extensions, unsupported MIME, oversized receipts, unconfirmed receipt inputs, preparation scoping, safe errors, authority references, and legacy migration all remain blocked or conservative | Run result recorded below |
 | Existing boundary coverage | `npm run test -- src/lib/__tests__/ocr-service.test.ts src/lib/__tests__/receipt-repository.test.ts src/lib/__tests__/preparation-repository.test.ts src/lib/__tests__/local-db-migration.test.ts src/lib/__tests__/submission-service.test.ts` | PASS; focused repository, OCR, migration, and submission contracts remain green | Run result recorded below |
+| TypeScript project check | `npx tsc -b --noEmit --pretty false` | PASS; no type errors | Run result recorded below |
 | Static checks | `npm run lint` | PASS with no new lint errors | Run result recorded below |
 | Production build | `npm run build` | PASS; no compile or bundling errors | Run result recorded below |
 | Secret/artifact review | `git diff --check`; `git status --short` | No whitespace errors, secrets, real PII, receipt bytes, generated exports, or OCR artifacts in the change | Run result recorded below |
@@ -20,8 +21,10 @@ This is a bounded evidence gate for the local-first Phase One release. It record
 - Branch/worktree: `codex/filesmart-phase-one` / `filesmart-phase-one`
 - Focused test result: `NOT RUN` — the configured Windows esbuild/SWC native-cache/DACL environment blocks the test runner before discovery.
 - Existing boundary result: `NOT RUN` — same test-runner blocker; static review and test definitions are present.
-- Lint result: `NOT RUN` — must be rerun in a working environment before release approval.
-- Build result: `NOT RUN` — must be rerun in a working environment before release approval.
+- TypeScript result: `PASS` — `npx tsc -b --noEmit --pretty false` completed successfully after correcting the receipt test fixture types.
+- Targeted Phase One lint result: `PASS` — all changed Phase One domain, repository, OCR, sync, and jurisdiction files pass ESLint.
+- Full-project lint result: `BLOCKED` — `npm run lint` reports 10 pre-existing errors outside this feature set in `ProfileForm.tsx`, UI primitives, `use-sync.ts`, `Onboarding.tsx`, and `tailwind.config.ts`; no new errors remain in the changed Phase One files.
+- Build result: `NOT RUN` — the Windows esbuild permissions issue prevents Vite from loading `vite.config.ts`; must be rerun in a working environment before release approval.
 - Artifact review: `PASS` — diff review found no secrets, real PII, receipt bytes, or generated user artifacts; `.gitignore` unchanged.
 
 ## Migration rehearsal expectations

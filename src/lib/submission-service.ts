@@ -201,6 +201,8 @@ function normalizeAuthorityReference(value: string): string {
     throw new Error("Authority confirmation requires an official reference.");
   }
   const reference = value.trim();
+  // Intentional control-character rejection for authority references.
+  // eslint-disable-next-line no-control-regex
   if (reference.length > 200 || /[\u0000-\u001f\u007f]/.test(reference)) {
     throw new Error("Authority confirmation reference is invalid.");
   }

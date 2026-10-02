@@ -92,6 +92,8 @@ function requiredSafeText(value: unknown): string {
 
 function optionalSafeText(value: unknown): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
+  // Intentional control-character rejection for untrusted provider metadata.
+  // eslint-disable-next-line no-control-regex
   if (typeof value !== "string" || value.length > 160 || /[\u0000-\u001f\u007f]/.test(value)) throw new Error("OCR provider returned invalid metadata.");
   return value.trim();
 }

@@ -138,6 +138,8 @@ export function isValidTimestamp(value: unknown, referenceTimestamp?: string): v
 }
 
 function isSafeEvidenceText(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0 &&
-    value.length <= 200 && !/[\u0000-\u001f\u007f]/.test(value);
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > 200) return false;
+  // Intentional control-character rejection for persisted evidence text.
+  // eslint-disable-next-line no-control-regex
+  return !/[\u0000-\u001f\u007f]/.test(value);
 }

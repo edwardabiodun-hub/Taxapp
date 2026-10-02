@@ -87,6 +87,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function safeText(value: unknown, required = false): string | undefined {
   if (typeof value !== "string") return required ? undefined : undefined;
   const text = value.trim();
+  // Intentional control-character rejection for untrusted registry metadata.
+  // eslint-disable-next-line no-control-regex
   if (!text || text.length > 1000 || /[\u0000-\u001f\u007f]/.test(text)) {
     return undefined;
   }

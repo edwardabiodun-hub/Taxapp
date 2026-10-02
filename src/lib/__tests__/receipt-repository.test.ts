@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isReceiptRecordPersistable, saveReceiptRecord } from "@/lib/receipt-repository";
+import type { ConfirmedReceiptInput, ReceiptFields, ReceiptRecord } from "@/domain/receipts";
 
 const receipt = {
   id: "receipt-1",
@@ -13,7 +14,7 @@ const receipt = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
-const fields = {
+const fields: ReceiptFields = {
   vendor: { value: "Acme Foods", confidence: 0.96, source: "ocr" as const, userConfirmed: false },
   date: { value: "2026-09-30", confidence: 0.89, source: "ocr" as const, userConfirmed: false },
   amount: { value: "12500", confidence: 0.71, source: "ocr" as const, userConfirmed: false },
@@ -28,22 +29,26 @@ const reviewedReceipt = {
   fields,
 };
 
-const confirmedReceipt = {
+const confirmedFields: ReceiptFields = Object.fromEntries(
+  Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }]),
+) as ReceiptFields;
+
+const calculationInput: ConfirmedReceiptInput = {
+  receiptId: "receipt-1",
+  vendor: "Acme Foods",
+  date: "2026-09-30",
+  amount: "12500",
+  taxAmount: "937.50",
+  currency: "NGN",
+  category: "meals",
+};
+
+const confirmedReceipt: ReceiptRecord = {
   ...reviewedReceipt,
   reviewStatus: "confirmed" as const,
-  fields: Object.fromEntries(
-    Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }]),
-  ),
+  fields: confirmedFields,
   confirmedAt: "2026-10-02T00:05:00.000Z",
-  calculationInput: {
-    receiptId: "receipt-1",
-    vendor: "Acme Foods",
-    date: "2026-09-30",
-    amount: "12500",
-    taxAmount: "937.50",
-    currency: "NGN",
-    category: "meals",
-  },
+  calculationInput,
 };
 
 describe("receipt persistence validation", () => {

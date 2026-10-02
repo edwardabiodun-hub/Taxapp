@@ -100,7 +100,7 @@ export async function pushPreparationsToServer(
 
 // ── Reference Data ───────────────────────────────────────
 export async function fetchReferenceDataFromServer(): Promise<
-  Record<string, any>
+  Record<string, unknown>
 > {
   await delay();
   return {

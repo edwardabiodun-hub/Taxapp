@@ -124,7 +124,7 @@ export interface ExportPackageRecord {
 
 export interface LocalReferenceData {
   key: string;
-  value: any;
+  value: unknown;
   lastSynced: string;
 }
 
@@ -137,7 +137,7 @@ export interface LocalActivity {
   title: string;
   description?: string;
   timestamp: string;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 class TaxEaseDB extends Dexie {

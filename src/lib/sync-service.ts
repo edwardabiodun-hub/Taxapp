@@ -106,8 +106,8 @@ export async function syncAll(): Promise<SyncResult> {
 
     console.log("[sync] Completed successfully");
     return { success: true, auditRequests: newAuditRequests };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[sync] Failed:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
