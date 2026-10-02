@@ -1,8 +1,4 @@
-export interface NigeriaDeclarationForm {
-  // Personal Info
-  taxYear: string;
-  country: string;
-
+interface DeclarationIncomeFields {
   // Earned Income - Trade/Business
   businessIncome: string;
   businessExpenses: string;
@@ -52,6 +48,22 @@ export interface NigeriaDeclarationForm {
   annualRentPaid: string;
 }
 
+/** Canonical declaration shape for the jurisdiction-aware flow. */
+export interface DeclarationFormData extends DeclarationIncomeFields {
+  taxYear: string;
+  jurisdictionCode: string;
+}
+
+/**
+ * Compatibility shape for the existing country-based screens and saved
+ * drafts. New domain records should use DeclarationFormData instead.
+ */
+export interface NigeriaDeclarationForm extends DeclarationIncomeFields {
+  // Personal Info
+  taxYear: string;
+  country: string;
+}
+
 export const defaultNigeriaForm: NigeriaDeclarationForm = {
   taxYear: "",
   country: "ng",
@@ -90,6 +102,28 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   employeePension: "",
   annualRentPaid: "",
 };
+
+/**
+ * Maps a legacy country-based draft without guessing a state. An empty
+ * jurisdiction code deliberately requires the user to confirm a jurisdiction
+ * before the draft is treated as a complete preparation.
+ */
+export function mapLegacyDeclaration(
+  draft: NigeriaDeclarationForm | Record<string, unknown>,
+): DeclarationFormData {
+  const { country: _country, jurisdictionCode, ...formData } = draft as Record<
+    string,
+    unknown
+  >;
+
+  return {
+    ...(formData as Omit<DeclarationFormData, "jurisdictionCode">),
+    jurisdictionCode:
+      typeof jurisdictionCode === "string" ? jurisdictionCode : "",
+  };
+}
+
+export const mapLegacyDraft = mapLegacyDeclaration;
 
 export const declarationSteps = [
   "Country",
