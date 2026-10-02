@@ -16,6 +16,12 @@ export interface UserSubmissionEvidence {
   readonly note?: string;
 }
 
+export interface SubmissionEventEvidence {
+  readonly source: string;
+  readonly reference?: string;
+  readonly note?: string;
+}
+
 interface SubmissionEventBase {
   readonly id: string;
   readonly preparationId: string;
@@ -23,6 +29,8 @@ interface SubmissionEventBase {
   readonly timestamp: string;
   readonly authorityReference?: string;
   readonly userEvidence?: UserSubmissionEvidence;
+  /** Required for newly appended events; optional for legacy history rows. */
+  readonly evidence?: SubmissionEventEvidence;
 }
 
 export type SubmissionEvent =
@@ -36,6 +44,10 @@ export type SubmissionEvent =
     });
 
 export function isSubmissionEventValid(event: SubmissionEvent): boolean {
+  if (event.evidence !== undefined && !isSubmissionEventEvidenceValid(event.evidence)) {
+    return false;
+  }
+
   if (!isValidTimestamp(event.timestamp)) return false;
 
   if (event.userEvidence !== undefined && !isUserSubmissionEvidenceValid(event.userEvidence, event.timestamp)) {
@@ -45,6 +57,22 @@ export function isSubmissionEventValid(event: SubmissionEvent): boolean {
   if (event.type !== "authority_confirmed") return true;
 
   return isSafeEvidenceText(event.authorityReference);
+}
+
+export function isSubmissionEventEvidenceValid(
+  evidence: unknown,
+): evidence is SubmissionEventEvidence {
+  if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
+    return false;
+  }
+
+  const value = evidence as Record<string, unknown>;
+  const allowedKeys = new Set(["source", "reference", "note"]);
+  if (Object.keys(value).some((key) => !allowedKeys.has(key))) return false;
+
+  return isSafeEvidenceText(value.source) &&
+    (value.reference === undefined || isSafeEvidenceText(value.reference)) &&
+    (value.note === undefined || isSafeEvidenceText(value.note));
 }
 
 export function isUserSubmissionEvidenceValid(
