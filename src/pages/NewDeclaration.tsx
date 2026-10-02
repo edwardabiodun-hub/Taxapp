@@ -20,9 +20,9 @@ import {
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
-import { getCalculationReceiptInputs, type ReceiptRecord } from "@/domain/receipts";
+import { getCalculationReceiptInputs } from "@/domain/receipts";
 import { listReceiptRecords } from "@/lib/receipt-repository";
-import { generateExportPackage } from "@/lib/exports/export-service";
+import { submissionService } from "@/lib/submission-service";
 import type { ExportPackage } from "@/domain/exports";
 import DeadlineCard from "@/components/deadlines/DeadlineCard";
 import { resolveDeadline } from "@/lib/deadline-service";
@@ -211,13 +211,9 @@ const NewDeclaration = () => {
       const savedRecord = await handleSave("ready_for_review");
       if (!savedRecord) return;
 
-      const receipts: ReceiptRecord[] = await listReceiptRecords(preparationId);
-      const generated = await generateExportPackage(
-        savedRecord,
-        receipts,
-        exportCapability,
-        { persist: true },
-      );
+      // SubmissionService owns the lifecycle transition and persists the
+      // export artifacts plus immutable export event in one transaction.
+      const generated = await submissionService.export(savedRecord.id);
       setExportPackage(generated);
       setSavedStatus("exported");
       setLastSavedAt(generated.generatedAt);

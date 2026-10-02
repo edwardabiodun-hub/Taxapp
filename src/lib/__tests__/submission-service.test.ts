@@ -70,14 +70,6 @@ function createMemoryService(initial = preparation()) {
     service: new SubmissionService({
       repository,
       now: () => "2026-10-02T12:00:00.000Z",
-      exportPersistence: {
-        saveExportPackage: async (record) => {
-          exportRecords.push(record);
-        },
-        savePreparation: async (next) => {
-          current = next;
-        },
-      },
     }),
     read: () => current,
     events,

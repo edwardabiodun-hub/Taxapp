@@ -7,10 +7,7 @@ import {
   type SubmissionEvent,
   type UserSubmissionEvidence,
 } from "@/domain/submissions";
-import {
-  buildExportPackageRecords,
-  type ExportPersistence,
-} from "@/lib/exports/export-service";
+import { buildExportPackageRecords } from "@/lib/exports/export-service";
 import { sanitizePreparationForExportPersistence } from "@/lib/exports/export-data";
 import {
   appendSubmissionEvent,
@@ -44,7 +41,6 @@ export interface SubmissionServiceOptions {
   readonly repository?: SubmissionRepository;
   readonly adapter?: SubmissionAdapter;
   readonly now?: () => string;
-  readonly exportPersistence?: ExportPersistence;
 }
 
 const defaultRepository: SubmissionRepository = {
@@ -75,7 +71,7 @@ export class SubmissionService {
       status: "exported",
       lastExportedAt: submissionPackage.exportPackage.generatedAt,
       updatedAt: submissionPackage.exportPackage.generatedAt,
-    });
+    } as PreparationRecord) as PreparationRecord;
     await this.repository.savePreparationAndAppendSubmissionEventWithExportPackages(exportedPreparation, {
       id: createEventId(preparationId, "exported"),
       preparationId,
@@ -133,6 +129,9 @@ export class SubmissionService {
     }
 
     const confirmedAt = this.now();
+    if (!isValidTimestamp(confirmedAt)) {
+      throw new Error("Submission service timestamp is invalid.");
+    }
     const next: PreparationRecord = {
       ...preparation,
       status: "authority_confirmed",

@@ -119,7 +119,7 @@ describe("preparation repository", () => {
           authorityReference: "NRS-2026-0002",
           confirmedAt: "2026-01-01T00:00:00.000Z",
         },
-      }),
+      } as PreparationRecord),
     ).rejects.toThrow(/immutable|authority.?confirmed/i);
     await expect(getPreparation(confirmed.id)).resolves.toMatchObject({
       authorityConfirmation: { authorityReference: "NRS-2026-0001" },
@@ -361,9 +361,17 @@ describe("preparation repository", () => {
 
     const draft = preparation("exported-local", "2026-01-01T00:00:00.000Z");
     await savePreparation(draft);
-    const ready = { ...draft, status: "ready_for_review" as const, updatedAt: "2026-01-02T00:00:00.000Z" };
+    const ready = {
+      ...draft,
+      status: "ready_for_review" as const,
+      updatedAt: "2026-01-02T00:00:00.000Z",
+    } as PreparationRecord;
     await savePreparation(ready);
-    const exported = { ...ready, status: "exported" as const, updatedAt: "2026-01-03T00:00:00.000Z" };
+    const exported = {
+      ...ready,
+      status: "exported" as const,
+      updatedAt: "2026-01-03T00:00:00.000Z",
+    } as PreparationRecord;
     await savePreparation(exported);
 
     await migrateLegacyDeclarationsToPreparations([{
@@ -386,16 +394,31 @@ describe("preparation repository", () => {
     });
   });
 
-  it("appends immutable submission events and requires authority references", async () => {
+  it("appends lifecycle events only for an existing preparation", async () => {
     await db.delete();
     await db.open();
+
+    const draft = preparation("prep-1", "2026-01-01T00:00:00.000Z");
+    await savePreparation(draft);
+    const ready = {
+      ...draft,
+      status: "ready_for_review" as const,
+      updatedAt: "2026-01-01T01:00:00.000Z",
+    } as PreparationRecord;
+    await savePreparation(ready);
+    const exported = {
+      ...ready,
+      status: "exported" as const,
+      updatedAt: "2026-01-01T02:00:00.000Z",
+    } as PreparationRecord;
+    await savePreparation(exported);
 
     const event = {
       id: "event-1",
       preparationId: "prep-1",
-      type: "created" as const,
-      actor: "user" as const,
-      timestamp: "2026-01-01T00:00:00.000Z",
+      type: "exported" as const,
+      actor: "system" as const,
+      timestamp: "2026-01-01T02:00:00.000Z",
     };
     await appendSubmissionEvent(event);
 
@@ -408,10 +431,10 @@ describe("preparation repository", () => {
         preparationId: "prep-1",
         type: "authority_confirmed",
         actor: "authority",
-        timestamp: "2026-01-02T00:00:00.000Z",
+        timestamp: "2026-01-01T02:00:00.000Z",
         authorityReference: "",
       } as never),
-    ).rejects.toThrow(/authority reference/i);
+      ).rejects.toThrow(/authority reference/i);
     await expect(
       appendSubmissionEvent({
         ...event,
@@ -425,6 +448,14 @@ describe("preparation repository", () => {
         id: "event-future-timestamp",
         timestamp: "2999-01-01T00:00:00.000Z",
       }),
-    ).rejects.toThrow(/timestamp|future|evidence/i);
+      ).rejects.toThrow(/timestamp|future|evidence/i);
+
+    await expect(
+      appendSubmissionEvent({
+        ...event,
+        id: "event-missing-preparation",
+        preparationId: "missing-preparation",
+      }),
+    ).rejects.toThrow(/existing preparation/i);
   });
 });

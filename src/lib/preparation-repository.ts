@@ -108,10 +108,18 @@ export async function listPreparations(): Promise<PreparationRecord[]> {
 }
 
 export async function appendSubmissionEvent(event: SubmissionEvent): Promise<void> {
-  await db.transaction("rw", db.submissionEvents, async () => {
+  await db.transaction("rw", db.preparations, db.submissionEvents, async () => {
+    const preparation = await db.preparations.get(event.preparationId);
+    if (!preparation) {
+      throw new Error("Submission event requires an existing preparation.");
+    }
+    if (preparation.status === "authority_confirmed") {
+      throw new Error("Authority-confirmed preparations are immutable.");
+    }
     if (!isSubmissionEventValid(event)) {
       throw new Error("Submission event evidence is invalid.");
     }
+    assertLifecycleEvent(stripSyncMetadata(preparation), event);
 
     const existing = await db.submissionEvents.get(event.id);
     if (existing) {
@@ -254,13 +262,7 @@ function assertValidPreparationSave(
   event?: SubmissionEvent,
 ): void {
   if (existing?.status === "authority_confirmed") {
-    if (
-      preparation.status !== "authority_confirmed" ||
-      serializePreparationSnapshot(existing) !== serializePreparationSnapshot(preparation)
-    ) {
-      throw new Error("Authority-confirmed preparations are immutable.");
-    }
-    return;
+    throw new Error("Authority-confirmed preparations are immutable.");
   }
 
   if (
@@ -323,6 +325,8 @@ function assertLifecycleEvent(
   ) {
     throw new Error("Authority confirmation evidence does not match the preparation.");
   }
+
+  throw new Error("Submission events require an explicit lifecycle transition.");
 }
 
 function buildStoredPreparation(
@@ -387,7 +391,7 @@ function preparationAtStatus(
 ): PreparationRecord {
   if (status === "authority_confirmed") {
     assertAuthorityConfirmation(preparation);
-    return { ...preparation, status };
+    return { ...preparation, status } as PreparationRecord;
   }
 
   const { authorityConfirmation: _authorityConfirmation, ...withoutConfirmation } =
