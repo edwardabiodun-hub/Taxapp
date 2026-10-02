@@ -2,7 +2,7 @@
 
 ## Status
 
-Task 7 is implemented, with the remaining review findings fixed in this follow-up. PDF, CSV, and XLSX artifacts remain review/manual-upload exports only: they do not file a return, submit to an authority, or confirm acceptance.
+Task 7 is implemented, with the remaining review findings fixed in completed follow-ups through final head `2b7b26f`. PDF, CSV, and XLSX artifacts remain review/manual-upload exports only: they do not file a return, submit to an authority, or confirm acceptance.
 
 ## Implementation and review fixes
 
@@ -31,7 +31,7 @@ Task 7 is implemented, with the remaining review findings fixed in this follow-u
 
 ## Source and worktree state
 
-- Task 7 source history before this follow-up: `5ee6be8` (`feat: add universal tax export packages`), `972ee5b` (`fix: harden universal export packages`), and `c194621` (`fix: complete universal export workflow`).
-- `c194621` already contains the unrelated `.superpowers/sdd/.gitignore` addition and Task 2 report update; those are committed history, not current unstaged changes.
-- Before this follow-up, the worktree had no unrelated tracked changes. The only local ignored content is the existing SDD artifact set and `node_modules`.
-- No temporary test/config files were added by this follow-up. The follow-up will be finalized with subject `fix: lock exported preparation integrity`; the resulting commit hash is returned with this report.
+- Task 7 source history through final head: `5ee6be8` (`feat: add universal tax export packages`), `972ee5b` (`fix: harden universal export packages`), `c194621` (`fix: complete universal export workflow`), `77dff41` (`fix: align export lifecycle UI`), `469d4c5` (`fix: lock exported preparation integrity`), and `2b7b26f` (`fix: preserve export field omission semantics`).
+- `c194621` contains the unrelated `.superpowers/sdd/.gitignore` addition and Task 2 report update; those are committed history, not current unstaged changes.
+- The completed follow-ups left no unrelated tracked changes in the worktree. The only local ignored content is the existing SDD artifact set and `node_modules`.
+- No temporary test/config files were added; the completed follow-ups are represented through final head `2b7b26f`.

@@ -92,6 +92,7 @@ const needsReviewReceipt = {
 describe("universal export service", () => {
   it("preserves omission semantics for absent allowlisted fields", () => {
     expect(safeScalarValue(undefined)).toBeUndefined();
+    expect(safeScalarValue(null)).toBeUndefined();
 
     const sanitized = sanitizePreparationForExportPersistence(preparation);
     expect(sanitized.formData).toEqual({
