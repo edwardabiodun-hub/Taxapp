@@ -74,6 +74,20 @@ const incompleteGenericProvenance: CalculationProvenance = {
   ],
 };
 
+const completeStateProvenance: CalculationProvenance = {
+  label: "State-specific estimate",
+  ruleProfileId: "ng-la-pit",
+  ruleProfileVersion: "state-2026.1",
+  source: "https://example.test/official-guidance",
+  effectiveTaxYears: ["2026"],
+  effectiveFrom: "2026-01-01",
+  effectiveTo: "2026-12-31",
+  verifiedAt: "2026-10-02",
+  confidence: "high",
+  assumptions: [],
+  missingInputWarnings: [],
+};
+
 describe("preparation domain contracts", () => {
   it("uses the generic label unless a verified state rule profile exists", () => {
     expect(getCalculationLabel(genericCapability)).toBe("Generic Nigerian PIT estimate");
@@ -103,6 +117,52 @@ describe("preparation domain contracts", () => {
         },
       } as unknown as JurisdictionCapability),
     ).toBe("Generic Nigerian PIT estimate");
+  });
+
+  it("does not trust persisted state provenance when capability evidence is generic", () => {
+    expect(
+      getPreparationCalculationLabel(
+        {
+          jurisdictionCode: "NG-LA",
+          calculationProvenance: completeStateProvenance,
+        },
+        genericCapability,
+      ),
+    ).toBe("Generic Nigerian PIT estimate");
+  });
+
+  it("requires complete persisted provenance before returning a state-specific label", () => {
+    const verifiedCapability: JurisdictionCapability = {
+      ...genericCapability,
+      ruleProfile: {
+        kind: "verified_state",
+        profileId: "ng-la-pit",
+        version: "state-2026.1",
+        evidence: verifiedEvidence,
+      },
+    };
+
+    expect(
+      getPreparationCalculationLabel(
+        {
+          jurisdictionCode: "NG-LA",
+          calculationProvenance: {
+            ...completeStateProvenance,
+            source: "",
+          },
+        },
+        verifiedCapability,
+      ),
+    ).toBe("Not filing-ready");
+    expect(
+      getPreparationCalculationLabel(
+        {
+          jurisdictionCode: "NG-LA",
+          calculationProvenance: completeStateProvenance,
+        },
+        verifiedCapability,
+      ),
+    ).toBe("State-specific estimate");
   });
 
   it("requires evidence for authority-facing capability claims", () => {
@@ -261,5 +321,27 @@ describe("preparation domain contracts", () => {
         confirmedReceiptIds: ["receipt-1"],
       }),
     ).toEqual({ annualSalary: "1000000", pensionReceipt: "1000" });
+  });
+
+  it("passes confirmed receipt inputs into the preparation calculation", () => {
+    const preparation = createPreparationRecord(
+      {
+        id: "prep-receipt-calculation",
+        jurisdictionCode: "NG-LA",
+        taxYear: "2026",
+        ruleProfileVersion: "2026.1",
+        status: "draft",
+        formData: {},
+        confirmedReceiptIds: ["receipt-1"],
+        confirmedReceiptInputs: { annualSalary: "1000000" },
+        createdAt: "2026-10-02T00:00:00.000Z",
+        updatedAt: "2026-10-02T00:00:00.000Z",
+      },
+      genericCapability,
+    );
+
+    expect(preparation.calculationProvenance.missingInputWarnings).not.toContain(
+      "At least one income source is required.",
+    );
   });
 });

@@ -102,7 +102,7 @@ export function createPreparationRecord(
 
   const calculation = calculatePreparation(
     {
-      ...(input.formData as Record<string, unknown>),
+      ...getConfirmedCalculationInputs(input),
       taxYear: input.taxYear,
       jurisdictionCode,
     },
@@ -134,10 +134,26 @@ export function getPreparationCalculationLabel(
     capability,
     preparation.jurisdictionCode,
   );
-  return capabilityLabel === "State-specific estimate" &&
-    preparation.calculationProvenance.label !== "State-specific estimate"
-    ? "Not filing-ready"
-    : preparation.calculationProvenance.label;
+  const hasCompleteProvenance = hasCompleteCalculationProvenance(
+    preparation.calculationProvenance,
+  );
+
+  if (capabilityLabel === "State-specific estimate") {
+    return preparation.calculationProvenance.label === "State-specific estimate" &&
+      hasCompleteProvenance
+      ? "State-specific estimate"
+      : "Not filing-ready";
+  }
+
+  if (preparation.calculationProvenance.label === "State-specific estimate") {
+    return hasCompleteProvenance
+      ? "Generic Nigerian PIT estimate"
+      : "Not filing-ready";
+  }
+
+  return hasCompleteProvenance
+    ? preparation.calculationProvenance.label
+    : "Not filing-ready";
 }
 
 function hasCompleteCalculationProvenance(
