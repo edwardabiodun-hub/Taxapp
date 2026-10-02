@@ -258,16 +258,22 @@ function compareVersions(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
+function validatedCapabilities(overlays: unknown): JurisdictionCapability[] {
+  if (!Array.isArray(overlays)) return [];
+
+  return overlays.flatMap((rawCapability) => {
+    const capability = sanitizeCapability(rawCapability);
+    return capability ? [capability] : [];
+  });
+}
+
 function mergeCapabilities(
   bundled: readonly JurisdictionCapability[],
   overlays: unknown,
 ): JurisdictionCapability[] {
   const byCode = new Map(bundled.map((capability) => [capability.jurisdictionCode, capability]));
-  if (!Array.isArray(overlays)) return Array.from(bundled);
 
-  for (const rawCapability of overlays) {
-    const capability = sanitizeCapability(rawCapability);
-    if (!capability) continue;
+  for (const capability of validatedCapabilities(overlays)) {
     const bundledCapability = byCode.get(capability.jurisdictionCode);
     if (!bundledCapability || compareVersions(capability.registryVersion, bundledCapability.registryVersion) < 0) {
       continue;
@@ -299,8 +305,7 @@ export async function loadJurisdictionCapabilities(
   const refresh = options.refresh ?? (() => fetchRegistry(options.fetchImpl ?? fetch));
   try {
     const refreshed = await refresh();
-    const refreshedCapabilities = mergeCapabilities(bundled, refreshed);
-    capabilities = mergeCapabilities(capabilities, refreshedCapabilities);
+    capabilities = mergeCapabilities(capabilities, validatedCapabilities(refreshed));
     try {
       await cache.write(capabilities);
     } catch {
