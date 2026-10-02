@@ -9,13 +9,12 @@ acknowledgement now compares the full prepared snapshot, new persistence starts
 only at `draft`, first-time legacy/sync records are materialized through each
 valid lifecycle transition, evidence-backed authority records are preserved,
 and receipt records require opaque storage references.
-The post-fix focused test rerun was intentionally stopped at the user's
-request; prior bounded runs remain limited by the documented environment
-issues below.
+Tests were not run in this final fix pass; earlier bounded checks remain
+limited by the documented environment issues below.
 
 ## Commit hash
 
-`246feb9` (source/test fix commit; report finalization follows in this commit).
+`5c32ad8` (latest source/test fix commit; report finalization follows in this commit).
 
 ## Files changed
 
@@ -178,8 +177,8 @@ Result: PASS. Git emitted only normal LF-to-CRLF working-copy warnings.
 - Runtime repository tests remain unverified because this worktree has no
   IndexedDB implementation for jsdom. Adding or repairing test-environment
   dependencies was outside the requested bounded verification scope.
-- The newly added regression cases were not rerun after implementation because
-  the user requested immediate finalization and no long-running checks.
+- Tests were not run in this final fix pass; earlier bounded checks remain
+  limited by the documented environment issues above.
 - Standard Vitest and build remain blocked by the pre-existing SWC native
   package/cache issue. No extended environment repair was attempted.
 - Full application typecheck and lint remain blocked by unrelated baseline
