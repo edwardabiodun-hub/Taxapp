@@ -214,6 +214,7 @@ const Dashboard = () => {
                   status: preparation?.status || declaration?.status || "draft",
                   date: new Date(preparation?.updatedAt || declaration?.updatedAt || declaration?.createdAt || "").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
                   amount: declaration?.amount || "—",
+                  capability,
                   calculationLabel: preparation?.calculationLabel,
                   readiness: preparation?.filingReadiness,
                   exportFormats: preparation && ["exported", "user_submitted", "authority_confirmed"].includes(preparation.status)
