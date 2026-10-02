@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
 import type { PreparationRecord } from "@/domain/preparations";
-import { buildExportRows } from "@/lib/exports/export-data";
+import {
+  buildExportRows,
+  safeScalarValue,
+  sanitizePreparationForExportPersistence,
+} from "@/lib/exports/export-data";
 import { generateExportPackage } from "@/lib/exports/export-service";
 
 const capability = getJurisdictionCapability("NG-LA");
@@ -86,6 +90,43 @@ const needsReviewReceipt = {
 };
 
 describe("universal export service", () => {
+  it("preserves omission semantics for absent allowlisted fields", () => {
+    expect(safeScalarValue(undefined)).toBeUndefined();
+
+    const sanitized = sanitizePreparationForExportPersistence(preparation);
+    expect(sanitized.formData).toEqual({
+      annualSalary: "1000000",
+      annualRentPaid: "120000",
+      documents: preparation.formData.documents,
+    });
+
+    const rows = buildExportRows({
+      preparation,
+      receipts: [],
+      capability,
+      metadata: {
+        schemaVersion: "1.0.0",
+        preparationId: preparation.id,
+        jurisdiction: capability.name,
+        jurisdictionCode: capability.jurisdictionCode,
+        taxYear: preparation.taxYear,
+        registryVersion: capability.registryVersion,
+        ruleProfileId: "ng-pit-baseline",
+        ruleProfileVersion: "2026.1",
+        calculationLabel: preparation.calculationLabel,
+        readiness: preparation.filingReadiness,
+        source: "Nigerian PIT baseline",
+        sourceVerifiedAt: "2026-10-01",
+        deadlineSource: "NRS",
+        deadlineVerifiedAt: "2026-10-01",
+        generatedAt: "2026-10-02T00:00:00.000Z",
+        notSubmitted: true,
+      },
+    });
+
+    expect(rows.some((row) => row.section === "income_deductions" && row.field === "businessIncome")).toBe(false);
+  });
+
   it("generates all universal formats for an unsupported jurisdiction", async () => {
     const result = await generateExportPackage(preparation, [], capability, { persist: false });
 

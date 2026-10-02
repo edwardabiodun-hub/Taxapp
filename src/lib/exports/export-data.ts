@@ -134,7 +134,7 @@ export function sanitizeExportMetadata(metadata: ExportMetadata): ExportMetadata
 }
 
 export function safeScalarValue(value: unknown): string | undefined {
-  if (value === null || value === undefined) return "";
+  if (value === null || value === undefined) return undefined;
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : undefined;
   if (typeof value === "boolean") return String(value);
   if (typeof value !== "string" || value.length > 500 || hasControlCharacters(value) || UNSAFE_TEXT.test(value)) return undefined;
