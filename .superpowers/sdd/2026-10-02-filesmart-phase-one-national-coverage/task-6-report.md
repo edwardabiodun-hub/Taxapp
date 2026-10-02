@@ -101,3 +101,27 @@ Implemented as `fix: enforce receipt confirmation boundary`.
 
 - The focused Vitest command remained blocked before test discovery by the existing esbuild/worktree access error.
 - A quick application TypeScript check was stopped after reporting existing preparation-repository/OCR fixture errors and current receipt-boundary typing errors; no further checks or environment repair were run per request.
+
+## Critical Confirmation Integration Repair
+
+### Status
+
+Implemented as `fix: repair receipt confirmation integration`.
+
+### Finding addressed
+
+- `ReceiptScanner` and `DocumentsStep` no longer expose or inject a public receipt save callback into confirmation.
+- `confirmReceipt` accepts only an optional read lookup and always persists confirmed records through its private confirmation writer; calculation inputs are still created only inside that operation.
+- `saveReceiptRecord` rejects modern `reviewStatus: "confirmed"`, legacy `status: "confirmed"`, and any `calculationInput` on the public path.
+- Receipt capture now supplies the validated file metadata needed by the persistence boundary; raw receipt bytes remain excluded.
+
+### Regression coverage
+
+- Added a `DocumentsStep` integration test proving UI confirmation persists a confirmed record and calculation input through the repository operation.
+- Added legacy confirmed-write rejection coverage and updated OCR service/scanner tests to use an in-memory local database adapter for focused UI/service verification.
+
+### Verification
+
+- Standard Vitest startup remains blocked by the existing worktree/esbuild access error; no long test suite or environment repair was run.
+- Focused no-SWC Vitest verification passed: 4 files, 47 tests (`receipt-repository`, `ocr-service`, `DocumentsStep`, and `ReceiptScanner`).
+- `git diff --check` passed; only normal LF-to-CRLF working-copy warnings were reported.

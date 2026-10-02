@@ -19,7 +19,6 @@ import OcrReview from "@/components/receipts/OcrReview";
 interface ReceiptScannerProps {
   readonly preparationId: string;
   readonly provider?: OcrProvider;
-  readonly persistRecord?: (record: ReceiptRecord) => Promise<void>;
   readonly getRecord?: (id: string) => Promise<ReceiptRecord | undefined>;
   readonly onConfirmed?: (record: ReceiptRecord) => void;
 }
@@ -27,7 +26,6 @@ interface ReceiptScannerProps {
 const ReceiptScanner = ({
   preparationId,
   provider,
-  persistRecord,
   getRecord,
   onConfirmed,
 }: ReceiptScannerProps) => {
@@ -70,7 +68,7 @@ const ReceiptScanner = ({
           file,
           assetRef: `receipt-asset:${createId()}`,
         },
-        { provider, consent: true, persistRecord },
+        { provider, consent: true },
       );
       setRecord(result.record);
       setManualEntry(result.state === "manual_entry");
@@ -88,7 +86,7 @@ const ReceiptScanner = ({
     try {
       const result = await createManualReceipt(
         { preparationId, file, assetRef: `receipt-asset:${createId()}` },
-        { persistRecord },
+        {},
       );
       setRecord(result.record);
       setManualEntry(true);
@@ -102,7 +100,7 @@ const ReceiptScanner = ({
   const confirm = async (corrections: Parameters<typeof confirmReceipt>[1]) => {
     if (!record) return;
     try {
-      const confirmed = await confirmReceipt(record.id, corrections, { getRecord, saveRecord: persistRecord });
+      const confirmed = await confirmReceipt(record.id, corrections, { getRecord });
       setRecord(confirmed);
       onConfirmed?.(confirmed);
     } catch (confirmationError) {
@@ -113,7 +111,7 @@ const ReceiptScanner = ({
   const reject = async () => {
     if (!record) return;
     try {
-      const rejected = await rejectReceipt(record.id, { getRecord, saveRecord: persistRecord });
+      const rejected = await rejectReceipt(record.id, { getRecord });
       setRecord(rejected);
     } catch (rejectionError) {
       setError(rejectionError instanceof Error ? rejectionError.message : "Receipt could not be rejected.");

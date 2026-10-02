@@ -38,7 +38,7 @@ export async function processReceipt(input: ReceiptCaptureInput, options: OcrSer
   if (!validation.valid) throw new Error(validation.reason);
   const now = options.now ?? (() => new Date().toISOString());
   const persist = options.persistRecord ?? saveReceiptRecord;
-  const asset: ReceiptAsset = { ...input, file: input.file };
+  const asset = toReceiptAsset(input);
   const captured = createReceiptRecord(asset, now(), "captured");
   await persist(captured);
   if (!options.consent) return { state: "consent_required", record: captured };
@@ -65,7 +65,7 @@ export async function createManualReceipt(input: ReceiptCaptureInput, options: P
   if (!validation.valid) throw new Error(validation.reason);
   const now = options.now ?? (() => new Date().toISOString());
   const persist = options.persistRecord ?? saveReceiptRecord;
-  const captured = createReceiptRecord({ ...input, file: input.file }, now(), "captured");
+  const captured = createReceiptRecord(toReceiptAsset(input), now(), "captured");
   await persist(captured);
   const manual = withProcessingError(captured, "Manual entry selected. OCR was not used.", now());
   await persist(manual);
@@ -76,7 +76,7 @@ export async function rejectReceipt(id: string, options: ConfirmReceiptOptions =
   const record = await (options.getRecord ?? getReceiptRecord)(id);
   if (!record) throw new Error("Receipt record is unavailable for rejection.");
   const rejected: ReceiptRecord = { ...record, reviewStatus: "rejected", calculationInput: undefined, confirmedAt: undefined, updatedAt: (options.now ?? (() => new Date().toISOString()))() };
-  await (options.saveRecord ?? saveReceiptRecord)(rejected);
+  await saveReceiptRecord(rejected);
   return rejected;
 }
 
@@ -92,6 +92,17 @@ function createReviewedRecord(base: ReceiptRecord, extraction: OcrExtraction, no
 
 function withProcessingError(record: ReceiptRecord, errorMessage: string, now: string): ReceiptRecord {
   return { ...record, reviewStatus: "needs_review", errorMessage, updatedAt: now };
+}
+
+function toReceiptAsset(input: ReceiptCaptureInput): ReceiptAsset {
+  return {
+    preparationId: input.preparationId,
+    assetRef: input.assetRef,
+    fileName: input.file.name,
+    mimeType: input.file.type,
+    size: input.file.size,
+    file: input.file,
+  };
 }
 
 function emptyFields(): ReceiptFields {

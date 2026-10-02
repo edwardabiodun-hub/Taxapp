@@ -11,6 +11,7 @@ import {
   rejectReceipt,
   validateReceiptFile,
 } from "@/lib/ocr/ocr-service";
+import { getReceiptRecord } from "@/lib/receipt-repository";
 import type { OcrProvider } from "@/lib/ocr/ocr-provider";
 
 const fields: ReceiptFields = {
@@ -54,6 +55,19 @@ const confirmedReceipt: ReceiptRecord = {
   },
 };
 
+vi.mock("@/lib/local-db", () => {
+  const records = new Map<string, unknown>();
+  return {
+    db: {
+      receiptRecords: {
+        get: async (id: string) => records.get(id),
+        put: async (record: { id: string }) => { records.set(record.id, record); },
+        where: () => ({ equals: () => ({ toArray: async () => [...records.values()] }) }),
+      },
+    },
+  };
+});
+
 describe("receipt OCR service", () => {
   it("excludes OCR fields until the user confirms the record", () => {
     expect(getCalculationReceiptInputs([needsReviewReceipt, confirmedReceipt])).toEqual([
@@ -62,13 +76,12 @@ describe("receipt OCR service", () => {
   });
 
   it("confirms only through the repository-backed confirmReceipt operation", async () => {
-    const records = new Map([["receipt-1", needsReviewReceipt]]);
+    const records = new Map([["receipt-1", { ...needsReviewReceipt, id: "receipt-1" }]]);
     const record = await confirmReceipt("receipt-1", {
       amount: "13000",
       category: "transport",
     }, {
       getRecord: async (id) => records.get(id),
-      saveRecord: async (next) => { records.set(next.id, next); },
       now: () => "2026-10-02T00:05:00.000Z",
     });
 
@@ -82,20 +95,23 @@ describe("receipt OCR service", () => {
       expect.objectContaining({ field: "amount", previousValue: "12500", correctedValue: "13000" }),
       expect.objectContaining({ field: "category", previousValue: "meals", correctedValue: "transport" }),
     ]);
-    expect(records.get("receipt-1")?.reviewStatus).toBe("confirmed");
+    await expect(getReceiptRecord("receipt-1")).resolves.toEqual(expect.objectContaining({
+      reviewStatus: "confirmed",
+      calculationInput: expect.objectContaining({ category: "transport" }),
+    }));
   });
 
   it("persists rejection and excludes the rejected record from calculation inputs", async () => {
     const records = new Map([[confirmedReceipt.id, confirmedReceipt]]);
     const rejected = await rejectReceipt(confirmedReceipt.id, {
       getRecord: async (id) => records.get(id),
-      saveRecord: async (next) => { records.set(next.id, next); },
       now: () => "2026-10-02T00:06:00.000Z",
     });
 
     expect(rejected.reviewStatus).toBe("rejected");
     expect(rejected.calculationInput).toBeUndefined();
-    expect(getCalculationReceiptInputs([records.get(confirmedReceipt.id)!])).toEqual([]);
+    expect(getCalculationReceiptInputs([rejected])).toEqual([]);
+    await expect(getReceiptRecord(confirmedReceipt.id)).resolves.toEqual(expect.objectContaining({ reviewStatus: "rejected" }));
   });
 
   it("allows manual entry without consent or a provider attempt", async () => {
@@ -139,7 +155,7 @@ describe("receipt OCR service", () => {
         file: new File(["receipt"], "receipt.jpg", { type: "image/jpeg" }),
         assetRef: "receipts/receipt-1.jpg",
       },
-      { provider },
+      { provider, consent: true },
     );
 
     expect(result.state).toBe("manual_entry");

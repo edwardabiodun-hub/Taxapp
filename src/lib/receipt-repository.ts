@@ -97,7 +97,6 @@ export async function saveReceiptRecord(
 
 export interface ReceiptRepositoryBoundary {
   readonly getRecord?: (id: string) => Promise<DomainReceiptRecord | undefined>;
-  readonly saveRecord?: (record: DomainReceiptRecord) => Promise<void>;
 }
 
 export interface ConfirmReceiptOptions extends ReceiptRepositoryBoundary { readonly now?: () => string; }
@@ -111,7 +110,7 @@ export async function confirmReceipt(
   if (!record) throw new Error("Receipt record is unavailable for confirmation.");
   const now = options.now ?? (() => new Date().toISOString());
   const confirmed = buildConfirmedReceipt(id, record, corrections, now());
-  await (options.saveRecord ?? saveConfirmedReceiptRecord)(confirmed);
+  await saveConfirmedReceiptRecord(confirmed);
   return confirmed;
 }
 
@@ -150,7 +149,7 @@ function isNewReceiptRecord(
 
 function isConfirmationManagedRecord(value: ReceiptRecord | DomainReceiptRecord): boolean {
   const candidate = value as unknown as Record<string, unknown>;
-  return candidate.reviewStatus === "confirmed" || candidate.calculationInput !== undefined;
+  return candidate.reviewStatus === "confirmed" || candidate.status === "confirmed" || candidate.calculationInput !== undefined;
 }
 
 function isNewReceiptFieldsPersistable(value: unknown): boolean {

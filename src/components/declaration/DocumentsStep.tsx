@@ -5,7 +5,6 @@ import { toast } from "@/hooks/use-toast";
 import ReceiptScanner from "@/components/receipts/ReceiptScanner";
 import type { ReceiptRecord } from "@/domain/receipts";
 import { ManagedOcrProvider } from "@/lib/ocr/managed-ocr-provider";
-import { saveReceiptRecord } from "@/lib/receipt-repository";
 
 export interface UploadedDoc {
   id: string;
@@ -158,7 +157,6 @@ const DocumentsStep = ({
         <ReceiptScanner
           preparationId={preparationId}
           provider={new ManagedOcrProvider()}
-          persistRecord={saveReceiptRecord}
           onConfirmed={onReceiptConfirmed}
         />
       )}

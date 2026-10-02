@@ -183,5 +183,9 @@ describe("receipt persistence validation", () => {
       ...reviewedReceipt,
       calculationInput: confirmedReceipt.calculationInput,
     })).rejects.toThrow(/confirmation/i);
+    await expect(saveReceiptRecord({
+      ...receipt,
+      status: "confirmed",
+    })).rejects.toThrow(/confirmation/i);
   });
 });
