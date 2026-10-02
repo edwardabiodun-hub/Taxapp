@@ -41,17 +41,31 @@ export async function savePreparation(preparation: PreparationRecord): Promise<v
     const existing = await db.preparations.get(preparation.id);
     assertValidPreparationSave(existing, preparation);
 
-    const record: StoredPreparation = {
-      ...preparation,
-      createdAt: existing?.createdAt ?? preparation.createdAt,
-      updatedAt:
-        existing && existing.updatedAt > preparation.updatedAt
-          ? existing.updatedAt
-          : preparation.updatedAt,
-      pendingSync: true,
-    };
+    await db.preparations.put(buildStoredPreparation(existing, preparation));
+  });
+}
 
-    await db.preparations.put(record);
+/**
+ * Persists a lifecycle change and its immutable evidence in one Dexie
+ * transaction. A failed event append rolls back the preparation update too.
+ */
+export async function savePreparationAndAppendSubmissionEvent(
+  preparation: PreparationRecord,
+  event: SubmissionEvent,
+): Promise<void> {
+  await db.transaction("rw", db.preparations, db.submissionEvents, async () => {
+    const existing = await db.preparations.get(preparation.id);
+    assertValidPreparationSave(existing, preparation);
+
+    if (!isSubmissionEventValid(event)) {
+      throw new Error("Submission event evidence is invalid.");
+    }
+    if (await db.submissionEvents.get(event.id)) {
+      throw new Error("Submission events are immutable and cannot be overwritten.");
+    }
+
+    await db.preparations.put(buildStoredPreparation(existing, preparation));
+    await db.submissionEvents.add(event);
   });
 }
 
@@ -70,16 +84,18 @@ export async function listPreparations(): Promise<PreparationRecord[]> {
 }
 
 export async function appendSubmissionEvent(event: SubmissionEvent): Promise<void> {
-  if (!isSubmissionEventValid(event)) {
-    throw new Error("Authority-confirmed events require an authority reference.");
-  }
+  await db.transaction("rw", db.submissionEvents, async () => {
+    if (!isSubmissionEventValid(event)) {
+      throw new Error("Submission event evidence is invalid.");
+    }
 
-  const existing = await db.submissionEvents.get(event.id);
-  if (existing) {
-    throw new Error("Submission events are immutable and cannot be overwritten.");
-  }
+    const existing = await db.submissionEvents.get(event.id);
+    if (existing) {
+      throw new Error("Submission events are immutable and cannot be overwritten.");
+    }
 
-  await db.submissionEvents.add(event);
+    await db.submissionEvents.add(event);
+  });
 }
 
 export async function migrateLegacyDeclarationsToPreparations(
@@ -132,7 +148,17 @@ export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationR
       ruleProfileVersion: "",
       status,
       ...(authorityConfirmation ? { authorityConfirmation } : {}),
-      formData: { ...record.formData, country: record.country },
+       formData: {
+         ...record.formData,
+         country: record.country,
+         documents: record.documents.map((document, index) => ({
+           id: `legacy-${record.id}-${index}`,
+           name: document.name,
+           size: document.size,
+           type: document.type,
+           category: "legacy",
+         })),
+       },
       confirmedReceiptIds: [],
       confirmedReceiptInputs: {},
       createdAt: record.createdAt,
@@ -214,6 +240,21 @@ function assertAuthorityConfirmation(preparation: PreparationRecord): void {
   ) {
     throw new Error("Authority confirmation requires an authority reference.");
   }
+}
+
+function buildStoredPreparation(
+  existing: StoredPreparation | undefined,
+  preparation: PreparationRecord,
+): StoredPreparation {
+  return {
+    ...preparation,
+    createdAt: existing?.createdAt ?? preparation.createdAt,
+    updatedAt:
+      existing && existing.updatedAt > preparation.updatedAt
+        ? existing.updatedAt
+        : preparation.updatedAt,
+    pendingSync: true,
+  };
 }
 
 function getMigratedPreparationLifecycle(

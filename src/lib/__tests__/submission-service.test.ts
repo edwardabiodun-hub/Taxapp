@@ -40,12 +40,20 @@ function createMemoryService(initial = preparation()) {
   let current = initial;
   const events: SubmissionEvent[] = [];
   const exportRecords: unknown[] = [];
+  let failAtomicTransition = false;
   const repository: SubmissionRepository = {
     getPreparation: async () => current,
     savePreparation: async (next) => {
       current = next;
     },
     appendSubmissionEvent: async (event) => {
+      events.push(event);
+    },
+    savePreparationAndAppendSubmissionEvent: async (next, event) => {
+      if (failAtomicTransition) {
+        throw new Error("atomic transition failed");
+      }
+      current = next;
       events.push(event);
     },
   };
@@ -66,6 +74,9 @@ function createMemoryService(initial = preparation()) {
     read: () => current,
     events,
     exportRecords,
+    failAtomicTransition: () => {
+      failAtomicTransition = true;
+    },
   };
 }
 
@@ -118,6 +129,38 @@ describe("SubmissionService", () => {
     );
   });
 
+  it("rejects arbitrary or future submittedAt evidence without changing status", async () => {
+    const memory = createMemoryService({ ...preparation(), status: "exported" } as PreparationRecord);
+
+    await expect(
+      memory.service.markUserSubmitted("prep-1", {
+        source: "manual-handoff",
+        submittedAt: "not-a-timestamp",
+      }),
+    ).rejects.toThrow(/timestamp/i);
+    await expect(
+      memory.service.markUserSubmitted("prep-1", {
+        source: "manual-handoff",
+        submittedAt: "2026-10-03T00:00:00.000Z",
+      }),
+    ).rejects.toThrow(/future/i);
+
+    expect(memory.read().status).toBe("exported");
+    expect(memory.events).toHaveLength(0);
+  });
+
+  it("does not leave user-submitted status when the atomic event transition fails", async () => {
+    const memory = createMemoryService({ ...preparation(), status: "exported" } as PreparationRecord);
+    memory.failAtomicTransition();
+
+    await expect(
+      memory.service.markUserSubmitted("prep-1", { source: "manual-handoff" }),
+    ).rejects.toThrow(/atomic/i);
+
+    expect(memory.read().status).toBe("exported");
+    expect(memory.events).toHaveLength(0);
+  });
+
   it("requires user submission before authority confirmation and preserves the official reference", async () => {
     const memory = createMemoryService({ ...preparation(), status: "exported" } as PreparationRecord);
 
@@ -138,5 +181,20 @@ describe("SubmissionService", () => {
         confirmedAt: "2026-10-02T12:00:00.000Z",
       },
     });
+  });
+
+  it("prevents re-exporting an authority-confirmed preparation", async () => {
+    const memory = createMemoryService({
+      ...preparation(),
+      status: "authority_confirmed",
+      authorityConfirmation: {
+        authorityReference: "NRS-2026-0001",
+        confirmedAt: "2026-10-02T12:00:00.000Z",
+      },
+    } as PreparationRecord);
+
+    await expect(memory.service.export("prep-1")).rejects.toThrow(/authority-confirmed|export/i);
+    expect(memory.read().status).toBe("authority_confirmed");
+    expect(memory.events).toHaveLength(0);
   });
 });

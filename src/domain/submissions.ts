@@ -36,7 +36,7 @@ export type SubmissionEvent =
     });
 
 export function isSubmissionEventValid(event: SubmissionEvent): boolean {
-  if (event.userEvidence !== undefined && !isUserSubmissionEvidenceValid(event.userEvidence)) {
+  if (event.userEvidence !== undefined && !isUserSubmissionEvidenceValid(event.userEvidence, event.timestamp)) {
     return false;
   }
 
@@ -47,6 +47,7 @@ export function isSubmissionEventValid(event: SubmissionEvent): boolean {
 
 export function isUserSubmissionEvidenceValid(
   evidence: unknown,
+  referenceTimestamp?: string,
 ): evidence is UserSubmissionEvidence {
   if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
     return false;
@@ -58,8 +59,22 @@ export function isUserSubmissionEvidenceValid(
 
   return isSafeEvidenceText(value.source) &&
     (value.reference === undefined || isSafeEvidenceText(value.reference)) &&
-    (value.submittedAt === undefined || isSafeEvidenceText(value.submittedAt)) &&
+    (value.submittedAt === undefined || isValidTimestamp(value.submittedAt, referenceTimestamp)) &&
     (value.note === undefined || isSafeEvidenceText(value.note));
+}
+
+export function isValidTimestamp(value: unknown, referenceTimestamp?: string): value is string {
+  if (!isSafeEvidenceText(value)) return false;
+
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return false;
+
+  if (referenceTimestamp !== undefined) {
+    const reference = Date.parse(referenceTimestamp);
+    if (!Number.isFinite(reference) || timestamp > reference) return false;
+  }
+
+  return true;
 }
 
 function isSafeEvidenceText(value: unknown): value is string {

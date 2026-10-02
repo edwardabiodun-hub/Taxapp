@@ -3,6 +3,7 @@ import { db, type LocalActivity, type LocalDeclaration, type LocalProfile } from
 import type { PreparationRecord } from "@/domain/preparations";
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { getPreparation, listPreparations } from "@/lib/preparation-repository";
+import { mergeSubmissionRecords, type SubmissionRecord } from "@/lib/submission-records";
 
 export function useProfile(): LocalProfile | undefined {
   return useLiveQuery(() => db.profiles.toCollection().first());
@@ -36,6 +37,23 @@ export function usePreparations(filter?: {
       },
       [filter?.status],
     ) ?? []
+  );
+}
+
+export function useSubmissionRecords(): SubmissionRecord[] {
+  return useLiveQuery(
+    async () => mergeSubmissionRecords(
+      await listPreparations(),
+      await db.declarations.toArray(),
+    ),
+    [],
+  ) ?? [];
+}
+
+export function useDeclaration(id: string | undefined): LocalDeclaration | undefined {
+  return useLiveQuery(
+    () => (id ? db.declarations.get(id) : undefined),
+    [id],
   );
 }
 

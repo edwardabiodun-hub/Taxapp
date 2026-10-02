@@ -4,26 +4,33 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
 import type { PreparationStatus } from "@/domain/tax-readiness";
-import { usePreparations } from "@/hooks/use-local-data";
+import { useSubmissionRecords } from "@/hooks/use-local-data";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 
-const filters: readonly { label: string; status?: PreparationStatus }[] = [
+const filters: readonly {
+  label: string;
+  status?: PreparationStatus;
+  legacy?: boolean;
+}[] = [
   { label: "All" },
   { label: "Draft", status: "draft" },
   { label: "Ready for review", status: "ready_for_review" },
   { label: "Exported", status: "exported" },
   { label: "User submitted", status: "user_submitted" },
   { label: "Authority confirmed", status: "authority_confirmed" },
+  { label: "Legacy records", legacy: true },
 ];
 
 const Submissions = () => {
   const [active, setActive] = useState("All");
   const navigate = useNavigate();
-  const preparations = usePreparations();
+  const records = useSubmissionRecords();
   const activeFilter = filters.find((filter) => filter.label === active);
-  const filtered = activeFilter?.status
-    ? preparations.filter((preparation) => preparation.status === activeFilter.status)
-    : preparations;
+  const filtered = records.filter((record) => {
+    if (!activeFilter?.status && !activeFilter?.legacy) return true;
+    if (activeFilter.legacy) return record.kind === "legacy";
+    return record.kind === "preparation" && record.preparation.status === activeFilter.status;
+  });
 
   return (
     <motion.div
@@ -62,30 +69,33 @@ const Submissions = () => {
         {filtered.length === 0 && (
           <p className="text-center text-muted-foreground py-12 text-sm">No preparations found.</p>
         )}
-        {filtered.map((preparation, i) => {
-          const capability = getJurisdictionCapability(preparation.jurisdictionCode);
+        {filtered.map((record, i) => {
+          const preparation = record.kind === "preparation" ? record.preparation : undefined;
+          const declaration = record.kind === "legacy" ? record.declaration : record.legacy;
+          const jurisdictionCode = preparation?.jurisdictionCode || declaration?.country || "NG";
+          const capability = getJurisdictionCapability(jurisdictionCode);
           return (
           <motion.div
-            key={preparation.id}
+            key={record.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
             <SubmissionCard
               submission={{
-                id: preparation.id,
-                taxYear: preparation.taxYear,
-                type: `${capability.shortName} PIT preparation`,
-                status: preparation.status,
-                date: new Date(preparation.updatedAt).toLocaleDateString("en-GB", {
+                id: record.id,
+                taxYear: preparation?.taxYear || declaration?.taxYear || "—",
+                type: preparation ? `${capability.shortName} PIT preparation` : declaration?.type || "Legacy declaration",
+                status: preparation?.status || declaration?.status || "draft",
+                date: new Date(preparation?.updatedAt || declaration?.updatedAt || declaration?.createdAt || "").toLocaleDateString("en-GB", {
                   day: "2-digit",
                   month: "short",
                   year: "numeric",
                 }),
-                amount: "—",
+                amount: declaration?.amount || "—",
                 capability,
               }}
-              onClick={() => navigate(`/submissions/${preparation.id}`)}
+              onClick={() => navigate(`/submissions/${record.id}`)}
             />
           </motion.div>
           );

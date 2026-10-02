@@ -2,10 +2,11 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft, Calendar, FileText, MapPin, Paperclip } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
-import { usePreparation } from "@/hooks/use-local-data";
+import { useActivities, useDeclaration, usePreparation } from "@/hooks/use-local-data";
 import { db } from "@/lib/local-db";
 import { cn } from "@/lib/utils";
 import SubmissionStatus from "@/components/submissions/SubmissionStatus";
+import { migrateLegacyDeclaration } from "@/lib/preparation-repository";
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("en-GB", {
@@ -17,7 +18,12 @@ const formatDate = (value: string) =>
 const SubmissionDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const preparation = usePreparation(id);
+  const storedPreparation = usePreparation(id);
+  const legacyDeclaration = useDeclaration(id);
+  const preparation = storedPreparation ?? (
+    legacyDeclaration ? migrateLegacyDeclaration(legacyDeclaration) : undefined
+  );
+  const legacyActivities = useActivities(id ?? "");
   const events = useLiveQuery(
     () => (id ? db.submissionEvents.where("preparationId").equals(id).sortBy("timestamp") : Promise.resolve([])),
     [id],
@@ -46,6 +52,24 @@ const SubmissionDetail = () => {
   const documents = Array.isArray(preparation.formData.documents)
     ? preparation.formData.documents
     : [];
+  const history = [
+    ...legacyActivities.map((activity) => ({
+      id: `legacy-${activity.id}`,
+      timestamp: activity.timestamp,
+      title: activity.title,
+      description: activity.description,
+      actor: "legacy record",
+    })),
+    ...events.map((event) => ({
+      id: `event-${event.id}`,
+      timestamp: event.timestamp,
+      title: eventLabel(event.type, preparation.status),
+      description: event.userEvidence?.reference
+        ? `Evidence reference: ${event.userEvidence.reference}`
+        : undefined,
+      actor: event.actor,
+    })),
+  ].sort((left, right) => left.timestamp.localeCompare(right.timestamp));
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto space-y-5">
@@ -66,6 +90,12 @@ const SubmissionDetail = () => {
       </div>
 
       <SubmissionStatus status={preparation.status} capability={capability} />
+
+      {legacyDeclaration && !storedPreparation && (
+        <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
+          Legacy declaration retained offline. Its historical status is shown for continuity and is not treated as proof of authority filing.
+        </div>
+      )}
 
       <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
         <h2 className="font-display font-bold text-sm text-card-foreground">Preparation details</h2>
@@ -108,17 +138,18 @@ const SubmissionDetail = () => {
 
       <div className="bg-card rounded-2xl shadow-card p-4 space-y-3">
         <h2 className="font-display font-bold text-sm text-card-foreground">Status history</h2>
-        {events.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground py-2">No status events recorded yet.</p>
+        {history.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground py-2">No status or legacy activity events recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {events.map((event) => (
-              <div key={event.id} className="flex items-start justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2">
+            {history.map((entry) => (
+              <div key={entry.id} className="flex items-start justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2">
                 <div>
-                  <p className="text-xs font-semibold text-foreground">{eventLabel(event.type)}</p>
-                  <p className="text-[10px] text-muted-foreground">Recorded by {event.actor}</p>
+                  <p className="text-xs font-semibold text-foreground">{entry.title}</p>
+                  {entry.description && <p className="text-[10px] text-muted-foreground">{entry.description}</p>}
+                  <p className="text-[10px] text-muted-foreground">Recorded by {entry.actor}</p>
                 </div>
-                <time className="text-[10px] text-muted-foreground shrink-0">{formatDate(event.timestamp)}</time>
+                <time className="text-[10px] text-muted-foreground shrink-0">{formatDate(entry.timestamp)}</time>
               </div>
             ))}
           </div>
@@ -128,11 +159,13 @@ const SubmissionDetail = () => {
   );
 };
 
-const eventLabel = (type: string) => {
+const eventLabel = (type: string, currentStatus?: string) => {
   const labels: Record<string, string> = {
     created: "Preparation created",
     status_changed: "Status changed",
-    exported: "Package exported — not submitted",
+    exported: currentStatus === "authority_confirmed"
+      ? "Package exported — filing status unchanged"
+      : "Package exported — not submitted",
     user_submitted: "User submitted",
     authority_confirmed: "Authority confirmed",
     submission_failed: "Submission failed",

@@ -3,15 +3,19 @@ import type { ExportPackageRecord } from "@/lib/local-db";
 import type { PreparationRecord } from "@/domain/preparations";
 import {
   isUserSubmissionEvidenceValid,
+  isValidTimestamp,
   type SubmissionEvent,
   type UserSubmissionEvidence,
 } from "@/domain/submissions";
-import { persistExportMetadata } from "@/lib/exports/export-service";
-import type { ExportPersistence } from "@/lib/exports/export-service";
+import {
+  persistExportMetadata,
+  type ExportPersistence,
+} from "@/lib/exports/export-service";
 import { saveExportPackage } from "@/lib/export-repository";
 import {
   appendSubmissionEvent,
   getPreparation,
+  savePreparationAndAppendSubmissionEvent,
   savePreparation,
 } from "@/lib/preparation-repository";
 import {
@@ -24,6 +28,10 @@ export interface SubmissionRepository {
   readonly getPreparation: (id: string) => Promise<PreparationRecord | undefined>;
   readonly savePreparation: (preparation: PreparationRecord) => Promise<void>;
   readonly appendSubmissionEvent: (event: SubmissionEvent) => Promise<void>;
+  readonly savePreparationAndAppendSubmissionEvent: (
+    preparation: PreparationRecord,
+    event: SubmissionEvent,
+  ) => Promise<void>;
 }
 
 export interface SubmissionServiceOptions {
@@ -37,6 +45,7 @@ const defaultRepository: SubmissionRepository = {
   getPreparation,
   savePreparation,
   appendSubmissionEvent,
+  savePreparationAndAppendSubmissionEvent,
 };
 
 export class SubmissionService {
@@ -60,13 +69,24 @@ export class SubmissionService {
     assertExportableStatus(preparation);
     const capability = getJurisdictionCapability(preparation.jurisdictionCode);
     const submissionPackage = await this.adapter.prepare(preparation, capability);
+    let exportedPreparation: PreparationRecord | undefined;
 
     await persistExportMetadata(
       submissionPackage.exportPackage,
       preparation,
-      this.exportPersistence,
+      {
+        ...this.exportPersistence,
+        savePreparation: async (next) => {
+          exportedPreparation = next;
+        },
+      },
     );
-    await this.repository.appendSubmissionEvent({
+
+    if (!exportedPreparation) {
+      throw new Error("Export persistence did not produce an exported preparation.");
+    }
+
+    await this.repository.savePreparationAndAppendSubmissionEvent(exportedPreparation, {
       id: createEventId(preparationId, "exported"),
       preparationId,
       type: "exported",
@@ -95,8 +115,7 @@ export class SubmissionService {
       status: "user_submitted" as const,
       updatedAt: timestamp,
     };
-    await this.repository.savePreparation(next);
-    await this.repository.appendSubmissionEvent({
+    await this.repository.savePreparationAndAppendSubmissionEvent(next, {
       id: createEventId(preparationId, "user_submitted"),
       preparationId,
       type: "user_submitted",
@@ -133,8 +152,7 @@ export class SubmissionService {
       },
       updatedAt: confirmedAt,
     };
-    await this.repository.savePreparation(next);
-    await this.repository.appendSubmissionEvent({
+    await this.repository.savePreparationAndAppendSubmissionEvent(next, {
       id: createEventId(preparationId, "authority_confirmed"),
       preparationId,
       type: "authority_confirmed",
@@ -152,9 +170,9 @@ export class SubmissionService {
 }
 
 function assertExportableStatus(preparation: PreparationRecord): void {
-  if (!["ready_for_review", "exported", "authority_confirmed"].includes(preparation.status)) {
+  if (!["ready_for_review", "exported"].includes(preparation.status)) {
     throw new Error(
-      `Preparation must be ready for review before export; current status is ${preparation.status}.`,
+      `Preparation cannot be exported from ${preparation.status}; authority-confirmed records are immutable.`,
     );
   }
 }
@@ -163,14 +181,22 @@ function normalizeUserEvidence(
   evidence: UserSubmissionEvidence,
   fallbackTimestamp: string,
 ): UserSubmissionEvidence {
+  if (!isValidTimestamp(fallbackTimestamp)) {
+    throw new Error("Submission service timestamp is invalid.");
+  }
   if (!isUserSubmissionEvidenceValid(evidence)) {
     throw new Error("Explicit user submission evidence is required.");
+  }
+
+  const submittedAt = evidence.submittedAt?.trim() || fallbackTimestamp;
+  if (!isValidTimestamp(submittedAt, fallbackTimestamp)) {
+    throw new Error("Submitted-at timestamp is invalid or in the future.");
   }
 
   return {
     source: evidence.source.trim(),
     ...(evidence.reference ? { reference: evidence.reference.trim() } : {}),
-    submittedAt: evidence.submittedAt?.trim() || fallbackTimestamp,
+    submittedAt: new Date(submittedAt).toISOString(),
     ...(evidence.note ? { note: evidence.note.trim() } : {}),
   };
 }

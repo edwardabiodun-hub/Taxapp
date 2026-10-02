@@ -60,7 +60,9 @@ export function SubmissionStatus({
             <div>
               <p className="text-sm font-semibold text-foreground">Authority handoff checklist</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                This preparation has not been submitted to a tax authority. FileSmart provides the package and guidance; you complete the authority handoff.
+                {status === "user_submitted"
+                  ? "You marked this preparation as submitted. FileSmart is waiting for an authority confirmation reference and does not claim authority acceptance."
+                  : "This preparation has not been submitted to a tax authority. FileSmart provides the package and guidance; you complete the authority handoff."}
               </p>
             </div>
           </div>
