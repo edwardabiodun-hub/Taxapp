@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Profile from "./pages/Profile";
 import TaxCalculator from "./pages/TaxCalculator";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import { loadJurisdictionCapabilities } from "@/lib/jurisdiction-service";
 
 const queryClient = new QueryClient();
 
@@ -53,18 +55,24 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CountryThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </CountryThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    void loadJurisdictionCapabilities().catch(() => undefined);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CountryThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </CountryThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
