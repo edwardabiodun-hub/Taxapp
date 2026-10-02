@@ -43,7 +43,11 @@ export type SubmissionEvent =
       readonly authorityReference: string;
     });
 
-export function isSubmissionEventValid(event: SubmissionEvent): boolean {
+export function isSubmissionEventValid(
+  event: SubmissionEvent,
+  options: { readonly requireEvidence?: boolean } = {},
+): boolean {
+  if (options.requireEvidence && event.evidence === undefined) return false;
   if (event.evidence !== undefined && !isSubmissionEventEvidenceValid(event.evidence)) {
     return false;
   }

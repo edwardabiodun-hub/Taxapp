@@ -78,6 +78,10 @@ export class SubmissionService {
       type: "exported",
       actor: "system",
       timestamp: submissionPackage.exportPackage.generatedAt,
+      evidence: {
+        source: "filesmart-export",
+        reference: `${preparation.id}:${submissionPackage.exportPackage.generatedAt}`,
+      },
     }, buildExportPackageRecords(submissionPackage.exportPackage, preparation));
 
     return submissionPackage.exportPackage;
@@ -108,6 +112,7 @@ export class SubmissionService {
       actor: "user",
       timestamp,
       userEvidence: normalizedEvidence,
+      evidence: { source: "user-submission" },
     });
   }
 
@@ -148,6 +153,7 @@ export class SubmissionService {
       actor: "authority",
       timestamp: confirmedAt,
       authorityReference: reference,
+      evidence: { source: "authority-confirmation", reference },
     });
   }
 

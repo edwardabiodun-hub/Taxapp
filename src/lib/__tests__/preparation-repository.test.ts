@@ -419,6 +419,10 @@ describe("preparation repository", () => {
       type: "exported" as const,
       actor: "system" as const,
       timestamp: "2026-01-01T02:00:00.000Z",
+      evidence: {
+        source: "filesmart-export",
+        reference: "prep-1:2026-01-01T02:00:00.000Z",
+      },
     };
     await appendSubmissionEvent(event);
 
@@ -427,12 +431,30 @@ describe("preparation repository", () => {
     );
     await expect(
       appendSubmissionEvent({
+        ...event,
+        id: "event-missing-evidence",
+        evidence: undefined,
+      } as never),
+    ).rejects.toThrow(/evidence/i);
+    await expect(
+      appendSubmissionEvent({
+        ...event,
+        id: "event-mismatched-export",
+        evidence: {
+          source: "filesmart-export",
+          reference: "prep-1:2026-01-01T03:00:00.000Z",
+        },
+      }),
+    ).rejects.toThrow(/exported|system event/i);
+    await expect(
+      appendSubmissionEvent({
         id: "event-2",
         preparationId: "prep-1",
         type: "authority_confirmed",
         actor: "authority",
         timestamp: "2026-01-01T02:00:00.000Z",
         authorityReference: "",
+        evidence: { source: "authority-confirmation", reference: "" },
       } as never),
       ).rejects.toThrow(/authority reference/i);
     await expect(

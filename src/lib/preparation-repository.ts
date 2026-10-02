@@ -71,9 +71,9 @@ export async function savePreparationAndAppendSubmissionEventWithExportPackages(
 ): Promise<void> {
   await db.transaction("rw", db.preparations, db.submissionEvents, db.exportPackages, async () => {
     const existing = await db.preparations.get(preparation.id);
-    assertValidPreparationSave(existing, preparation, event);
+    assertValidPreparationSave(existing, preparation, event, exportPackages);
 
-    if (event.preparationId !== preparation.id || !isSubmissionEventValid(event)) {
+    if (event.preparationId !== preparation.id || !isSubmissionEventValid(event, { requireEvidence: true })) {
       throw new Error("Submission event evidence is invalid.");
     }
     if (await db.submissionEvents.get(event.id)) {
@@ -116,7 +116,7 @@ export async function appendSubmissionEvent(event: SubmissionEvent): Promise<voi
     if (preparation.status === "authority_confirmed") {
       throw new Error("Authority-confirmed preparations are immutable.");
     }
-    if (!isSubmissionEventValid(event)) {
+    if (!isSubmissionEventValid(event, { requireEvidence: true })) {
       throw new Error("Submission event evidence is invalid.");
     }
     assertLifecycleEvent(stripSyncMetadata(preparation), event);
@@ -260,6 +260,7 @@ function assertValidPreparationSave(
   existing: StoredPreparation | undefined,
   preparation: PreparationRecord,
   event?: SubmissionEvent,
+  exportPackages: readonly ExportPackageRecord[] = [],
 ): void {
   if (existing?.status === "authority_confirmed") {
     throw new Error("Authority-confirmed preparations are immutable.");
@@ -280,7 +281,7 @@ function assertValidPreparationSave(
     );
   }
   assertAuthorityConfirmation(preparation);
-  if (event) assertLifecycleEvent(preparation, event);
+  if (event) assertLifecycleEvent(preparation, event, exportPackages);
 }
 
 function assertAuthorityConfirmation(preparation: PreparationRecord): void {
@@ -296,9 +297,21 @@ function assertAuthorityConfirmation(preparation: PreparationRecord): void {
 function assertLifecycleEvent(
   preparation: PreparationRecord,
   event: SubmissionEvent,
+  exportPackages: readonly ExportPackageRecord[] = [],
 ): void {
+  if (!event.evidence) {
+    throw new Error("New submission events require explicit evidence.");
+  }
+
   if (preparation.status === "exported") {
-    if (event.type !== "exported" || event.actor !== "system") {
+    if (
+      event.type !== "exported" ||
+      event.actor !== "system" ||
+      event.evidence.source !== "filesmart-export" ||
+      event.evidence.reference !== `${preparation.id}:${event.timestamp}` ||
+      exportPackages.length === 0 ||
+      exportPackages.some((record) => record.generatedAt !== event.timestamp)
+    ) {
       throw new Error("Exported preparations require a system export event.");
     }
     return;
@@ -309,6 +322,7 @@ function assertLifecycleEvent(
       event.type !== "user_submitted" ||
       event.actor !== "user" ||
       !event.userEvidence ||
+      event.evidence.source !== "user-submission" ||
       !isUserSubmissionEvidenceValid(event.userEvidence, event.timestamp)
     ) {
       throw new Error("User submission requires explicit validated evidence.");
@@ -320,6 +334,8 @@ function assertLifecycleEvent(
     preparation.status === "authority_confirmed" &&
     (event.type !== "authority_confirmed" ||
       event.actor !== "authority" ||
+      event.evidence.source !== "authority-confirmation" ||
+      event.evidence.reference !== event.authorityReference ||
       event.authorityReference !== preparation.authorityConfirmation.authorityReference ||
       preparation.authorityConfirmation.confirmedAt !== event.timestamp)
   ) {
