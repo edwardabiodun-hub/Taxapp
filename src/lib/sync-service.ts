@@ -6,7 +6,15 @@ import {
   pushDeclarationsToServer,
   fetchReferenceDataFromServer,
   fetchActivitiesFromServer,
+  pushPreparationsToServer,
 } from "./mock-api";
+import {
+  getPreparation,
+  listPendingPreparations,
+  markPreparationSynced,
+  migrateLegacyDeclaration,
+  savePreparationFromSync,
+} from "./preparation-repository";
 
 /**
  * Full bidirectional sync:
@@ -21,6 +29,19 @@ export interface SyncResult {
 
 export async function syncAll(): Promise<SyncResult> {
   try {
+    // Preparation synchronization is local lifecycle synchronization only; it
+    // never promotes a preparation to an authority status.
+    const pendingPreparations = await listPendingPreparations();
+    if (pendingPreparations.length > 0) {
+      await pushPreparationsToServer(pendingPreparations);
+      const syncedAt = new Date().toISOString();
+      await Promise.all(
+        pendingPreparations.map((preparation) =>
+          markPreparationSynced(preparation.id, syncedAt),
+        ),
+      );
+    }
+
     // ── Push pending local changes ──
     const pending = await db.declarations
       .where("pendingSync")
@@ -55,6 +76,7 @@ export async function syncAll(): Promise<SyncResult> {
 
     // Detect new audit_request status changes
     const newAuditRequests: SyncResult["auditRequests"] = [];
+    const now = new Date().toISOString();
 
     for (const decl of serverDeclarations) {
       const local = await db.declarations.get(decl.id);
@@ -64,10 +86,15 @@ export async function syncAll(): Promise<SyncResult> {
           newAuditRequests.push({ id: decl.id, type: decl.type, taxYear: decl.taxYear });
         }
         await db.declarations.put(decl);
+
+        const migrated = migrateLegacyDeclaration(decl);
+        const localPreparation = await getPreparation(decl.id);
+        if (localPreparation?.status !== "authority_confirmed") {
+          await savePreparationFromSync(migrated, now);
+        }
       }
     }
 
-    const now = new Date().toISOString();
     for (const [key, value] of Object.entries(refData)) {
       await db.referenceData.put({ key, value, lastSynced: now });
     }

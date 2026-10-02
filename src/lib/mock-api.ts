@@ -3,7 +3,12 @@
  * Replace these implementations with real fetch() calls when the backend is ready.
  */
 
-import type { LocalActivity, LocalDeclaration, LocalProfile } from "./local-db";
+import type {
+  LocalActivity,
+  LocalDeclaration,
+  LocalProfile,
+  StoredPreparation,
+} from "./local-db";
 
 // Simulated network delay
 const delay = (ms = 300) => new Promise((r) => setTimeout(r, ms));
@@ -84,6 +89,13 @@ export async function pushDeclarationsToServer(
 ): Promise<void> {
   await delay();
   console.log("[mock-api] Declarations pushed to server", declarations.length);
+}
+
+export async function pushPreparationsToServer(
+  preparations: StoredPreparation[],
+): Promise<void> {
+  await delay();
+  console.log("[mock-api] Preparations pushed to server", preparations.length);
 }
 
 // ── Reference Data ───────────────────────────────────────
