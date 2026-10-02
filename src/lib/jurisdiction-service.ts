@@ -270,12 +270,23 @@ function validatedCapabilities(overlays: unknown): JurisdictionCapability[] {
 function mergeCapabilities(
   bundled: readonly JurisdictionCapability[],
   overlays: unknown,
+  options: { readonly allowEqualVersion?: boolean } = {},
 ): JurisdictionCapability[] {
   const byCode = new Map(bundled.map((capability) => [capability.jurisdictionCode, capability]));
 
   for (const capability of validatedCapabilities(overlays)) {
     const bundledCapability = byCode.get(capability.jurisdictionCode);
-    if (!bundledCapability || compareVersions(capability.registryVersion, bundledCapability.registryVersion) < 0) {
+    if (!bundledCapability) {
+      continue;
+    }
+    const versionComparison = compareVersions(
+      capability.registryVersion,
+      bundledCapability.registryVersion,
+    );
+    if (
+      versionComparison < 0 ||
+      (versionComparison === 0 && options.allowEqualVersion !== true)
+    ) {
       continue;
     }
     byCode.set(capability.jurisdictionCode, capability);
@@ -301,7 +312,10 @@ export async function loadJurisdictionCapabilities(
     cached = undefined;
   }
 
-  let capabilities = mergeCapabilities(bundled, cached);
+  // Cached entries may legitimately equal the bundled version while carrying
+  // richer verified evidence. A refresh at that same version may not replace
+  // them unless a newer registry version is supplied.
+  let capabilities = mergeCapabilities(bundled, cached, { allowEqualVersion: true });
   const refresh = options.refresh ?? (() => fetchRegistry(options.fetchImpl ?? fetch));
   try {
     const refreshed = await refresh();

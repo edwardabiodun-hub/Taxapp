@@ -126,6 +126,21 @@ describe("phase-one feature controls", () => {
     );
   });
 
+  it("does not replace cached evidence with an equal-version refresh", async () => {
+    const refreshed = { ...cachedLagosCapability, notes: "Unverified same-version refresh" };
+    const capabilities = await loadJurisdictionCapabilities({
+      refresh: async () => [refreshed],
+      cache: {
+        read: async () => [cachedLagosCapability],
+        write: async () => undefined,
+      },
+    });
+
+    expect(capabilities.find(({ jurisdictionCode }) => jurisdictionCode === "NG-LA")).toEqual(
+      cachedLagosCapability,
+    );
+  });
+
   it("exposes only public runtime configuration", () => {
     const config = getPublicRuntimeConfig({
       VITE_OCR_ENDPOINT: "https://example.test/ocr",
