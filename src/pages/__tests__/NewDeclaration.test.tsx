@@ -180,5 +180,8 @@ describe("NewDeclaration", () => {
     ));
     expect(await screen.findByText("Not submitted")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /download pdf/i })).toBeEnabled();
+    expect(screen.getAllByText(/exported.*downloads ready/i).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /save as draft/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /mark ready for review/i })).not.toBeInTheDocument();
   });
 });

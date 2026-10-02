@@ -57,6 +57,7 @@ const NewDeclaration = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportPackage, setExportPackage] = useState<ExportPackage>();
   const [exportError, setExportError] = useState<string>();
+  const isExported = savedStatus === "exported";
 
   const capabilities = listNigeriaJurisdictions();
   const capability = useMemo(
@@ -329,36 +330,47 @@ const NewDeclaration = () => {
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
         )}
-        <Button
-          variant="outline"
-          onClick={() => void handleSave("draft")}
-          disabled={isSaving || isExporting}
-          className="flex-1 gap-2"
-        >
-          <Save className="h-4 w-4" /> Save as draft
-        </Button>
-        {currentStep < preparationSteps.length - 1 ? (
-          <Button onClick={next} className="flex-1 gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
-            Next <ArrowRight className="h-4 w-4" />
-          </Button>
+        {isExported ? (
+          <div className="flex-1 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-center" role="status">
+            <p className="text-sm font-semibold text-foreground">Exported — downloads ready</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              The package is available below. Nothing has been filed or submitted.
+            </p>
+          </div>
         ) : (
           <>
             <Button
-              onClick={() => void handleSave("ready_for_review")}
-              disabled={isSaving || isExporting || !requiredDataComplete()}
-              className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
+              variant="outline"
+              onClick={() => void handleSave("draft")}
+              disabled={isSaving || isExporting}
+              className="flex-1 gap-2"
             >
-              <Check className="h-4 w-4" /> Mark ready for review
+              <Save className="h-4 w-4" /> Save as draft
             </Button>
-            {savedStatus === "ready_for_review" && !exportPackage && (
-              <Button
-                onClick={() => void handleExport()}
-                disabled={isSaving || isExporting}
-                className="flex-1 gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90"
-              >
-                <Save className="h-4 w-4" />
-                {isExporting ? "Generating package…" : "Generate universal package"}
+            {currentStep < preparationSteps.length - 1 ? (
+              <Button onClick={next} className="flex-1 gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
+                Next <ArrowRight className="h-4 w-4" />
               </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={() => void handleSave("ready_for_review")}
+                  disabled={isSaving || isExporting || !requiredDataComplete()}
+                  className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
+                >
+                  <Check className="h-4 w-4" /> Mark ready for review
+                </Button>
+                {savedStatus === "ready_for_review" && !exportPackage && (
+                  <Button
+                    onClick={() => void handleExport()}
+                    disabled={isSaving || isExporting}
+                    className="flex-1 gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isExporting ? "Generating package…" : "Generate universal package"}
+                  </Button>
+                )}
+              </>
             )}
           </>
         )}

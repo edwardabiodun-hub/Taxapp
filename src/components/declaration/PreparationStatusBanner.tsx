@@ -73,7 +73,13 @@ const PreparationStatusBanner = ({
         <div>
           <p className="text-muted-foreground">Saved status</p>
           <p className="mt-0.5 font-semibold text-foreground">
-            {status === "ready_for_review" ? "Ready for review" : status === "draft" ? "Draft" : "Not saved"}
+            {status === "exported"
+              ? "Exported — downloads ready"
+              : status === "ready_for_review"
+                ? "Ready for review"
+                : status === "draft"
+                  ? "Draft"
+                  : "Not saved"}
           </p>
         </div>
       </div>

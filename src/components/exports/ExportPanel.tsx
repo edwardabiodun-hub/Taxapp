@@ -17,11 +17,12 @@ export function downloadExportArtifact(artifact: ExportArtifact): void {
   anchor.download = artifact.fileName;
   anchor.style.display = "none";
   document.body.appendChild(anchor);
-  anchor.click();
-  window.setTimeout(() => {
+  try {
+    anchor.click();
+  } finally {
     anchor.remove();
     URL.revokeObjectURL(url);
-  }, 0);
+  }
 }
 
 const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
