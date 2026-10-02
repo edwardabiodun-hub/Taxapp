@@ -36,13 +36,15 @@ export type SubmissionEvent =
     });
 
 export function isSubmissionEventValid(event: SubmissionEvent): boolean {
+  if (!isValidTimestamp(event.timestamp)) return false;
+
   if (event.userEvidence !== undefined && !isUserSubmissionEvidenceValid(event.userEvidence, event.timestamp)) {
     return false;
   }
 
   if (event.type !== "authority_confirmed") return true;
 
-  return event.authorityReference.trim().length > 0;
+  return isSafeEvidenceText(event.authorityReference);
 }
 
 export function isUserSubmissionEvidenceValid(
@@ -66,13 +68,39 @@ export function isUserSubmissionEvidenceValid(
 export function isValidTimestamp(value: unknown, referenceTimestamp?: string): value is string {
   if (!isSafeEvidenceText(value)) return false;
 
+  // Persisted lifecycle timestamps must be unambiguous ISO instants, not
+  // locale-dependent or date-only strings.
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?(Z|[+-](\d{2}):(\d{2}))$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, , zone, offsetHourText, offsetMinuteText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+  const offsetHour = offsetHourText === undefined ? 0 : Number(offsetHourText);
+  const offsetMinute = offsetMinuteText === undefined ? 0 : Number(offsetMinuteText);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (
+    month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1] ||
+    hour > 23 || minute > 59 || second > 59 ||
+    offsetHour > 23 || offsetMinute > 59 || (zone !== "Z" && zone[0] !== "+" && zone[0] !== "-")
+  ) {
+    return false;
+  }
+
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return false;
 
-  if (referenceTimestamp !== undefined) {
-    const reference = Date.parse(referenceTimestamp);
-    if (!Number.isFinite(reference) || timestamp > reference) return false;
-  }
+  const reference = referenceTimestamp === undefined
+    ? Date.now()
+    : Date.parse(referenceTimestamp);
+  if (!Number.isFinite(reference) || timestamp > reference) return false;
 
   return true;
 }

@@ -73,28 +73,8 @@ export async function persistExportMetadata(
   preparation: PreparationRecord,
   persistence: ExportPersistence = defaultPersistence,
 ): Promise<void> {
-  for (const artifact of exportPackage.artifacts) {
-    await persistence.saveExportPackage({
-      id: `${exportPackage.id}-${artifact.format}`,
-      preparationId: preparation.id,
-      format: artifact.format,
-      assetRef: artifact.artifactRef,
-      ruleProfileVersion: exportPackage.metadata.ruleProfileVersion,
-      calculationLabel: exportPackage.metadata.calculationLabel,
-      schemaVersion: exportPackage.schemaVersion,
-      jurisdiction: exportPackage.metadata.jurisdiction,
-      jurisdictionCode: exportPackage.metadata.jurisdictionCode,
-      taxYear: exportPackage.metadata.taxYear,
-      readiness: exportPackage.metadata.readiness,
-      generatedAt: exportPackage.generatedAt,
-      notSubmitted: true,
-      source: exportPackage.metadata.source,
-      sourceVerifiedAt: exportPackage.metadata.sourceVerifiedAt,
-      deadlineSource: exportPackage.metadata.deadlineSource,
-      deadlineVerifiedAt: exportPackage.metadata.deadlineVerifiedAt,
-      metadata: exportPackage.metadata,
-      createdAt: exportPackage.generatedAt,
-    });
+  for (const exportRecord of buildExportPackageRecords(exportPackage, preparation)) {
+    await persistence.saveExportPackage(exportRecord);
   }
 
   if (preparation.status !== "authority_confirmed") {
@@ -106,6 +86,33 @@ export async function persistExportMetadata(
     });
     await persistence.savePreparation(exportedPreparation);
   }
+}
+
+export function buildExportPackageRecords(
+  exportPackage: ExportPackage,
+  preparation: PreparationRecord,
+): ExportPackageRecord[] {
+  return exportPackage.artifacts.map((artifact) => ({
+    id: `${exportPackage.id}-${artifact.format}`,
+    preparationId: preparation.id,
+    format: artifact.format,
+    assetRef: artifact.artifactRef,
+    ruleProfileVersion: exportPackage.metadata.ruleProfileVersion,
+    calculationLabel: exportPackage.metadata.calculationLabel,
+    schemaVersion: exportPackage.schemaVersion,
+    jurisdiction: exportPackage.metadata.jurisdiction,
+    jurisdictionCode: exportPackage.metadata.jurisdictionCode,
+    taxYear: exportPackage.metadata.taxYear,
+    readiness: exportPackage.metadata.readiness,
+    generatedAt: exportPackage.generatedAt,
+    notSubmitted: true,
+    source: exportPackage.metadata.source,
+    sourceVerifiedAt: exportPackage.metadata.sourceVerifiedAt,
+    deadlineSource: exportPackage.metadata.deadlineSource,
+    deadlineVerifiedAt: exportPackage.metadata.deadlineVerifiedAt,
+    metadata: exportPackage.metadata,
+    createdAt: exportPackage.generatedAt,
+  }));
 }
 
 function buildExportMetadata(

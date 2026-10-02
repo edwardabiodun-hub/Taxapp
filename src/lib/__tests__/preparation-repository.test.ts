@@ -86,6 +86,46 @@ describe("preparation repository", () => {
     ).rejects.toThrow(/invalid preparation status transition/i);
   });
 
+  it("rejects repository writes that try to promote a preparation to user submitted", async () => {
+    await db.delete();
+    await db.open();
+
+    const draft = preparation("prep-direct-submission", "2026-01-01T00:00:00.000Z");
+    await savePreparation(draft);
+
+    await expect(
+      savePreparation({ ...draft, status: "user_submitted" } as PreparationRecord),
+    ).rejects.toThrow(/SubmissionService|user.?submitted/i);
+  });
+
+  it("rejects edits to an authority-confirmed record at the repository boundary", async () => {
+    await db.delete();
+    await db.open();
+
+    const confirmed = {
+      ...preparation("prep-immutable", "2026-01-01T00:00:00.000Z"),
+      status: "authority_confirmed" as const,
+      authorityConfirmation: {
+        authorityReference: "NRS-2026-0001",
+        confirmedAt: "2026-01-01T00:00:00.000Z",
+      },
+    } as PreparationRecord;
+    await db.preparations.put({ ...confirmed, pendingSync: false });
+
+    await expect(
+      savePreparation({
+        ...confirmed,
+        authorityConfirmation: {
+          authorityReference: "NRS-2026-0002",
+          confirmedAt: "2026-01-01T00:00:00.000Z",
+        },
+      }),
+    ).rejects.toThrow(/immutable|authority.?confirmed/i);
+    await expect(getPreparation(confirmed.id)).resolves.toMatchObject({
+      authorityConfirmation: { authorityReference: "NRS-2026-0001" },
+    });
+  });
+
   it("rejects status skips while preserving same-status updates", () => {
     expect(isValidPreparationStatusTransition(undefined, "draft")).toBe(true);
     expect(isValidPreparationStatusTransition(undefined, "ready_for_review")).toBe(false);
@@ -142,7 +182,7 @@ describe("preparation repository", () => {
     });
   });
 
-  it("materializes a synced user submission from an existing draft", async () => {
+  it("keeps a synced user submission conservative at exported", async () => {
     await db.delete();
     await db.open();
 
@@ -159,12 +199,12 @@ describe("preparation repository", () => {
     );
 
     await expect(getPreparation(local.id)).resolves.toMatchObject({
-      status: "user_submitted",
+      status: "exported",
       updatedAt: "2026-02-02T00:00:00.000Z",
     });
   });
 
-  it("materializes synced authority confirmation from an existing ready record", async () => {
+  it("keeps synced authority confirmation conservative at exported", async () => {
     await db.delete();
     await db.open();
 
@@ -189,11 +229,7 @@ describe("preparation repository", () => {
     );
 
     await expect(getPreparation(local.id)).resolves.toMatchObject({
-      status: "authority_confirmed",
-      authorityConfirmation: {
-        authorityReference: "NRS-2025-0001",
-        confirmedAt: "2026-02-02T00:00:00.000Z",
-      },
+      status: "exported",
     });
   });
 
@@ -250,12 +286,22 @@ describe("preparation repository", () => {
     });
   });
 
-  it("preserves evidence-backed authority confirmation through explicit lifecycle steps", async () => {
+  it("preserves a locally authoritative record when legacy data tries to replace it", async () => {
     await db.delete();
     await db.open();
 
+    const confirmed = {
+      ...preparation("legacy-confirmed", "2026-02-01T00:00:00.000Z"),
+      status: "authority_confirmed" as const,
+      authorityConfirmation: {
+        authorityReference: "NRS-2025-0001",
+        confirmedAt: "2026-02-02T00:00:00.000Z",
+      },
+    } as PreparationRecord;
+    await db.preparations.put({ ...confirmed, pendingSync: false });
+
     const legacy: LocalDeclaration = {
-      id: "legacy-confirmed",
+      id: confirmed.id,
       taxYear: "2025",
       country: "ng",
       type: "Income Tax",
@@ -265,8 +311,8 @@ describe("preparation repository", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-02-01T00:00:00.000Z",
       pendingSync: false,
-      authorityReference: "NRS-2025-0001",
-      authorityConfirmedAt: "2026-02-02T00:00:00.000Z",
+      authorityReference: "NRS-2025-0002",
+      authorityConfirmedAt: "2026-02-03T00:00:00.000Z",
     };
 
     await migrateLegacyDeclarationsToPreparations([legacy]);
@@ -366,5 +412,19 @@ describe("preparation repository", () => {
         authorityReference: "",
       } as never),
     ).rejects.toThrow(/authority reference/i);
+    await expect(
+      appendSubmissionEvent({
+        ...event,
+        id: "event-invalid-timestamp",
+        timestamp: "not-a-timestamp",
+      }),
+    ).rejects.toThrow(/timestamp|evidence/i);
+    await expect(
+      appendSubmissionEvent({
+        ...event,
+        id: "event-future-timestamp",
+        timestamp: "2999-01-01T00:00:00.000Z",
+      }),
+    ).rejects.toThrow(/timestamp|future|evidence/i);
   });
 });

@@ -8,14 +8,15 @@ import {
   type UserSubmissionEvidence,
 } from "@/domain/submissions";
 import {
-  persistExportMetadata,
+  buildExportPackageRecords,
   type ExportPersistence,
 } from "@/lib/exports/export-service";
-import { saveExportPackage } from "@/lib/export-repository";
+import { sanitizePreparationForExportPersistence } from "@/lib/exports/export-data";
 import {
   appendSubmissionEvent,
   getPreparation,
   savePreparationAndAppendSubmissionEvent,
+  savePreparationAndAppendSubmissionEventWithExportPackages,
   savePreparation,
 } from "@/lib/preparation-repository";
 import {
@@ -32,6 +33,11 @@ export interface SubmissionRepository {
     preparation: PreparationRecord,
     event: SubmissionEvent,
   ) => Promise<void>;
+  readonly savePreparationAndAppendSubmissionEventWithExportPackages: (
+    preparation: PreparationRecord,
+    event: SubmissionEvent,
+    exportPackages: readonly ExportPackageRecord[],
+  ) => Promise<void>;
 }
 
 export interface SubmissionServiceOptions {
@@ -46,22 +52,17 @@ const defaultRepository: SubmissionRepository = {
   savePreparation,
   appendSubmissionEvent,
   savePreparationAndAppendSubmissionEvent,
+  savePreparationAndAppendSubmissionEventWithExportPackages,
 };
 
 export class SubmissionService {
   private readonly repository: SubmissionRepository;
   private readonly adapter: SubmissionAdapter;
   private readonly now: () => string;
-  private readonly exportPersistence: ExportPersistence;
-
   constructor(options: SubmissionServiceOptions = {}) {
     this.repository = options.repository ?? defaultRepository;
     this.adapter = options.adapter ?? universalExportAdapter;
     this.now = options.now ?? (() => new Date().toISOString());
-    this.exportPersistence = options.exportPersistence ?? {
-      saveExportPackage,
-      savePreparation: this.repository.savePreparation,
-    };
   }
 
   async export(preparationId: string) {
@@ -69,30 +70,19 @@ export class SubmissionService {
     assertExportableStatus(preparation);
     const capability = getJurisdictionCapability(preparation.jurisdictionCode);
     const submissionPackage = await this.adapter.prepare(preparation, capability);
-    let exportedPreparation: PreparationRecord | undefined;
-
-    await persistExportMetadata(
-      submissionPackage.exportPackage,
-      preparation,
-      {
-        ...this.exportPersistence,
-        savePreparation: async (next) => {
-          exportedPreparation = next;
-        },
-      },
-    );
-
-    if (!exportedPreparation) {
-      throw new Error("Export persistence did not produce an exported preparation.");
-    }
-
-    await this.repository.savePreparationAndAppendSubmissionEvent(exportedPreparation, {
+    const exportedPreparation = sanitizePreparationForExportPersistence({
+      ...preparation,
+      status: "exported",
+      lastExportedAt: submissionPackage.exportPackage.generatedAt,
+      updatedAt: submissionPackage.exportPackage.generatedAt,
+    });
+    await this.repository.savePreparationAndAppendSubmissionEventWithExportPackages(exportedPreparation, {
       id: createEventId(preparationId, "exported"),
       preparationId,
       type: "exported",
       actor: "system",
       timestamp: submissionPackage.exportPackage.generatedAt,
-    });
+    }, buildExportPackageRecords(submissionPackage.exportPackage, preparation));
 
     return submissionPackage.exportPackage;
   }

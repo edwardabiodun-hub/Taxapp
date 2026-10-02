@@ -6,6 +6,7 @@ import type {
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import { getCalculationLabel } from "@/domain/tax-readiness";
 import { calculatePreparation } from "@/lib/calculation-service";
+import { isValidTimestamp } from "@/domain/submissions";
 
 export interface PreparationDocumentMetadata {
   readonly id: string;
@@ -91,7 +92,7 @@ export function createPreparationRecord(
     input.status === "authority_confirmed" &&
     (!input.authorityConfirmation ||
       input.authorityConfirmation.authorityReference.trim().length === 0 ||
-      input.authorityConfirmation.confirmedAt.trim().length === 0)
+      !isValidTimestamp(input.authorityConfirmation.confirmedAt))
   ) {
     throw new Error(
       "Authority confirmation requires a non-empty authority reference and timestamp.",
@@ -210,7 +211,7 @@ export function isAuthorityConfirmationValid(
 
   return (
     preparation.authorityConfirmation.authorityReference.trim().length > 0 &&
-    preparation.authorityConfirmation.confirmedAt.trim().length > 0
+    isValidTimestamp(preparation.authorityConfirmation.confirmedAt)
   );
 }
 

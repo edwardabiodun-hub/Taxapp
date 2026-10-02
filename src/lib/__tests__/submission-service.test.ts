@@ -56,6 +56,14 @@ function createMemoryService(initial = preparation()) {
       current = next;
       events.push(event);
     },
+    savePreparationAndAppendSubmissionEventWithExportPackages: async (next, event, records) => {
+      if (failAtomicTransition) {
+        throw new Error("atomic export transition failed");
+      }
+      current = next;
+      events.push(event);
+      exportRecords.push(...records);
+    },
   };
 
   return {
@@ -159,6 +167,33 @@ describe("SubmissionService", () => {
 
     expect(memory.read().status).toBe("exported");
     expect(memory.events).toHaveLength(0);
+  });
+
+  it("does not leave export metadata when the atomic export transition fails", async () => {
+    const memory = createMemoryService();
+    memory.failAtomicTransition();
+
+    await expect(memory.service.export("prep-1")).rejects.toThrow(/atomic export/i);
+
+    expect(memory.read().status).toBe("ready_for_review");
+    expect(memory.events).toHaveLength(0);
+    expect(memory.exportRecords).toHaveLength(0);
+  });
+
+  it("rejects an invalid service clock for authority confirmation", async () => {
+    const memory = createMemoryService({ ...preparation(), status: "user_submitted" } as PreparationRecord);
+    const invalidClock = new SubmissionService({
+      repository: {
+        getPreparation: async () => memory.read(),
+        savePreparation: async () => undefined,
+        appendSubmissionEvent: async () => undefined,
+        savePreparationAndAppendSubmissionEvent: async () => undefined,
+        savePreparationAndAppendSubmissionEventWithExportPackages: async () => undefined,
+      },
+      now: () => "not-a-timestamp",
+    });
+
+    await expect(invalidClock.confirmAuthority("prep-1", "NRS-2026-0001")).rejects.toThrow(/timestamp/i);
   });
 
   it("requires user submission before authority confirmation and preserves the official reference", async () => {

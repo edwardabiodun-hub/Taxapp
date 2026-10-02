@@ -24,7 +24,7 @@ describe("legacy declaration migration", () => {
     expect(migrated.status).not.toBe("authority_confirmed");
   });
 
-  it("preserves an explicit authority confirmation reference", () => {
+  it("does not promote legacy authority fields without local authority state", () => {
     const migrated = migrateLegacyDeclaration(
       legacyDeclaration({
         authorityReference: "NRS-2025-0001",
@@ -32,11 +32,8 @@ describe("legacy declaration migration", () => {
       }),
     );
 
-    expect(migrated.status).toBe("authority_confirmed");
-    expect(migrated.authorityConfirmation).toEqual({
-      authorityReference: "NRS-2025-0001",
-      confirmedAt: "2026-01-02T00:00:00.000Z",
-    });
+    expect(migrated.status).toBe("ready_for_review");
+    expect(migrated.authorityConfirmation).toBeUndefined();
   });
 
   it("does not synthesize an authority confirmation timestamp", () => {

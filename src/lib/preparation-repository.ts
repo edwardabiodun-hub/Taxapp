@@ -5,12 +5,15 @@ import {
 } from "@/domain/preparations";
 import {
   isSubmissionEventValid,
+  isUserSubmissionEvidenceValid,
+  isValidTimestamp,
   type SubmissionEvent,
 } from "@/domain/submissions";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
 import {
   db,
   type LocalDeclaration,
+  type ExportPackageRecord,
   type StoredPreparation,
 } from "@/lib/local-db";
 
@@ -53,19 +56,40 @@ export async function savePreparationAndAppendSubmissionEvent(
   preparation: PreparationRecord,
   event: SubmissionEvent,
 ): Promise<void> {
-  await db.transaction("rw", db.preparations, db.submissionEvents, async () => {
-    const existing = await db.preparations.get(preparation.id);
-    assertValidPreparationSave(existing, preparation);
+  await savePreparationAndAppendSubmissionEventWithExportPackages(preparation, event, []);
+}
 
-    if (!isSubmissionEventValid(event)) {
+/**
+ * Persists export metadata, the preparation lifecycle update, and its
+ * immutable event in one transaction. A failure leaves none of the three
+ * records behind.
+ */
+export async function savePreparationAndAppendSubmissionEventWithExportPackages(
+  preparation: PreparationRecord,
+  event: SubmissionEvent,
+  exportPackages: readonly ExportPackageRecord[],
+): Promise<void> {
+  await db.transaction("rw", db.preparations, db.submissionEvents, db.exportPackages, async () => {
+    const existing = await db.preparations.get(preparation.id);
+    assertValidPreparationSave(existing, preparation, event);
+
+    if (event.preparationId !== preparation.id || !isSubmissionEventValid(event)) {
       throw new Error("Submission event evidence is invalid.");
     }
     if (await db.submissionEvents.get(event.id)) {
       throw new Error("Submission events are immutable and cannot be overwritten.");
     }
+    for (const exportPackage of exportPackages) {
+      if (exportPackage.preparationId !== preparation.id || exportPackage.notSubmitted !== true) {
+        throw new Error("Export metadata does not match the preparation.");
+      }
+    }
 
     await db.preparations.put(buildStoredPreparation(existing, preparation));
     await db.submissionEvents.add(event);
+    for (const exportPackage of exportPackages) {
+      await db.exportPackages.put(exportPackage);
+    }
   });
 }
 
@@ -106,6 +130,10 @@ export async function migrateLegacyDeclarationsToPreparations(
       const migrated = migrateLegacyDeclaration(declaration);
       const existing = await db.preparations.get(migrated.id);
 
+      if (existing?.status === "authority_confirmed") {
+        continue;
+      }
+
       if (existing && (existing.pendingSync || existing.updatedAt >= migrated.updatedAt)) {
         continue;
       }
@@ -130,12 +158,9 @@ export async function migrateLegacyDeclarationsToPreparations(
 }
 
 export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationRecord {
-  const authorityConfirmation = getAuthorityConfirmation(record);
-  const status: PreparationStatus = authorityConfirmation
-    ? "authority_confirmed"
-    : record.status === "draft"
-      ? "draft"
-      : "ready_for_review";
+  const status: PreparationStatus = record.status === "draft"
+    ? "draft"
+    : "ready_for_review";
   const jurisdictionCode = record.country.trim().toLowerCase() === "ng"
     ? "NG"
     : record.country.trim().toUpperCase();
@@ -147,7 +172,6 @@ export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationR
       taxYear: record.taxYear,
       ruleProfileVersion: "",
       status,
-      ...(authorityConfirmation ? { authorityConfirmation } : {}),
        formData: {
          ...record.formData,
          country: record.country,
@@ -197,17 +221,21 @@ export async function savePreparationFromSync(
 ): Promise<void> {
   await db.transaction("rw", db.preparations, async () => {
     const existing = await db.preparations.get(preparation.id);
+    if (existing?.status === "authority_confirmed") {
+      return;
+    }
     if (
       existing &&
       (existing.pendingSync || existing.updatedAt >= preparation.updatedAt)
     ) {
       return;
     }
-    const lifecycle = getMigratedPreparationLifecycle(existing?.status, preparation);
+    const imported = downgradeUnvalidatedSyncStatus(preparation);
+    const lifecycle = getMigratedPreparationLifecycle(existing?.status, imported);
     if (!lifecycle) {
       return;
     }
-    assertAuthorityConfirmation(preparation);
+    assertAuthorityConfirmation(imported);
 
     for (const lifecyclePreparation of lifecycle) {
       await db.preparations.put({
@@ -223,22 +251,77 @@ export async function savePreparationFromSync(
 function assertValidPreparationSave(
   existing: StoredPreparation | undefined,
   preparation: PreparationRecord,
+  event?: SubmissionEvent,
 ): void {
+  if (existing?.status === "authority_confirmed") {
+    if (
+      preparation.status !== "authority_confirmed" ||
+      serializePreparationSnapshot(existing) !== serializePreparationSnapshot(preparation)
+    ) {
+      throw new Error("Authority-confirmed preparations are immutable.");
+    }
+    return;
+  }
+
+  if (
+    event === undefined &&
+    (preparation.status === "user_submitted" || preparation.status === "authority_confirmed")
+  ) {
+    throw new Error(
+      "User submission and authority confirmation must be validated by SubmissionService.",
+    );
+  }
+
   if (!isValidPreparationStatusTransition(existing?.status, preparation.status)) {
     throw new Error(
       `Invalid preparation status transition from ${existing?.status ?? "new"} to ${preparation.status}.`,
     );
   }
   assertAuthorityConfirmation(preparation);
+  if (event) assertLifecycleEvent(preparation, event);
 }
 
 function assertAuthorityConfirmation(preparation: PreparationRecord): void {
   if (
     preparation.status === "authority_confirmed" &&
     (!preparation.authorityConfirmation.authorityReference.trim() ||
-      !preparation.authorityConfirmation.confirmedAt.trim())
+      !isValidTimestamp(preparation.authorityConfirmation.confirmedAt))
   ) {
-    throw new Error("Authority confirmation requires an authority reference.");
+    throw new Error("Authority confirmation requires a valid authority reference and timestamp.");
+  }
+}
+
+function assertLifecycleEvent(
+  preparation: PreparationRecord,
+  event: SubmissionEvent,
+): void {
+  if (preparation.status === "exported") {
+    if (event.type !== "exported" || event.actor !== "system") {
+      throw new Error("Exported preparations require a system export event.");
+    }
+    return;
+  }
+
+  if (preparation.status === "user_submitted") {
+    if (
+      event.type !== "user_submitted" ||
+      event.actor !== "user" ||
+      !event.userEvidence ||
+      !isUserSubmissionEvidenceValid(event.userEvidence, event.timestamp)
+    ) {
+      throw new Error("User submission requires explicit validated evidence.");
+    }
+    return;
+  }
+
+  if (
+    preparation.status === "authority_confirmed" &&
+    (event.type !== "authority_confirmed" ||
+      event.actor !== "authority" ||
+      event.authorityReference !== preparation.authorityConfirmation.authorityReference ||
+      preparation.authorityConfirmation.confirmedAt !== event.timestamp)
+  ) {
+    throw new Error("Authority confirmation evidence does not match the preparation.");
   }
 }
 
@@ -289,6 +372,15 @@ function getMigratedPreparationLifecycle(
     .map((status) => preparationAtStatus(preparation, status));
 }
 
+function downgradeUnvalidatedSyncStatus(preparation: PreparationRecord): PreparationRecord {
+  if (preparation.status === "user_submitted" || preparation.status === "authority_confirmed") {
+    const { authorityConfirmation: _authorityConfirmation, ...withoutConfirmation } =
+      preparation as PreparationRecord & { authorityConfirmation?: unknown };
+    return { ...withoutConfirmation, status: "exported" } as PreparationRecord;
+  }
+  return preparation;
+}
+
 function preparationAtStatus(
   preparation: PreparationRecord,
   status: PreparationStatus,
@@ -326,27 +418,4 @@ function stableSerialize(value: unknown): string {
       .join(",")}}`;
   }
   return JSON.stringify(value);
-}
-
-function getAuthorityReference(record: LocalDeclaration): string | undefined {
-  const reference =
-    record.authorityReference ?? record.authorityConfirmation?.authorityReference;
-  const trimmed = reference?.trim();
-  return trimmed || undefined;
-}
-
-function getAuthorityConfirmedAt(record: LocalDeclaration): string | undefined {
-  return (
-    record.authorityConfirmedAt ?? record.authorityConfirmation?.confirmedAt
-  )?.trim() || undefined;
-}
-
-function getAuthorityConfirmation(
-  record: LocalDeclaration,
-): { authorityReference: string; confirmedAt: string } | undefined {
-  const authorityReference = getAuthorityReference(record);
-  const confirmedAt = getAuthorityConfirmedAt(record);
-  if (!authorityReference || !confirmedAt) return undefined;
-
-  return { authorityReference, confirmedAt };
 }
