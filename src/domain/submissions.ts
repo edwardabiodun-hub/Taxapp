@@ -9,11 +9,26 @@ export type SubmissionEventType =
 
 export type SubmissionActor = "user" | "system" | "authority";
 
-export interface SubmissionEvent {
+interface SubmissionEventBase {
   readonly id: string;
   readonly preparationId: string;
-  readonly type: SubmissionEventType;
   readonly actor: SubmissionActor;
   readonly timestamp: string;
   readonly authorityReference?: string;
+}
+
+export type SubmissionEvent =
+  | (SubmissionEventBase & {
+      readonly type: Exclude<SubmissionEventType, "authority_confirmed">;
+    })
+  | (SubmissionEventBase & {
+      readonly type: "authority_confirmed";
+      readonly actor: "authority";
+      readonly authorityReference: string;
+    });
+
+export function isSubmissionEventValid(event: SubmissionEvent): boolean {
+  if (event.type !== "authority_confirmed") return true;
+
+  return event.authorityReference.trim().length > 0;
 }

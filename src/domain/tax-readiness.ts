@@ -1,4 +1,9 @@
-import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import {
+  isEvidenceComplete,
+  type JurisdictionCapability,
+} from "@/domain/jurisdictions";
+
+export { isEvidenceComplete } from "@/domain/jurisdictions";
 
 export type ReadinessLabel =
   | "Direct filing"
@@ -25,8 +30,14 @@ export type PreparationStatus =
  */
 export function getCalculationLabel(
   capability: JurisdictionCapability,
+  jurisdictionCode?: string,
 ): CalculationLabel {
-  return capability.ruleProfile.kind === "verified_state"
+  if (jurisdictionCode !== undefined && jurisdictionCode.trim().length === 0) {
+    return "Not filing-ready";
+  }
+
+  return capability.ruleProfile.kind === "verified_state" &&
+    isEvidenceComplete(capability.ruleProfile.evidence)
     ? "State-specific estimate"
     : "Generic Nigerian PIT estimate";
 }

@@ -1,23 +1,74 @@
-import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import type {
+  CapabilityEvidence,
+  DeadlineProfile,
+  EvidenceMetadata,
+  JurisdictionCapability,
+  RuleProfile,
+} from "@/domain/jurisdictions";
 
 const REGISTRY_VERSION = "2026.1";
 const GENERIC_RULE_PROFILE_VERSION = "2026.1";
 const REGISTRY_REVIEW_DATE = "2026-10-02";
 const GENERIC_RULE_SOURCE = "Nigerian PIT baseline; state-specific source verification pending";
 
-const genericRuleProfile = () => ({
+const freezeEvidence = (evidence: EvidenceMetadata): EvidenceMetadata =>
+  Object.freeze({ ...evidence });
+
+const freezeRuleProfile = (profile: RuleProfile): RuleProfile =>
+  Object.freeze(
+    profile.kind === "verified_state"
+      ? { ...profile, evidence: freezeEvidence(profile.evidence) }
+      : { ...profile, baseline: Object.freeze({ ...profile.baseline }) },
+  );
+
+const freezeDeadlineProfile = (profile: DeadlineProfile): DeadlineProfile =>
+  Object.freeze(
+    profile.kind === "unverified"
+      ? { ...profile }
+      : { ...profile, evidence: freezeEvidence(profile.evidence) },
+  );
+
+const freezeCapabilityEvidence = (
+  evidence: CapabilityEvidence,
+): CapabilityEvidence =>
+  Object.freeze({
+    ...evidence,
+    ...(evidence.template
+      ? { template: freezeEvidence(evidence.template) }
+      : {}),
+    ...(evidence.integration
+      ? { integration: freezeEvidence(evidence.integration) }
+      : {}),
+  });
+
+const freezeCapability = (
+  capability: JurisdictionCapability,
+): JurisdictionCapability =>
+  Object.freeze({
+    ...capability,
+    ruleProfile: freezeRuleProfile(capability.ruleProfile),
+    deadlineProfile: freezeDeadlineProfile(capability.deadlineProfile),
+    submissionModes: Object.freeze([...capability.submissionModes]),
+    exportFormats: Object.freeze([...capability.exportFormats]),
+    evidence: freezeCapabilityEvidence(capability.evidence),
+  });
+
+const genericRuleProfile = (): RuleProfile => ({
   kind: "generic_nigerian_pit" as const,
   profileId: "ng-pit-baseline" as const,
   version: GENERIC_RULE_PROFILE_VERSION,
-  source: GENERIC_RULE_SOURCE,
-  verifiedAt: REGISTRY_REVIEW_DATE,
+  baseline: {
+    source: GENERIC_RULE_SOURCE,
+    effectiveFrom: "2026-01-01",
+    reviewedAt: REGISTRY_REVIEW_DATE,
+  },
 });
 
 const createConservativeCapability = (
   jurisdictionCode: string,
   name: string,
   shortName = name,
-): JurisdictionCapability => ({
+): JurisdictionCapability => freezeCapability({
   jurisdictionCode,
   name,
   shortName,
@@ -28,12 +79,13 @@ const createConservativeCapability = (
   apiStatus: "not_pursued",
   deadlineProfile: { kind: "unverified", confidence: "low" },
   exportFormats: ["pdf", "csv", "xlsx"],
+  evidence: {},
   notes:
     "Generic Nigerian PIT preparation and universal export are available; state-specific rules and filing workflows require verified evidence.",
   registryVersion: REGISTRY_VERSION,
 });
 
-const nigeriaJurisdictions: JurisdictionCapability[] = [
+const nigeriaJurisdictions: readonly JurisdictionCapability[] = Object.freeze([
   ["NG-AB", "Abia"],
   ["NG-AD", "Adamawa"],
   ["NG-AK", "Akwa Ibom"],
@@ -73,13 +125,13 @@ const nigeriaJurisdictions: JurisdictionCapability[] = [
   ["NG-FCT", "Federal Capital Territory", "FCT"],
 ].map(([code, name, shortName]) =>
   createConservativeCapability(code, name, shortName),
-);
+));
 
-const unknownCapability = createConservativeCapability(
+const unknownCapability = Object.freeze(createConservativeCapability(
   "NG-UNKNOWN",
   "Unknown Nigerian jurisdiction",
   "Unknown",
-);
+));
 
 export function listNigeriaJurisdictions(): readonly JurisdictionCapability[] {
   return nigeriaJurisdictions;
