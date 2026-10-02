@@ -1,5 +1,5 @@
 import { EXPORT_SCHEMA_VERSION, type ExportContext } from "@/domain/exports";
-import { EXPORT_HEADERS, buildExportRows } from "@/lib/exports/export-data";
+import { EXPORT_HEADERS, buildSanitizedExportModel } from "@/lib/exports/export-data";
 
 export const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -9,23 +9,13 @@ export async function createXlsxArtifact(
   artifactRef: string,
 ): Promise<{ format: "xlsx"; fileName: string; mimeType: string; data: Blob; artifactRef: string }> {
   const XLSX = await import("xlsx");
-  const rows = buildExportRows(context);
+  const model = buildSanitizedExportModel(context);
+  const rows = model.rows;
   const workbook = XLSX.utils.book_new();
   const summaryRows = [
     ["FileSmart export", "Not submitted"],
     ["Schema version", EXPORT_SCHEMA_VERSION],
-    ["Jurisdiction", context.metadata.jurisdiction],
-    ["Jurisdiction code", context.metadata.jurisdictionCode],
-    ["Tax year", context.metadata.taxYear],
-    ["Calculation", context.metadata.calculationLabel],
-    ["Readiness", context.metadata.readiness],
-    ["Rule profile", context.metadata.ruleProfileId],
-    ["Rule profile version", context.metadata.ruleProfileVersion],
-    ["Rule source", context.metadata.source],
-    ["Rule verified at", context.metadata.sourceVerifiedAt],
-    ["Deadline source", context.metadata.deadlineSource],
-    ["Deadline verified at", context.metadata.deadlineVerifiedAt],
-    ["Generated at", context.metadata.generatedAt],
+    ...rows.filter((row) => row.section === "summary").map((row) => [row.label, row.value]),
     ["Submission status", "Not submitted"],
   ];
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(summaryRows), "Summary");

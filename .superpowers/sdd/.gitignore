@@ -1,0 +1,3 @@
+# Keep SDD artifacts local to the worktree.
+*
+!.gitignore

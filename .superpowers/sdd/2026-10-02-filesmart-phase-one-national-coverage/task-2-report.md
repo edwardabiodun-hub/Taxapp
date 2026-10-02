@@ -235,3 +235,44 @@ Result: PASS.
 ### Remaining concern
 
 The standard Vitest/SWC runtime still requires environment repair or dependency reinstallation outside this scoped fix. The passing no-SWC run verifies the scoped domain and calculation behavior, but does not remove that runtime limitation.
+
+## Task 2 Fix Round 3
+
+### Status
+
+DONE_WITH_CONCERNS
+
+The remaining scoped issue was fixed: `getPreparationCalculationLabel` now returns `Not filing-ready` before evaluating persisted provenance whenever `preparation.jurisdictionCode` is empty or whitespace. The regression test covers both `""` and `"   "` with a verified-state capability and complete persisted state provenance. Prior fixes for confirmed receipt inputs and state-specific evidence validation were preserved.
+
+### Files changed
+
+- Modified `src/domain/preparations.ts`
+- Modified `src/domain/__tests__/preparations.test.ts`
+
+### Verification
+
+Isolated typecheck:
+
+```text
+npx tsc -p .task2-round3-tsconfig.json --noEmit
+```
+
+Result: PASS. The temporary typecheck configuration was removed after verification.
+
+Standard focused tests:
+
+```text
+npm run test -- src/lib/__tests__/calculation-service.test.ts src/domain/__tests__/jurisdictions.test.ts src/domain/__tests__/preparations.test.ts
+```
+
+Result: BLOCKED before test execution by the existing `@swc/core` native binding failure (`ERR_SWC_NATIVE_CACHE`; missing `swc.win32-x64-msvc.node`). No environment repair was attempted.
+
+Focused no-SWC tests:
+
+```text
+npx vitest run --config .task2-round3-vitest.config.ts
+```
+
+Result: PASS — 3 test files, 21 tests. The temporary no-SWC configuration was removed after verification.
+
+The required final status is therefore `DONE_WITH_CONCERNS` because standard Vitest remains blocked, despite the isolated typecheck and no-SWC focused tests passing.

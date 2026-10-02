@@ -1,4 +1,4 @@
-interface DeclarationIncomeFields {
+export interface DeclarationIncomeFields {
   // Earned Income - Trade/Business
   businessIncome: string;
   businessExpenses: string;

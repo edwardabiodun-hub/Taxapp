@@ -20,8 +20,10 @@ import {
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
-import { getCalculationReceiptInputs } from "@/domain/receipts";
+import { getCalculationReceiptInputs, type ReceiptRecord } from "@/domain/receipts";
 import { listReceiptRecords } from "@/lib/receipt-repository";
+import { generateExportPackage } from "@/lib/exports/export-service";
+import type { ExportPackage } from "@/domain/exports";
 import DeadlineCard from "@/components/deadlines/DeadlineCard";
 import { resolveDeadline } from "@/lib/deadline-service";
 import { validateStep } from "@/lib/validation";
@@ -34,6 +36,7 @@ import BenefitsStep from "@/components/declaration/BenefitsStep";
 import DeductionsStep from "@/components/declaration/DeductionsStep";
 import DocumentsStep, { type UploadedDoc } from "@/components/declaration/DocumentsStep";
 import ReviewStep from "@/components/declaration/ReviewStep";
+import ExportPanel from "@/components/exports/ExportPanel";
 
 const preparationSteps = declarationSteps.map((step, index) =>
   index === 0 ? "Jurisdiction" : step,
@@ -51,6 +54,9 @@ const NewDeclaration = () => {
   const [lastSavedAt, setLastSavedAt] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportPackage, setExportPackage] = useState<ExportPackage>();
+  const [exportError, setExportError] = useState<string>();
 
   const capabilities = listNigeriaJurisdictions();
   const capability = useMemo(
@@ -100,7 +106,7 @@ const NewDeclaration = () => {
     if (currentStep > 0) setCurrentStep((step) => step - 1);
   };
 
-  const handleSave = async (targetStatus: "draft" | "ready_for_review") => {
+  const handleSave = async (targetStatus: "draft" | "ready_for_review"): Promise<PreparationRecord | undefined> => {
     setIsSaving(true);
     setSaveError(undefined);
     let draftSaved = false;
@@ -168,6 +174,7 @@ const NewDeclaration = () => {
         title: savedRecord.status === "ready_for_review" ? "Preparation ready for review" : "Draft saved",
         description: "Saved locally. No tax return was filed or submitted.",
       });
+      return savedRecord;
     } catch {
       const title = draftSaved
         ? "Draft saved, but could not mark ready for review"
@@ -183,8 +190,46 @@ const NewDeclaration = () => {
         description,
         variant: "destructive",
       });
+      return undefined;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleExport = async () => {
+    const exportCapability = capability;
+    if (!exportCapability || !requiredDataComplete()) {
+      setExportError("Complete the tax year, jurisdiction, and earned-income steps before generating an export.");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(undefined);
+
+    try {
+      const savedRecord = await handleSave("ready_for_review");
+      if (!savedRecord) return;
+
+      const receipts: ReceiptRecord[] = await listReceiptRecords(preparationId);
+      const generated = await generateExportPackage(
+        savedRecord,
+        receipts,
+        exportCapability,
+        { persist: true },
+      );
+      setExportPackage(generated);
+      setSavedStatus("exported");
+      setLastSavedAt(generated.generatedAt);
+      toast({
+        title: "Export package generated",
+        description: "PDF, CSV, and XLSX files are ready to download. Nothing was filed or submitted.",
+      });
+    } catch {
+      const message = "The export package could not be generated. Your preparation remains available for review.";
+      setExportError(message);
+      toast({ title: "Could not generate export", description: message, variant: "destructive" });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -276,6 +321,8 @@ const NewDeclaration = () => {
         {renderStep()}
       </motion.div>
 
+      {exportPackage && <ExportPanel exportPackage={exportPackage} />}
+
       <div className="mt-8 flex flex-wrap gap-3">
         {currentStep > 0 && (
           <Button variant="outline" onClick={prev} className="flex-1 gap-2">
@@ -285,7 +332,7 @@ const NewDeclaration = () => {
         <Button
           variant="outline"
           onClick={() => void handleSave("draft")}
-          disabled={isSaving}
+          disabled={isSaving || isExporting}
           className="flex-1 gap-2"
         >
           <Save className="h-4 w-4" /> Save as draft
@@ -295,16 +342,29 @@ const NewDeclaration = () => {
             Next <ArrowRight className="h-4 w-4" />
           </Button>
         ) : (
-          <Button
-            onClick={() => void handleSave("ready_for_review")}
-            disabled={isSaving || !requiredDataComplete()}
-            className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
-          >
-            <Check className="h-4 w-4" /> Mark ready for review
-          </Button>
+          <>
+            <Button
+              onClick={() => void handleSave("ready_for_review")}
+              disabled={isSaving || isExporting || !requiredDataComplete()}
+              className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
+            >
+              <Check className="h-4 w-4" /> Mark ready for review
+            </Button>
+            {savedStatus === "ready_for_review" && !exportPackage && (
+              <Button
+                onClick={() => void handleExport()}
+                disabled={isSaving || isExporting}
+                className="flex-1 gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90"
+              >
+                <Save className="h-4 w-4" />
+                {isExporting ? "Generating package…" : "Generate universal package"}
+              </Button>
+            )}
+          </>
         )}
       </div>
       {saveError && <p className="mt-3 text-center text-xs text-destructive" role="alert">{saveError}</p>}
+      {exportError && <p className="mt-3 text-center text-xs text-destructive" role="alert">{exportError}</p>}
       <p className="mt-3 text-center text-[10px] text-muted-foreground">
         Local-first preparation. Saving or marking ready for review does not file a tax return.
       </p>

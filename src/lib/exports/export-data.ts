@@ -1,6 +1,6 @@
+import { EXPORT_SCHEMA_VERSION, type ExportContext, type ExportMetadata } from "@/domain/exports";
 import type { DeclarationIncomeFields } from "@/types/declaration";
 import { isConfirmedReceiptRecord, type ReceiptRecord } from "@/domain/receipts";
-import type { ExportContext, ExportMetadata } from "@/domain/exports";
 
 export const EXPORT_HEADERS = ["schema_version", "section", "field", "label", "value", "source", "reference", "category", "date", "amount", "status"] as const;
 export type ExportRow = Record<(typeof EXPORT_HEADERS)[number], string>;
@@ -71,7 +71,7 @@ export function buildSanitizedExportModel(context: ExportContext): SanitizedExpo
 export function buildExportRows(context: ExportContext): readonly ExportRow[] { return buildSanitizedExportModel(context).rows; }
 
 export function sanitizeExportMetadata(metadata: ExportMetadata): ExportMetadata {
-  return { ...metadata, schemaVersion: metadata.schemaVersion ?? "1.0.0", preparationId: safeValue(metadata.preparationId), jurisdiction: safeValue(metadata.jurisdiction), jurisdictionCode: safeValue(metadata.jurisdictionCode), taxYear: safeValue(metadata.taxYear), registryVersion: safeValue(metadata.registryVersion), ruleProfileId: safeValue(metadata.ruleProfileId), ruleProfileVersion: safeValue(metadata.ruleProfileVersion), calculationLabel: safeValue(metadata.calculationLabel) as ExportMetadata["calculationLabel"], readiness: safeValue(metadata.readiness) as ExportMetadata["readiness"], source: safeValue(metadata.source), sourceVerifiedAt: safeValue(metadata.sourceVerifiedAt), deadlineSource: safeValue(metadata.deadlineSource), deadlineVerifiedAt: safeValue(metadata.deadlineVerifiedAt), generatedAt: safeValue(metadata.generatedAt), notSubmitted: true };
+  return { ...metadata, schemaVersion: EXPORT_SCHEMA_VERSION, preparationId: safeValue(metadata.preparationId), jurisdiction: safeValue(metadata.jurisdiction), jurisdictionCode: safeValue(metadata.jurisdictionCode), taxYear: safeValue(metadata.taxYear), registryVersion: safeValue(metadata.registryVersion), ruleProfileId: safeValue(metadata.ruleProfileId), ruleProfileVersion: safeValue(metadata.ruleProfileVersion), calculationLabel: safeValue(metadata.calculationLabel) as ExportMetadata["calculationLabel"], readiness: safeValue(metadata.readiness) as ExportMetadata["readiness"], source: safeValue(metadata.source), sourceVerifiedAt: safeValue(metadata.sourceVerifiedAt), deadlineSource: safeValue(metadata.deadlineSource), deadlineVerifiedAt: safeValue(metadata.deadlineVerifiedAt), generatedAt: safeValue(metadata.generatedAt), notSubmitted: true };
 }
 
 export function safeScalarValue(value: unknown): string | undefined {

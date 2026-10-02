@@ -134,6 +134,7 @@ describe("universal export service", () => {
       receipts: [],
       capability,
       metadata: {
+        schemaVersion: "1.0.0",
         preparationId: preparation.id,
         jurisdiction: capability.name,
         jurisdictionCode: capability.jurisdictionCode,
@@ -193,14 +194,14 @@ describe("universal export service", () => {
   });
 
   it("persists the complete export metadata alongside opaque artifact references", async () => {
-    const exportRecords: Array<Record<string, unknown>> = [];
+    const exportRecords: unknown[] = [];
     const preparations: PreparationRecord[] = [];
     const result = await generateExportPackage(preparation, [], capability, {
       now: () => "2026-10-02T12:34:56.000Z",
       persist: true,
       persistence: {
-        saveExportPackage: async (record) => exportRecords.push(record),
-        savePreparation: async (record) => preparations.push(record),
+        saveExportPackage: async (record) => { exportRecords.push(record); },
+        savePreparation: async (record) => { preparations.push(record); },
       },
     });
 
@@ -222,6 +223,24 @@ describe("universal export service", () => {
         metadata: result.metadata,
       }),
     ]));
+    expect(preparations).toEqual([
+      expect.objectContaining({ status: "exported", lastExportedAt: result.generatedAt }),
+    ]);
+  });
+
+  it("moves a draft to exported when a persisted export succeeds", async () => {
+    const draft = { ...preparation, status: "draft" as const };
+    const preparations: PreparationRecord[] = [];
+
+    const result = await generateExportPackage(draft, [], capability, {
+      persist: true,
+      persistence: {
+        saveExportPackage: async () => undefined,
+        savePreparation: async (record) => { preparations.push(record); },
+      },
+    });
+
+    expect(result.status).toBe("exported");
     expect(preparations).toEqual([
       expect.objectContaining({ status: "exported", lastExportedAt: result.generatedAt }),
     ]);

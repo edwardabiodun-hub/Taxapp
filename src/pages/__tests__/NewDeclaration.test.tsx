@@ -5,6 +5,8 @@ import NewDeclaration from "@/pages/NewDeclaration";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
 import { listReceiptRecords } from "@/lib/receipt-repository";
+import { generateExportPackage } from "@/lib/exports/export-service";
+import type { ExportPackage } from "@/domain/exports";
 
 vi.mock("@/lib/preparation-repository", () => ({
   savePreparation: vi.fn().mockResolvedValue(undefined),
@@ -13,6 +15,43 @@ vi.mock("@/lib/preparation-repository", () => ({
 vi.mock("@/lib/receipt-repository", () => ({
   listReceiptRecords: vi.fn().mockResolvedValue([]),
 }));
+
+vi.mock("@/lib/exports/export-service", () => ({
+  generateExportPackage: vi.fn(),
+}));
+
+const generatedExportPackage: ExportPackage = {
+  id: "export-prep-1-20261002",
+  preparationId: "prep-1",
+  schemaVersion: "1.0.0",
+  status: "exported",
+  generatedAt: "2026-10-02T12:34:56.000Z",
+  metadata: {
+    schemaVersion: "1.0.0",
+    preparationId: "prep-1",
+    jurisdiction: "Lagos",
+    jurisdictionCode: "NG-LA",
+    taxYear: "2026",
+    registryVersion: "2026.1",
+    ruleProfileId: "ng-pit-baseline",
+    ruleProfileVersion: "",
+    calculationLabel: "Generic Nigerian PIT estimate",
+    readiness: "Not yet supported",
+    source: "",
+    sourceVerifiedAt: "",
+    deadlineSource: "",
+    deadlineVerifiedAt: "",
+    generatedAt: "2026-10-02T12:34:56.000Z",
+    notSubmitted: true,
+  },
+  artifacts: ["pdf", "csv", "xlsx"].map((format) => ({
+    format: format as "pdf" | "csv" | "xlsx",
+    fileName: `taxease-prep-1-2026.${format}`,
+    mimeType: "application/octet-stream",
+    artifactRef: `exports/prep-1/${format}/20261002`,
+    data: new Blob([format]),
+  })),
+};
 
 describe("NewDeclaration", () => {
   it("starts with a national jurisdiction selector and local-first preparation language", () => {
@@ -100,5 +139,46 @@ describe("NewDeclaration", () => {
     expect(saveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "ready_for_review" }),
     );
+  });
+
+  it("generates and exposes universal downloads from the review step", async () => {
+    const saveMock = vi.mocked(savePreparation);
+    const listMock = vi.mocked(listReceiptRecords);
+    const generateMock = vi.mocked(generateExportPackage);
+    saveMock.mockClear();
+    listMock.mockResolvedValue([]);
+    saveMock.mockResolvedValue(undefined);
+    generateMock.mockResolvedValue(generatedExportPackage);
+
+    render(
+      <MemoryRouter>
+        <NewDeclaration />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText(/tax year/i), { target: { value: "2026" } });
+    fireEvent.click(screen.getByRole("button", { name: /Lagos/i }));
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    fireEvent.change(screen.getAllByPlaceholderText("0.00")[0], {
+      target: { value: "1000000" },
+    });
+
+    for (let step = 0; step < 5; step += 1) {
+      fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    }
+
+    fireEvent.click(screen.getByRole("button", { name: /mark ready for review/i }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /generate universal package/i })).toBeEnabled());
+
+    fireEvent.click(screen.getByRole("button", { name: /generate universal package/i }));
+
+    await waitFor(() => expect(generateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "ready_for_review" }),
+      [],
+      expect.objectContaining({ jurisdictionCode: "NG-LA" }),
+      expect.objectContaining({ persist: true }),
+    ));
+    expect(await screen.findByText("Not submitted")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /download pdf/i })).toBeEnabled();
   });
 });

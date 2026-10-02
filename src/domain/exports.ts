@@ -4,6 +4,7 @@ import type { ExportFormat, JurisdictionCapability } from "@/domain/jurisdiction
 export const EXPORT_SCHEMA_VERSION = "1.0.0";
 
 export interface ExportMetadata {
+  readonly schemaVersion: typeof EXPORT_SCHEMA_VERSION;
   readonly preparationId: string;
   readonly jurisdiction: string;
   readonly jurisdictionCode: string;

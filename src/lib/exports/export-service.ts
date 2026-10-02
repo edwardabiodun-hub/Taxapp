@@ -10,6 +10,7 @@ import {
 import { createCsvArtifact } from "@/lib/exports/csv-exporter";
 import { createPdfArtifact } from "@/lib/exports/pdf-exporter";
 import { createXlsxArtifact } from "@/lib/exports/xlsx-exporter";
+import { sanitizeExportMetadata } from "@/lib/exports/export-data";
 import { saveExportPackage } from "@/lib/export-repository";
 import { savePreparation } from "@/lib/preparation-repository";
 import type { ExportPackageRecord } from "@/lib/local-db";
@@ -39,7 +40,7 @@ export async function generateExportPackage(
   }
 
   const generatedAt = options.now?.() ?? new Date().toISOString();
-  const metadata = buildExportMetadata(preparation, capability, generatedAt);
+  const metadata = sanitizeExportMetadata(buildExportMetadata(preparation, capability, generatedAt));
   const packageId = `export-${safePart(preparation.id)}-${compactTimestamp(generatedAt)}`;
   const context = { preparation, receipts, capability, metadata };
   const formats = ["pdf", "csv", "xlsx"] as const;
@@ -77,11 +78,23 @@ export async function persistExportMetadata(
       assetRef: artifact.artifactRef,
       ruleProfileVersion: exportPackage.metadata.ruleProfileVersion,
       calculationLabel: exportPackage.metadata.calculationLabel,
+      schemaVersion: exportPackage.schemaVersion,
+      jurisdiction: exportPackage.metadata.jurisdiction,
+      jurisdictionCode: exportPackage.metadata.jurisdictionCode,
+      taxYear: exportPackage.metadata.taxYear,
+      readiness: exportPackage.metadata.readiness,
+      generatedAt: exportPackage.generatedAt,
+      notSubmitted: true,
+      source: exportPackage.metadata.source,
+      sourceVerifiedAt: exportPackage.metadata.sourceVerifiedAt,
+      deadlineSource: exportPackage.metadata.deadlineSource,
+      deadlineVerifiedAt: exportPackage.metadata.deadlineVerifiedAt,
+      metadata: exportPackage.metadata,
       createdAt: exportPackage.generatedAt,
     });
   }
 
-  if (preparation.status === "ready_for_review" || preparation.status === "exported") {
+  if (preparation.status !== "authority_confirmed") {
     await persistence.savePreparation({
       ...preparation,
       status: "exported",
@@ -101,6 +114,7 @@ function buildExportMetadata(
     ? { source: "", verifiedAt: "" }
     : { source: capability.deadlineProfile.evidence.source, verifiedAt: capability.deadlineProfile.evidence.verifiedAt };
   return {
+    schemaVersion: EXPORT_SCHEMA_VERSION,
     preparationId: preparation.id,
     jurisdiction: capability.name,
     jurisdictionCode: capability.jurisdictionCode,

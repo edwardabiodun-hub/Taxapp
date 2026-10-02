@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import ExportPanel from "@/components/exports/ExportPanel";
+import ExportPanel, { downloadExportArtifact } from "@/components/exports/ExportPanel";
 import type { ExportPackage } from "@/domain/exports";
 
 const exportPackage = {
@@ -10,6 +10,7 @@ const exportPackage = {
   status: "exported" as const,
   generatedAt: "2026-10-02T00:00:00.000Z",
   metadata: {
+    schemaVersion: "1.0.0",
     preparationId: "prep-1",
     jurisdiction: "Lagos",
     jurisdictionCode: "NG-LA",
@@ -48,5 +49,24 @@ describe("ExportPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /download csv/i }));
     expect(onDownload).toHaveBeenCalledWith(expect.objectContaining({ format: "csv" }));
+  });
+
+  it("revokes object URLs after the browser has had a chance to consume the download link", () => {
+    vi.useFakeTimers();
+    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:download");
+    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    downloadExportArtifact(exportPackage.artifacts[0]);
+
+    expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:download");
+
+    click.mockRestore();
+    createObjectURL.mockRestore();
+    revokeObjectURL.mockRestore();
+    vi.useRealTimers();
   });
 });

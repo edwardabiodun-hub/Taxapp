@@ -2,6 +2,7 @@ import Dexie, { type Table } from "dexie";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { PreparationRecord } from "@/domain/preparations";
 import type { SubmissionEvent } from "@/domain/submissions";
+import type { ExportMetadata } from "@/domain/exports";
 import type {
   ReceiptFields,
   ReceiptProvenance,
@@ -106,6 +107,18 @@ export interface ExportPackageRecord {
   assetRef: string;
   ruleProfileVersion: string;
   calculationLabel: PreparationRecord["calculationLabel"];
+  schemaVersion: string;
+  jurisdiction: string;
+  jurisdictionCode: string;
+  taxYear: string;
+  readiness: PreparationRecord["filingReadiness"];
+  generatedAt: string;
+  notSubmitted: true;
+  source: string;
+  sourceVerifiedAt: string;
+  deadlineSource: string;
+  deadlineVerifiedAt: string;
+  metadata: ExportMetadata;
   createdAt: string;
 }
 

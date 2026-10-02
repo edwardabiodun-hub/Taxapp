@@ -10,18 +10,27 @@ interface ExportPanelProps {
 
 const labels = { pdf: "PDF", csv: "CSV", xlsx: "XLSX" } as const;
 
+export function downloadExportArtifact(artifact: ExportArtifact): void {
+  const url = URL.createObjectURL(artifact.data);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = artifact.fileName;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
 const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
   const download = (artifact: ExportArtifact) => {
     if (onDownload) {
       onDownload(artifact);
       return;
     }
-    const url = URL.createObjectURL(artifact.data);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = artifact.fileName;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadExportArtifact(artifact);
   };
 
   return (
