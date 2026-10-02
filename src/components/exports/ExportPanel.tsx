@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Download, FileSpreadsheet, FileText, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ExportArtifact, ExportPackage } from "@/domain/exports";
+import ErrorState from "@/components/shared/ErrorState";
 
 interface ExportPanelProps {
   readonly exportPackage: ExportPackage;
@@ -33,12 +35,16 @@ export function downloadExportArtifact(artifact: ExportArtifact): void {
 }
 
 const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
-  const download = (artifact: ExportArtifact) => {
-    if (onDownload) {
-      onDownload(artifact);
-      return;
+  const [failedArtifact, setFailedArtifact] = useState<ExportArtifact>();
+
+  const download = async (artifact: ExportArtifact) => {
+    try {
+      if (onDownload) await onDownload(artifact);
+      else downloadExportArtifact(artifact);
+      setFailedArtifact(undefined);
+    } catch {
+      setFailedArtifact(artifact);
     }
-    downloadExportArtifact(artifact);
   };
 
   return (
@@ -60,6 +66,12 @@ const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
         <p className="text-xs leading-relaxed text-muted-foreground">
           These files are for review or manual upload. Downloading does not file a return or confirm acceptance by a tax authority.
         </p>
+        {failedArtifact && (
+          <ErrorState
+            errorCode="EXPORT_DOWNLOAD_FAILED"
+            action={{ label: "Retry download", onClick: () => void download(failedArtifact) }}
+          />
+        )}
         <div className="grid gap-2 sm:grid-cols-3">
           {exportPackage.artifacts.map((artifact) => (
             <Button
@@ -67,7 +79,7 @@ const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
               type="button"
               variant="outline"
               aria-label={`Download ${labels[artifact.format]}`}
-              onClick={() => download(artifact)}
+              onClick={() => void download(artifact)}
               className="justify-start"
             >
               {artifact.format === "pdf" ? <FileText /> : artifact.format === "csv" ? <Table2 /> : <FileSpreadsheet />}

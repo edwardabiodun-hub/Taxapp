@@ -88,8 +88,15 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <p className="break-words text-2xl font-display font-bold text-foreground" role="status" aria-live="polite" aria-atomic="true">
+          <p className="break-words text-2xl font-display font-bold text-foreground" role="status">
             {remaining}
+          </p>
+          <p className="sr-only" aria-live="polite" aria-atomic="true">
+            {countdown.isPassed
+              ? "Deadline passed"
+              : countdown.days <= 1
+                ? "Deadline is within one day"
+                : "Deadline countdown available"}
           </p>
           {deadline?.dueAt && (
             <p className="mt-1 break-words text-xs text-muted-foreground">

@@ -89,4 +89,20 @@ describe("ExportPanel", () => {
     createObjectURL.mockRestore();
     revokeObjectURL.mockRestore();
   });
+
+  it("shows a safe retry state when a download fails", () => {
+    const onDownload = vi.fn(() => {
+      throw new Error("provider response leaked api key sk-live-secret");
+    });
+
+    render(<ExportPanel exportPackage={exportPackage} onDownload={onDownload} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /download csv/i }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/could not be downloaded/i);
+    expect(screen.queryByText(/provider response|api key|sk-live-secret/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /retry download/i }));
+    expect(onDownload).toHaveBeenCalledTimes(2);
+  });
 });

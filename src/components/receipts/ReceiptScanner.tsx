@@ -15,6 +15,8 @@ import {
   validateReceiptFile,
 } from "@/lib/ocr/ocr-service";
 import OcrReview from "@/components/receipts/OcrReview";
+import ErrorState, { type SafeErrorCode } from "@/components/shared/ErrorState";
+import type { StateAction } from "@/components/shared/LoadingState";
 
 interface ReceiptScannerProps {
   readonly preparationId: string;
@@ -36,7 +38,9 @@ const ReceiptScanner = ({
   const [record, setRecord] = useState<ReceiptRecord>();
   const [manualEntry, setManualEntry] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<{ code: SafeErrorCode; action?: StateAction }>();
+
+  const chooseFile = () => fileInputRef.current?.click();
 
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -46,7 +50,10 @@ const ReceiptScanner = ({
     if (!selected) return;
     const validation = validateReceiptFile(selected);
     if (!validation.valid) {
-      setError(validation.reason);
+      setError({
+        code: "RECEIPT_FILE_INVALID",
+        action: { label: "Choose another image", onClick: chooseFile },
+      });
       setFile(undefined);
       return;
     }
@@ -73,7 +80,10 @@ const ReceiptScanner = ({
       setRecord(result.record);
       setManualEntry(result.state === "manual_entry");
     } catch (processingError) {
-      setError(processingError instanceof Error ? processingError.message : "Receipt could not be processed.");
+      setError({
+        code: "RECEIPT_PROCESSING_FAILED",
+        action: { label: "Try again", onClick: () => void process() },
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -91,7 +101,10 @@ const ReceiptScanner = ({
       setRecord(result.record);
       setManualEntry(true);
     } catch (manualError) {
-      setError(manualError instanceof Error ? manualError.message : "Manual receipt entry could not be started.");
+      setError({
+        code: "RECEIPT_PROCESSING_FAILED",
+        action: { label: "Try again", onClick: () => void enterManually() },
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -103,8 +116,6 @@ const ReceiptScanner = ({
       const confirmed = await confirmReceipt(record.id, corrections, { getRecord });
       setRecord(confirmed);
       onConfirmed?.(confirmed);
-    } catch (confirmationError) {
-      setError(confirmationError instanceof Error ? confirmationError.message : "Receipt values could not be confirmed.");
     }
   };
 
@@ -113,8 +124,6 @@ const ReceiptScanner = ({
     try {
       const rejected = await rejectReceipt(record.id, { getRecord });
       setRecord(rejected);
-    } catch (rejectionError) {
-      setError(rejectionError instanceof Error ? rejectionError.message : "Receipt could not be rejected.");
     }
   };
 
@@ -129,7 +138,7 @@ const ReceiptScanner = ({
       </div>
 
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Receipt image" className="hidden" onChange={(event) => handleFile(event.target.files?.[0])} />
-      <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
+      <Button type="button" variant="outline" onClick={chooseFile} className="w-full">
         Choose receipt image
       </Button>
 
@@ -156,9 +165,16 @@ const ReceiptScanner = ({
         </div>
       )}
 
-      {error && <p className="text-xs text-destructive" role="alert">{error}</p>}
+      {error && <ErrorState errorCode={error.code} action={error.action} />}
       {record && (
-        <OcrReview record={record} previewUrl={previewUrl} manualEntry={manualEntry} onConfirm={confirm} onReject={reject} />
+        <OcrReview
+          record={record}
+          previewUrl={previewUrl}
+          manualEntry={manualEntry}
+          onConfirm={confirm}
+          onReject={reject}
+          onRetry={manualEntry ? undefined : () => void process()}
+        />
       )}
     </div>
   );

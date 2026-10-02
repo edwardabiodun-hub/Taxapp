@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import {
   type ReceiptFieldName,
   type ReceiptRecord,
 } from "@/domain/receipts";
+import ErrorState, { type SafeErrorCode } from "@/components/shared/ErrorState";
 
 interface OcrReviewProps {
   readonly record: ReceiptRecord;
@@ -17,6 +18,7 @@ interface OcrReviewProps {
   readonly onConfirm: (corrections: ReceiptCorrections) => void | Promise<void>;
   readonly onReject: () => void | Promise<void>;
   readonly manualEntry?: boolean;
+  readonly onRetry?: () => void | Promise<void>;
 }
 
 const editableFields: readonly ReceiptFieldName[] = [
@@ -34,12 +36,15 @@ const OcrReview = ({
   onConfirm,
   onReject,
   manualEntry = false,
+  onRetry,
 }: OcrReviewProps) => {
   const [values, setValues] = useState<Record<ReceiptFieldName, string>>(() =>
     Object.fromEntries(
       editableFields.map((field) => [field, record.fields[field].value ?? ""]),
     ) as Record<ReceiptFieldName, string>,
   );
+  const [errorCode, setErrorCode] = useState<SafeErrorCode>();
+  const [pendingAction, setPendingAction] = useState<"confirm" | "reject">();
 
   const update = (field: ReceiptFieldName, value: string) =>
     setValues((current) => ({ ...current, [field]: value }));
@@ -50,6 +55,18 @@ const OcrReview = ({
       return <span className="text-[10px] font-semibold text-warning">Low confidence</span>;
     }
     return <span className="text-[10px] text-success">{Math.round(confidence * 100)}% confidence</span>;
+  };
+
+  const confirm = async () => {
+    setErrorCode(undefined);
+    setPendingAction("confirm");
+    try { await onConfirm(values); } catch { setErrorCode("RECEIPT_CONFIRM_FAILED"); } finally { setPendingAction(undefined); }
+  };
+
+  const reject = async () => {
+    setErrorCode(undefined);
+    setPendingAction("reject");
+    try { await onReject(); } catch { setErrorCode("RECEIPT_REJECT_FAILED"); } finally { setPendingAction(undefined); }
   };
 
   return (
@@ -73,11 +90,21 @@ const OcrReview = ({
         />
       )}
 
-      {record.errorMessage && (
-        <div className="flex items-start gap-2 rounded-lg bg-warning/10 p-3 text-xs text-warning">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{record.errorMessage}</span>
-        </div>
+      {record.errorMessage && !manualEntry && (
+        <ErrorState
+          errorCode="RECEIPT_PROCESSING_FAILED"
+          action={onRetry ? { label: "Try again", onClick: () => void onRetry() } : undefined}
+        />
+      )}
+
+      {errorCode && (
+        <ErrorState
+          errorCode={errorCode}
+          action={{
+            label: errorCode === "RECEIPT_CONFIRM_FAILED" ? "Retry confirmation" : "Retry rejection",
+            onClick: errorCode === "RECEIPT_CONFIRM_FAILED" ? () => void confirm() : () => void reject(),
+          }}
+        />
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -90,19 +117,13 @@ const OcrReview = ({
       </div>
 
       {record.provenance && (
-        <p className="text-[10px] text-muted-foreground">
-          Provider: {record.provenance.provider} · Model: {record.provenance.model} · Version: {record.provenance.version}
-        </p>
+        <p className="break-words text-[10px] text-muted-foreground">Processing details are available in the saved record.</p>
       )}
       {record.provenance?.contract?.providerCategory && (
-        <p className="text-[10px] text-muted-foreground">
-          Processing purpose: structured receipt field extraction ({record.provenance.contract.providerCategory}).
-        </p>
+        <p className="break-words text-[10px] text-muted-foreground">Processing purpose: structured receipt field extraction.</p>
       )}
       {record.provenance?.contract?.retentionPeriod && (
-        <p className="text-[10px] text-muted-foreground">
-          Contracted provider retention: {record.provenance.contract.retentionPeriod}.
-        </p>
+        <p className="break-words text-[10px] text-muted-foreground">Provider retention terms are recorded with this receipt.</p>
       )}
       {record.provenance?.contract?.noTraining === true && (
         <p className="text-[10px] text-muted-foreground">
@@ -111,10 +132,10 @@ const OcrReview = ({
       )}
 
       <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={() => void onReject()} className="flex-1 gap-1">
+        <Button type="button" variant="outline" disabled={pendingAction !== undefined} onClick={() => void reject()} className="flex-1 gap-1">
           <XCircle className="h-4 w-4" /> Reject
         </Button>
-        <Button type="button" onClick={() => void onConfirm(values)} className="flex-1 gap-1">
+        <Button type="button" disabled={pendingAction !== undefined} onClick={() => void confirm()} className="flex-1 gap-1">
           <CheckCircle2 className="h-4 w-4" /> Confirm receipt
         </Button>
       </div>

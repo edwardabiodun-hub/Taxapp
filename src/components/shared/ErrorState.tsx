@@ -10,7 +10,8 @@ export type SafeErrorCode =
   | "RECEIPT_PROCESSING_FAILED"
   | "RECEIPT_CONFIRM_FAILED"
   | "RECEIPT_REJECT_FAILED"
-  | "EXPORT_DOWNLOAD_FAILED";
+  | "EXPORT_DOWNLOAD_FAILED"
+  | "NOT_FOUND";
 
 const safeMessages: Record<SafeErrorCode, string> = {
   GENERIC: "We could not complete this step. Your information is still saved. Please try again.",
@@ -20,6 +21,18 @@ const safeMessages: Record<SafeErrorCode, string> = {
   RECEIPT_CONFIRM_FAILED: "The receipt values could not be confirmed. Your edits are preserved; try again.",
   RECEIPT_REJECT_FAILED: "The receipt could not be rejected. Your receipt is preserved; try again.",
   EXPORT_DOWNLOAD_FAILED: "This file could not be downloaded. The export package is preserved; try again.",
+  NOT_FOUND: "This page is not available. Return to the home page to continue.",
+};
+
+const safeTitles: Record<SafeErrorCode, readonly string[]> = {
+  GENERIC: ["Something went wrong"],
+  OCR_UNAVAILABLE: ["Receipt scanning unavailable"],
+  RECEIPT_FILE_INVALID: ["Receipt file not supported"],
+  RECEIPT_PROCESSING_FAILED: ["Receipt processing failed"],
+  RECEIPT_CONFIRM_FAILED: ["Receipt confirmation failed"],
+  RECEIPT_REJECT_FAILED: ["Receipt rejection failed"],
+  EXPORT_DOWNLOAD_FAILED: ["Download failed"],
+  NOT_FOUND: ["Page not found"],
 };
 
 interface ErrorStateProps {
@@ -31,14 +44,17 @@ interface ErrorStateProps {
 }
 
 function safeMessage(message: string | undefined, errorCode: SafeErrorCode): string {
-  if (!message || message.length > 240 || /stack|trace|provider|api\s*key|secret|token|raw\s+error/i.test(message)) {
-    return safeMessages[errorCode];
-  }
-  return message;
+  return message && message === safeMessages[errorCode] ? message : safeMessages[errorCode];
+}
+
+function safeTitle(title: string | undefined, errorCode: SafeErrorCode): string {
+  return title && safeTitles[errorCode].includes(title)
+    ? title
+    : safeTitles[errorCode][0];
 }
 
 const ErrorState = ({
-  title = "Something went wrong",
+  title,
   message,
   errorCode = "GENERIC",
   action,
@@ -48,7 +64,7 @@ const ErrorState = ({
     <div className="flex items-start gap-3">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="break-words text-sm font-semibold text-foreground">{safeTitle(title, errorCode)}</p>
         <p className="break-words text-xs text-muted-foreground">{safeMessage(message, errorCode)}</p>
         {action && (
           <Button type="button" variant="outline" size="sm" onClick={action.onClick} className="mt-3">

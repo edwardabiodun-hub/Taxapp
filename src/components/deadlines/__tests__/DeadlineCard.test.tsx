@@ -17,7 +17,7 @@ const deadline: ResolvedDeadline = {
 };
 
 describe("DeadlineCard", () => {
-  it("renders countdown provenance and does not use a noisy live region", () => {
+  it("renders countdown provenance with a bounded meaningful live announcement", () => {
     const { container } = render(
       <DeadlineCard
         deadline={deadline}
@@ -34,7 +34,7 @@ describe("DeadlineCard", () => {
       "href",
       deadline.source,
     );
-    expect(container.querySelector("[aria-live]")).toBeNull();
+    expect(container.querySelector('[aria-live="polite"]')).toHaveTextContent(/countdown available/i);
   });
 
   it("shows passed, stale, and offline indicators without negative countdown values", () => {
