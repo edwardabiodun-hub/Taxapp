@@ -112,19 +112,15 @@ const ReceiptScanner = ({
 
   const confirm = async (corrections: Parameters<typeof confirmReceipt>[1]) => {
     if (!record) return;
-    try {
-      const confirmed = await confirmReceipt(record.id, corrections, { getRecord });
-      setRecord(confirmed);
-      onConfirmed?.(confirmed);
-    }
+    const confirmed = await confirmReceipt(record.id, corrections, { getRecord });
+    setRecord(confirmed);
+    onConfirmed?.(confirmed);
   };
 
   const reject = async () => {
     if (!record) return;
-    try {
-      const rejected = await rejectReceipt(record.id, { getRecord });
-      setRecord(rejected);
-    }
+    const rejected = await rejectReceipt(record.id, { getRecord });
+    setRecord(rejected);
   };
 
   return (

@@ -25,5 +25,4 @@ export const syntheticLagosCapability: JurisdictionCapability = Object.freeze({
   evidence: {},
   notes: "Synthetic fixture for local UI tests only.",
   registryVersion: "fixture-1",
-});
-
+} as JurisdictionCapability);

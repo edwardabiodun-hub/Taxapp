@@ -1,5 +1,5 @@
 import { EXPORT_SCHEMA_VERSION, type ExportContext, type ExportMetadata } from "@/domain/exports";
-import type { PreparationFormData, PreparationRecord } from "@/domain/preparations";
+import type { PreparationDocumentMetadata, PreparationFormData, PreparationRecord } from "@/domain/preparations";
 import type { DeclarationIncomeFields } from "@/types/declaration";
 import { isConfirmedReceiptRecord, type ReceiptRecord } from "@/domain/receipts";
 
@@ -23,7 +23,7 @@ const SAFE_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9._:/#-]*$/;
 export interface SanitizedExportModel { readonly metadata: ExportMetadata; readonly rows: readonly ExportRow[]; readonly unsafeReceiptReferenceCount: number; }
 
 export function sanitizePreparationForExportPersistence(preparation: PreparationRecord): PreparationRecord {
-  const formData: PreparationFormData = {};
+  const formData: Record<string, unknown> & { documents?: PreparationDocumentMetadata[] } = {};
   for (const field of SAFE_PREPARATION_FIELDS) {
     const value = safeScalarValue(preparation.formData[field]);
     if (value !== undefined) formData[field] = value;

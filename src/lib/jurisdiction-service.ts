@@ -59,7 +59,9 @@ const EVIDENCE_CONFIDENCES = new Set<EvidenceConfidence>([
 function defaultCache(): CapabilityCache {
   return {
     read: () => db.jurisdictionCapabilities.toArray(),
-    write: (capabilities) => db.jurisdictionCapabilities.bulkPut(capabilities),
+    write: async (capabilities) => {
+      await db.jurisdictionCapabilities.bulkPut(capabilities);
+    },
   };
 }
 
@@ -128,7 +130,9 @@ function sanitizeBaseline(value: unknown): BaselineMetadata | undefined {
   const source = safeText(value.source);
   const effectiveFrom = safeText(value.effectiveFrom);
   const reviewedAt = safeText(value.reviewedAt);
-  const status = value.status;
+  const status = value.status === "configured" || value.status === "unconfigured"
+    ? value.status
+    : undefined;
   if (
     (status !== undefined && status !== "configured" && status !== "unconfigured") ||
     source === undefined ||
@@ -174,7 +178,9 @@ function sanitizeDeadlineProfile(value: unknown): DeadlineProfile | undefined {
   }
   if (value.kind !== "verified_state" && value.kind !== "national_baseline") return undefined;
   const evidence = sanitizeEvidence(value.evidence, true);
-  return evidence ? { kind: value.kind, evidence } : undefined;
+  return evidence && "dueAt" in evidence
+    ? { kind: value.kind, evidence }
+    : undefined;
 }
 
 function sanitizeCapability(value: unknown): JurisdictionCapability | undefined {
@@ -215,7 +221,7 @@ function sanitizeCapability(value: unknown): JurisdictionCapability | undefined 
     return undefined;
   }
 
-  const evidence: CapabilityEvidence = {};
+  const evidence: { template?: EvidenceMetadata; integration?: EvidenceMetadata } = {};
   for (const key of ["template", "integration"] as const) {
     if (value.evidence[key] !== undefined) {
       const sanitized = sanitizeEvidence(value.evidence[key]);

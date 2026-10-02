@@ -138,7 +138,7 @@ export async function getReceiptRecord(
   id: string,
 ): Promise<DomainReceiptRecord | undefined> {
   const value = await db.receiptRecords.get(id);
-  return value && isReceiptRecordPersistable(value) && isNewReceiptRecord(value)
+  return value && isReceiptRecordPersistable(value as unknown as Record<string, unknown>) && isNewReceiptRecord(value as unknown as Record<string, unknown>)
     ? value as unknown as DomainReceiptRecord
     : undefined;
 }
@@ -147,7 +147,7 @@ export async function listReceiptRecords(
   preparationId: string,
 ): Promise<DomainReceiptRecord[]> {
   const values = await db.receiptRecords.where("preparationId").equals(preparationId).toArray();
-  return values.filter((value) => isReceiptRecordPersistable(value) && isNewReceiptRecord(value)) as unknown as DomainReceiptRecord[];
+  return values.filter((value) => isReceiptRecordPersistable(value as unknown as Record<string, unknown>) && isNewReceiptRecord(value as unknown as Record<string, unknown>)) as unknown as DomainReceiptRecord[];
 }
 
 function isNewReceiptRecord(
