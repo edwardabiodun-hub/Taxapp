@@ -216,7 +216,9 @@ const Dashboard = () => {
                   amount: declaration?.amount || "—",
                   calculationLabel: preparation?.calculationLabel,
                   readiness: preparation?.filingReadiness,
-                  exportFormats: preparation?.status === "exported" ? ["PDF", "CSV", "XLSX"] : undefined,
+                  exportFormats: preparation && ["exported", "user_submitted", "authority_confirmed"].includes(preparation.status)
+                    ? ["PDF", "CSV", "XLSX"]
+                    : undefined,
                 }}
                 onClick={() => navigate(`/submissions/${record.id}`)}
               />

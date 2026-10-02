@@ -47,6 +47,11 @@ const SubmissionCard = ({ submission, onClick }: SubmissionCardProps) => {
         <p className="text-sm font-semibold text-card-foreground truncate">
           {submission.type} — {submission.taxYear}
         </p>
+        {submission.capability && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Jurisdiction: {submission.capability.name}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">{submission.date}</p>
         {submission.calculationLabel && (
           <p className="break-words text-[10px] text-muted-foreground">
