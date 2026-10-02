@@ -20,9 +20,11 @@ export interface OcrProviderMetadata {
   readonly provider: string;
   readonly model: string;
   readonly version: string;
-  readonly providerCategory?: string;
-  readonly retentionPeriod?: string;
-  readonly noTraining?: boolean;
+  readonly contract?: {
+    readonly providerCategory?: string;
+    readonly retentionPeriod?: string;
+    readonly noTraining?: boolean;
+  };
 }
 
 export interface OcrExtraction {

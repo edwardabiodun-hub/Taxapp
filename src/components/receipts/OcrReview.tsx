@@ -59,7 +59,9 @@ const OcrReview = ({
           {manualEntry ? "Enter receipt details manually" : "Review extracted receipt"}
         </h4>
         <p className="text-[11px] text-muted-foreground">
-          OCR suggestions are drafts. Confirm each value before it can be used in a calculation.
+          {manualEntry
+            ? "Enter the receipt details. Values are used only after you confirm them."
+            : "OCR suggestions are drafts. Confirm each value before it can be used in a calculation."}
         </p>
       </div>
 
@@ -92,17 +94,17 @@ const OcrReview = ({
           Provider: {record.provenance.provider} · Model: {record.provenance.model} · Version: {record.provenance.version}
         </p>
       )}
-      {record.provenance?.providerCategory && (
+      {record.provenance?.contract?.providerCategory && (
         <p className="text-[10px] text-muted-foreground">
-          Processing purpose: structured receipt field extraction ({record.provenance.providerCategory}).
+          Processing purpose: structured receipt field extraction ({record.provenance.contract.providerCategory}).
         </p>
       )}
-      {record.provenance?.retentionPeriod && (
+      {record.provenance?.contract?.retentionPeriod && (
         <p className="text-[10px] text-muted-foreground">
-          Contracted provider retention: {record.provenance.retentionPeriod}.
+          Contracted provider retention: {record.provenance.contract.retentionPeriod}.
         </p>
       )}
-      {record.provenance?.noTraining === true && (
+      {record.provenance?.contract?.noTraining === true && (
         <p className="text-[10px] text-muted-foreground">
           The configured provider contract states that receipt content is not used to train its model.
         </p>

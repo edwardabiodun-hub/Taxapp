@@ -84,6 +84,13 @@ export interface ReceiptRecord {
   reviewStatus?: ReceiptReviewStatus;
   extractedData?: ReceiptExtractedData;
   fields?: ReceiptFields;
+  originalFields?: ReceiptFields;
+  correctionHistory?: Array<{
+    field: keyof ReceiptFields;
+    previousValue: string | null;
+    correctedValue: string | null;
+    at: string;
+  }>;
   provenance?: ReceiptProvenance;
   calculationInput?: ConfirmedReceiptInput;
   errorMessage?: string;

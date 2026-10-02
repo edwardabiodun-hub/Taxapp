@@ -8,8 +8,10 @@ import {
 } from "@/domain/receipts";
 import type { OcrProvider } from "@/lib/ocr/ocr-provider";
 import {
-  confirmReceiptRecord,
+  confirmReceipt,
+  createManualReceipt,
   processReceipt,
+  rejectReceipt,
   validateReceiptFile,
 } from "@/lib/ocr/ocr-service";
 import OcrReview from "@/components/receipts/OcrReview";
@@ -18,6 +20,7 @@ interface ReceiptScannerProps {
   readonly preparationId: string;
   readonly provider?: OcrProvider;
   readonly persistRecord?: (record: ReceiptRecord) => Promise<void>;
+  readonly getRecord?: (id: string) => Promise<ReceiptRecord | undefined>;
   readonly onConfirmed?: (record: ReceiptRecord) => void;
 }
 
@@ -25,6 +28,7 @@ const ReceiptScanner = ({
   preparationId,
   provider,
   persistRecord,
+  getRecord,
   onConfirmed,
 }: ReceiptScannerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,15 +81,42 @@ const ReceiptScanner = ({
     }
   };
 
-  const confirm = async (corrections: Parameters<typeof confirmReceiptRecord>[2]) => {
+  const enterManually = async () => {
+    if (!file) return;
+    setIsProcessing(true);
+    setError(undefined);
+    try {
+      const result = await createManualReceipt(
+        { preparationId, file, assetRef: `receipt-asset:${createId()}` },
+        { persistRecord },
+      );
+      setRecord(result.record);
+      setManualEntry(true);
+    } catch (manualError) {
+      setError(manualError instanceof Error ? manualError.message : "Manual receipt entry could not be started.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const confirm = async (corrections: Parameters<typeof confirmReceipt>[1]) => {
     if (!record) return;
     try {
-      const confirmed = await confirmReceiptRecord(record.id, record, corrections);
-      await persistRecord?.(confirmed);
+      const confirmed = await confirmReceipt(record.id, corrections, { getRecord, saveRecord: persistRecord });
       setRecord(confirmed);
       onConfirmed?.(confirmed);
     } catch (confirmationError) {
       setError(confirmationError instanceof Error ? confirmationError.message : "Receipt values could not be confirmed.");
+    }
+  };
+
+  const reject = async () => {
+    if (!record) return;
+    try {
+      const rejected = await rejectReceipt(record.id, { getRecord, saveRecord: persistRecord });
+      setRecord(rejected);
+    } catch (rejectionError) {
+      setError(rejectionError instanceof Error ? rejectionError.message : "Receipt could not be rejected.");
     }
   };
 
@@ -113,10 +144,13 @@ const ReceiptScanner = ({
               I consent to sending this image to the configured OCR provider for receipt-field extraction. The image remains linked to this review; OCR is optional and manual entry is always available.
             </Label>
           </div>
-          <Button type="button" disabled={!consent || isProcessing} onClick={() => void process()} className="w-full gap-2">
+           <Button type="button" disabled={!consent || isProcessing} onClick={() => void process()} className="w-full gap-2">
             {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
-            Process with OCR
-          </Button>
+             Process with OCR
+           </Button>
+           <Button type="button" variant="ghost" disabled={isProcessing} onClick={() => void enterManually()} className="w-full">
+             Enter details manually (no OCR)
+           </Button>
           <div className="flex items-start gap-2 text-[10px] text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>No receipt bytes or OCR secrets are stored in indexed local records.</span>
@@ -126,7 +160,7 @@ const ReceiptScanner = ({
 
       {error && <p className="text-xs text-destructive" role="alert">{error}</p>}
       {record && (
-        <OcrReview record={record} previewUrl={previewUrl} manualEntry={manualEntry} onConfirm={confirm} onReject={() => setRecord({ ...record, reviewStatus: "rejected" })} />
+        <OcrReview record={record} previewUrl={previewUrl} manualEntry={manualEntry} onConfirm={confirm} onReject={reject} />
       )}
     </div>
   );

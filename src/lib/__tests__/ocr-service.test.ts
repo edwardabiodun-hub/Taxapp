@@ -5,8 +5,10 @@ import {
   type ReceiptRecord,
 } from "@/domain/receipts";
 import {
-  confirmReceiptRecord,
+  confirmReceipt,
+  createManualReceipt,
   processReceipt,
+  rejectReceipt,
   validateReceiptFile,
 } from "@/lib/ocr/ocr-service";
 import type { OcrProvider } from "@/lib/ocr/ocr-provider";
@@ -37,6 +39,10 @@ const confirmedReceipt: ReceiptRecord = {
   ...needsReviewReceipt,
   id: "receipt-confirmed",
   reviewStatus: "confirmed",
+  confirmedAt: "2026-10-02T00:05:00.000Z",
+  fields: Object.fromEntries(
+    Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }]),
+  ) as ReceiptFields,
   calculationInput: {
     receiptId: "receipt-confirmed",
     vendor: "Acme Foods",
@@ -55,17 +61,63 @@ describe("receipt OCR service", () => {
     ]);
   });
 
-  it("preserves corrected values and marks them as user-confirmed", async () => {
-    const record = await confirmReceiptRecord("receipt-1", needsReviewReceipt, {
-      amount: "12500",
+  it("confirms only through the repository-backed confirmReceipt operation", async () => {
+    const records = new Map([["receipt-1", needsReviewReceipt]]);
+    const record = await confirmReceipt("receipt-1", {
+      amount: "13000",
       category: "transport",
+    }, {
+      getRecord: async (id) => records.get(id),
+      saveRecord: async (next) => { records.set(next.id, next); },
+      now: () => "2026-10-02T00:05:00.000Z",
     });
 
     expect(record.reviewStatus).toBe("confirmed");
-    expect(record.fields.amount.value).toBe("12500");
+    expect(record.fields.amount.value).toBe("13000");
     expect(record.fields.amount.userConfirmed).toBe(true);
     expect(record.fields.category.value).toBe("transport");
     expect(record.calculationInput?.category).toBe("transport");
+    expect(record.originalFields?.amount.value).toBe("12500");
+    expect(record.correctionHistory).toEqual([
+      expect.objectContaining({ field: "amount", previousValue: "12500", correctedValue: "13000" }),
+      expect.objectContaining({ field: "category", previousValue: "meals", correctedValue: "transport" }),
+    ]);
+    expect(records.get("receipt-1")?.reviewStatus).toBe("confirmed");
+  });
+
+  it("persists rejection and excludes the rejected record from calculation inputs", async () => {
+    const records = new Map([[confirmedReceipt.id, confirmedReceipt]]);
+    const rejected = await rejectReceipt(confirmedReceipt.id, {
+      getRecord: async (id) => records.get(id),
+      saveRecord: async (next) => { records.set(next.id, next); },
+      now: () => "2026-10-02T00:06:00.000Z",
+    });
+
+    expect(rejected.reviewStatus).toBe("rejected");
+    expect(rejected.calculationInput).toBeUndefined();
+    expect(getCalculationReceiptInputs([records.get(confirmedReceipt.id)!])).toEqual([]);
+  });
+
+  it("allows manual entry without consent or a provider attempt", async () => {
+    const persisted: ReceiptRecord[] = [];
+    const result = await createManualReceipt(
+      {
+        preparationId: "prep-1",
+        file: new File(["receipt"], "receipt.jpg", { type: "image/jpeg" }),
+        assetRef: "receipts/manual-1.jpg",
+      },
+      {
+        persistRecord: async (record) => { persisted.push(record); },
+        now: (() => {
+          let i = 0;
+          return () => `2026-10-02T00:0${i++}:00.000Z`;
+        })(),
+      },
+    );
+
+    expect(result.state).toBe("manual_entry");
+    expect(result.record.errorMessage).toMatch(/manual/i);
+    expect(persisted.at(-1)?.reviewStatus).toBe("needs_review");
   });
 
   it("rejects executable extensions even when a browser reports an image MIME type", () => {
@@ -92,5 +144,18 @@ describe("receipt OCR service", () => {
 
     expect(result.state).toBe("manual_entry");
     expect(result.record?.assetRef).toBe("receipts/receipt-1.jpg");
+  });
+
+  it("rejects stale or crafted confirmed records", () => {
+    const stale = {
+      ...confirmedReceipt,
+      calculationInput: { ...confirmedReceipt.calculationInput!, amount: "999999" },
+    };
+    const unconfirmedField = {
+      ...confirmedReceipt,
+      fields: { ...confirmedReceipt.fields, amount: { ...confirmedReceipt.fields.amount, userConfirmed: false } },
+    };
+
+    expect(getCalculationReceiptInputs([stale, unconfirmedField])).toEqual([]);
   });
 });

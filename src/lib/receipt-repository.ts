@@ -1,5 +1,8 @@
 import {
+  deriveConfirmedReceiptInput,
   isReceiptFieldsValid,
+  isReceiptProvenanceSafe,
+  isConfirmedReceiptRecord,
   type ReceiptRecord as DomainReceiptRecord,
   type ReceiptFields,
 } from "@/domain/receipts";
@@ -16,6 +19,8 @@ const receiptFields = new Set([
   "reviewStatus",
   "extractedData",
   "fields",
+  "originalFields",
+  "correctionHistory",
   "provenance",
   "calculationInput",
   "errorMessage",
@@ -54,10 +59,18 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
   }
 
   if (isNewReceiptRecord(value)) {
-    return ["captured", "processing", "needs_review", "confirmed", "rejected"].includes(
+    const statusValid = ["captured", "processing", "needs_review", "confirmed", "rejected"].includes(
       String(value.reviewStatus),
-    ) && isNewReceiptFieldsPersistable(value.fields) &&
-      (value.calculationInput === undefined || isCalculationInputPersistable(value.calculationInput));
+    );
+    if (!statusValid || !isNewReceiptFieldsPersistable(value.fields) || !isReceiptProvenanceSafe(value.provenance)) return false;
+    if (value.originalFields !== undefined && !isNewReceiptFieldsPersistable(value.originalFields)) return false;
+    if (value.correctionHistory !== undefined && (!Array.isArray(value.correctionHistory) || value.correctionHistory.some((entry) => !isPlainObject(entry)))) return false;
+    if (value.reviewStatus === "confirmed") {
+      const record = value as unknown as DomainReceiptRecord;
+      return isConfirmedReceiptRecord(record) && isCalculationInputPersistable(value.calculationInput) &&
+        JSON.stringify(value.calculationInput) === JSON.stringify(deriveConfirmedReceiptInput(record));
+    }
+    return value.calculationInput === undefined;
   }
 
   if (value.extractedData === undefined) return true;
@@ -84,14 +97,18 @@ export async function saveReceiptRecord(
 
 export async function getReceiptRecord(
   id: string,
-): Promise<ReceiptRecord | DomainReceiptRecord | undefined> {
-  return db.receiptRecords.get(id);
+): Promise<DomainReceiptRecord | undefined> {
+  const value = await db.receiptRecords.get(id);
+  return value && isReceiptRecordPersistable(value) && isNewReceiptRecord(value)
+    ? value as unknown as DomainReceiptRecord
+    : undefined;
 }
 
 export async function listReceiptRecords(
   preparationId: string,
-): Promise<Array<ReceiptRecord | DomainReceiptRecord>> {
-  return db.receiptRecords.where("preparationId").equals(preparationId).toArray();
+): Promise<DomainReceiptRecord[]> {
+  const values = await db.receiptRecords.where("preparationId").equals(preparationId).toArray();
+  return values.filter((value) => isReceiptRecordPersistable(value) && isNewReceiptRecord(value)) as unknown as DomainReceiptRecord[];
 }
 
 function isNewReceiptRecord(
