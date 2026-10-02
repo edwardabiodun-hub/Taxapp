@@ -179,20 +179,23 @@ function normalizeUserEvidence(
   if (!isValidTimestamp(fallbackTimestamp)) {
     throw new Error("Submission service timestamp is invalid.");
   }
-  if (!isUserSubmissionEvidenceValid(evidence)) {
+  const { submittedAt: providedSubmittedAt, ...baseEvidence } = evidence;
+  if (!isUserSubmissionEvidenceValid(baseEvidence)) {
     throw new Error("Explicit user submission evidence is required.");
   }
 
-  const submittedAt = evidence.submittedAt?.trim() || fallbackTimestamp;
-  if (!isValidTimestamp(submittedAt, fallbackTimestamp)) {
+  const submittedAt = typeof providedSubmittedAt === "string"
+    ? providedSubmittedAt.trim()
+    : fallbackTimestamp;
+  if (providedSubmittedAt !== undefined && !isValidTimestamp(submittedAt, fallbackTimestamp)) {
     throw new Error("Submitted-at timestamp is invalid or in the future.");
   }
 
   return {
-    source: evidence.source.trim(),
-    ...(evidence.reference ? { reference: evidence.reference.trim() } : {}),
+    source: baseEvidence.source.trim(),
+    ...(baseEvidence.reference ? { reference: baseEvidence.reference.trim() } : {}),
     submittedAt: new Date(submittedAt).toISOString(),
-    ...(evidence.note ? { note: evidence.note.trim() } : {}),
+    ...(baseEvidence.note ? { note: baseEvidence.note.trim() } : {}),
   };
 }
 

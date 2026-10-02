@@ -8,10 +8,12 @@ import {
   isValidPreparationStatusTransition,
   markPreparationSynced,
   migrateLegacyDeclarationsToPreparations,
+  savePreparationAndAppendSubmissionEventWithExportPackages,
   savePreparationFromSync,
   savePreparation,
 } from "@/lib/preparation-repository";
-import { db, type LocalDeclaration } from "@/lib/local-db";
+import { db, type ExportPackageRecord, type LocalDeclaration } from "@/lib/local-db";
+import type { ExportMetadata } from "@/domain/exports";
 
 const preparation = (
   id: string,
@@ -83,7 +85,7 @@ describe("preparation repository", () => {
           confirmedAt: "2026-01-02T00:00:00.000Z",
         },
       }),
-    ).rejects.toThrow(/invalid preparation status transition/i);
+    ).rejects.toThrow(/SubmissionService|authority confirmation/i);
   });
 
   it("rejects repository writes that try to promote a preparation to user submitted", async () => {
@@ -424,9 +426,50 @@ describe("preparation repository", () => {
         reference: "prep-1:2026-01-01T02:00:00.000Z",
       },
     };
-    await appendSubmissionEvent(event);
+    const exportMetadata: ExportMetadata = {
+      schemaVersion: "1.0.0",
+      preparationId: exported.id,
+      jurisdiction: "FCT",
+      jurisdictionCode: "NG-FCT",
+      taxYear: exported.taxYear,
+      registryVersion: "2026.1",
+      ruleProfileId: "ng-pit-baseline",
+      ruleProfileVersion: exported.ruleProfileVersion,
+      calculationLabel: exported.calculationLabel,
+      readiness: exported.filingReadiness,
+      source: "",
+      sourceVerifiedAt: "",
+      deadlineSource: "",
+      deadlineVerifiedAt: "",
+      generatedAt: event.timestamp,
+      notSubmitted: true,
+    };
+    const exportPackage: ExportPackageRecord = {
+      id: "export-prep-1-pdf",
+      preparationId: exported.id,
+      format: "pdf",
+      assetRef: "exports/prep-1/pdf/20260101",
+      ruleProfileVersion: exported.ruleProfileVersion,
+      calculationLabel: exported.calculationLabel,
+      schemaVersion: "1.0.0",
+      jurisdiction: "FCT",
+      jurisdictionCode: "NG-FCT",
+      taxYear: exported.taxYear,
+      readiness: exported.filingReadiness,
+      generatedAt: event.timestamp,
+      notSubmitted: true,
+      source: "",
+      sourceVerifiedAt: "",
+      deadlineSource: "",
+      deadlineVerifiedAt: "",
+      metadata: exportMetadata,
+      createdAt: event.timestamp,
+    };
+    await savePreparationAndAppendSubmissionEventWithExportPackages(exported, event, [exportPackage]);
 
-    await expect(appendSubmissionEvent({ ...event, actor: "system" })).rejects.toThrow(
+    await expect(
+      savePreparationAndAppendSubmissionEventWithExportPackages(exported, event, [exportPackage]),
+    ).rejects.toThrow(
       /immutable/i,
     );
     await expect(
@@ -454,9 +497,9 @@ describe("preparation repository", () => {
         actor: "authority",
         timestamp: "2026-01-01T02:00:00.000Z",
         authorityReference: "",
-        evidence: { source: "authority-confirmation", reference: "" },
+        evidence: { source: "authority-confirmation", reference: "NRS-1" },
       } as never),
-      ).rejects.toThrow(/authority reference/i);
+      ).rejects.toThrow(/authority reference|evidence/i);
     await expect(
       appendSubmissionEvent({
         ...event,

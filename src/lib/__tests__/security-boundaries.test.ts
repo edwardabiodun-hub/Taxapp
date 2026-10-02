@@ -195,7 +195,7 @@ describe("phase one security boundaries", () => {
 
     await expect(getPreparation(draft.id)).resolves.toMatchObject({ status: "draft", formData: { documents: [] } });
     await expect(getPreparation(submitted.id)).resolves.toMatchObject({ status: "ready_for_review", formData: { documents: [] } });
-    await expect(getPreparation(pending.id)).resolves.toMatchObject({ status: "ready_for_review", pendingSync: true });
+    await expect(db.preparations.get(pending.id)).resolves.toMatchObject({ status: "ready_for_review", pendingSync: true });
     await expect(listPendingPreparations()).resolves.toEqual([
       expect.objectContaining({ id: pending.id, pendingSync: true }),
     ]);

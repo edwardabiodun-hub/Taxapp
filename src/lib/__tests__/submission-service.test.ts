@@ -135,12 +135,14 @@ describe("SubmissionService", () => {
     await expect(
       memory.service.markUserSubmitted("prep-1", {
         source: "manual-handoff",
+        reference: "user-confirmed-2026-10-02",
         submittedAt: "not-a-timestamp",
       }),
     ).rejects.toThrow(/timestamp/i);
     await expect(
       memory.service.markUserSubmitted("prep-1", {
         source: "manual-handoff",
+        reference: "user-confirmed-2026-10-02",
         submittedAt: "2026-10-03T00:00:00.000Z",
       }),
     ).rejects.toThrow(/future/i);
@@ -193,7 +195,7 @@ describe("SubmissionService", () => {
 
     await expect(
       memory.service.confirmAuthority("prep-1", "NRS-2026-0001"),
-    ).rejects.toThrow(/transition|user submitted/i);
+    ).rejects.toThrow(/transition|user submission/i);
 
     await memory.service.markUserSubmitted("prep-1", {
       source: "authority-portal",

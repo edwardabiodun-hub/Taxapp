@@ -55,7 +55,7 @@ const Onboarding = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const update = (key: keyof ProfileForm, value: any) => {
+  const update = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -326,7 +326,7 @@ const Onboarding = () => {
 
 const Field = ({ label, icon: Icon, error, children }: {
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   error?: string;
   children: React.ReactNode;
 }) => (

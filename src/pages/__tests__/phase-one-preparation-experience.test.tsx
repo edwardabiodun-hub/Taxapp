@@ -67,9 +67,9 @@ describe("phase one preparation experience", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/preparations/i)).toBeInTheDocument();
-    expect(screen.getByText(/generic Nigerian PIT estimate/i)).toBeInTheDocument();
-    expect(screen.getByText(/not yet supported/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /recent preparations/i })).toBeInTheDocument();
+    expect(screen.getByText(/Lagos: Generic Nigerian PIT estimate/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/not yet supported/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /tax estimator/i })).toBeInTheDocument();
     expect(screen.queryByText(/file your taxes/i)).not.toBeInTheDocument();
   });
@@ -85,6 +85,6 @@ describe("phase one preparation experience", () => {
     expect(screen.getByText(/calculation: Generic Nigerian PIT estimate/i)).toBeInTheDocument();
     expect(screen.getByText(/readiness: Not yet supported/i)).toBeInTheDocument();
     expect(screen.getByText(/export package: PDF, CSV, XLSX/i)).toBeInTheDocument();
-    expect(screen.getByText("Exported")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status: Exported")).toBeInTheDocument();
   });
 });

@@ -19,13 +19,14 @@ This is a bounded evidence gate for the local-first Phase One release. It record
 
 - Date: 2026-10-02
 - Branch/worktree: `codex/filesmart-phase-one` / `filesmart-phase-one`
-- Focused test result: `NOT RUN` — the configured Windows esbuild/SWC native-cache/DACL environment blocks the test runner before discovery.
-- Existing boundary result: `NOT RUN` — same test-runner blocker; static review and test definitions are present.
-- TypeScript result: `PASS` — `npx tsc -b --noEmit --pretty false` completed successfully after correcting the receipt test fixture types.
-- Targeted Phase One lint result: `PASS` — all changed Phase One domain, repository, OCR, sync, and jurisdiction files pass ESLint.
-- Full-project lint result: `BLOCKED` — `npm run lint` reports 10 pre-existing errors outside this feature set in `ProfileForm.tsx`, UI primitives, `use-sync.ts`, `Onboarding.tsx`, and `tailwind.config.ts`; no new errors remain in the changed Phase One files.
-- Build result: `NOT RUN` — the Windows esbuild permissions issue prevents Vite from loading `vite.config.ts`; must be rerun in a working environment before release approval.
-- Artifact review: `PASS` — diff review found no secrets, real PII, receipt bytes, or generated user artifacts; `.gitignore` unchanged.
+- Focused test result: `PASS` — the complete Vitest run passed 27 suites and 179 tests using a mapped-drive verification copy to work around the nested Windows ACL/path issue.
+- Existing boundary result: `PASS` — the complete run includes the security-boundary, OCR, receipt, migration, repository, and submission-service suites.
+- TypeScript result: `PASS` — `npx tsc -b --noEmit --pretty false` completed successfully.
+- Static checks: `PASS` — `npm run lint` exits with 0 errors; 10 existing Fast Refresh warnings remain.
+- Build result: `PASS` — `npm run build` completed successfully through the mapped-drive workaround; Vite reports only the existing stale Browserslist data and large-chunk warnings.
+- Artifact review: `PASS` — `git diff --check` is clean and the final worktree contains no verification copies, secrets, real PII, receipt bytes, or generated user artifacts; `.gitignore` unchanged.
+
+The default nested-path Vitest/Vite invocations remain affected by the host's Windows esbuild parent-directory ACL behavior. The mapped-drive commands above exercise the same source and dependencies and completed successfully.
 
 ## Migration rehearsal expectations
 

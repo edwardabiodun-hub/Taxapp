@@ -142,7 +142,10 @@ describe("universal export service", () => {
 
   it("keeps CSV formula-safe and excludes unconfirmed receipt data and tax IDs", async () => {
     const result = await generateExportPackage(
-      preparation,
+      {
+        ...preparation,
+        formData: { ...preparation.formData, annualSalary: "=1+1" },
+      },
       [confirmedReceipt, needsReviewReceipt],
       capability,
       { persist: false },

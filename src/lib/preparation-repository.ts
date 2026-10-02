@@ -201,7 +201,9 @@ export function migrateLegacyDeclaration(record: LocalDeclaration): PreparationR
 }
 
 export async function listPendingPreparations(): Promise<StoredPreparation[]> {
-  return db.preparations.where("pendingSync").equals(1).toArray();
+  // The stored flag is boolean. Filtering avoids relying on IndexedDB's
+  // numeric representation of booleans, which differs across implementations.
+  return db.preparations.filter((preparation) => preparation.pendingSync).toArray();
 }
 
 export async function markPreparationSynced(

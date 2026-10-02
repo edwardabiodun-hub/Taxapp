@@ -5,19 +5,28 @@ import NewDeclaration from "@/pages/NewDeclaration";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
 import { listReceiptRecords } from "@/lib/receipt-repository";
-import { generateExportPackage } from "@/lib/exports/export-service";
 import type { ExportPackage } from "@/domain/exports";
 
+const { exportPreparationMock } = vi.hoisted(() => ({
+  exportPreparationMock: vi.fn(),
+}));
+
 vi.mock("@/lib/preparation-repository", () => ({
+  getPreparation: vi.fn().mockResolvedValue(undefined),
   savePreparation: vi.fn().mockResolvedValue(undefined),
+  appendSubmissionEvent: vi.fn().mockResolvedValue(undefined),
+  savePreparationAndAppendSubmissionEvent: vi.fn().mockResolvedValue(undefined),
+  savePreparationAndAppendSubmissionEventWithExportPackages: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/receipt-repository", () => ({
   listReceiptRecords: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/lib/exports/export-service", () => ({
-  generateExportPackage: vi.fn(),
+vi.mock("@/lib/submission-service", () => ({
+  submissionService: {
+    export: exportPreparationMock,
+  },
 }));
 
 const generatedExportPackage: ExportPackage = {
@@ -144,11 +153,10 @@ describe("NewDeclaration", () => {
   it("generates and exposes universal downloads from the review step", async () => {
     const saveMock = vi.mocked(savePreparation);
     const listMock = vi.mocked(listReceiptRecords);
-    const generateMock = vi.mocked(generateExportPackage);
     saveMock.mockClear();
     listMock.mockResolvedValue([]);
     saveMock.mockResolvedValue(undefined);
-    generateMock.mockResolvedValue(generatedExportPackage);
+    exportPreparationMock.mockResolvedValue(generatedExportPackage);
 
     render(
       <MemoryRouter>
@@ -172,12 +180,7 @@ describe("NewDeclaration", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /generate universal package/i }));
 
-    await waitFor(() => expect(generateMock).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "ready_for_review" }),
-      [],
-      expect.objectContaining({ jurisdictionCode: "NG-LA" }),
-      expect.objectContaining({ persist: true }),
-    ));
+    await waitFor(() => expect(exportPreparationMock).toHaveBeenCalledWith(expect.any(String)));
     expect(await screen.findByText("Not submitted")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /download pdf/i })).toBeEnabled();
     expect(screen.getAllByText(/exported.*downloads ready/i).length).toBeGreaterThan(0);

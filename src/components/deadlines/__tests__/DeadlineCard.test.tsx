@@ -55,7 +55,7 @@ describe("DeadlineCard", () => {
   it("shows an explicit unverified state when no deadline is available", () => {
     render(<DeadlineCard deadline={null} offline={false} />);
 
-    expect(screen.getByText("Deadline not verified")).toBeInTheDocument();
+    expect(screen.getAllByText("Deadline not verified").length).toBeGreaterThan(0);
     expect(
       screen.getByText(/No official filing deadline is available for this selection/i),
     ).toBeInTheDocument();

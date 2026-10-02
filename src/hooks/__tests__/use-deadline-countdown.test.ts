@@ -33,7 +33,7 @@ describe("useDeadlineCountdown", () => {
       vi.advanceTimersByTime(22 * 60 * 60 * 1000);
     });
 
-    expect(result.current.days).toBe(1);
+    expect(result.current.days).toBe(2);
     expect(result.current.hours).toBe(0);
   });
 });

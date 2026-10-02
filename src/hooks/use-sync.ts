@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { syncAll } from "@/lib/sync-service";
 import { toast } from "@/hooks/use-toast";
 
@@ -11,14 +10,6 @@ export function useSync() {
   const [online, setOnline] = useState(navigator.onLine);
   const retryTimer = useRef<ReturnType<typeof setTimeout>>();
   const retryCount = useRef(0);
-  const navigateRef = useRef<ReturnType<typeof useNavigate>>();
-
-  try {
-    navigateRef.current = useNavigate();
-  } catch {
-    // useNavigate may fail outside Router context
-  }
-
   const runSync = useCallback(async () => {
     if (!navigator.onLine) {
       setStatus("error");
@@ -39,9 +30,6 @@ export function useSync() {
             title: "⚠️ Audit Request",
             description: `Your ${req.type} (${req.taxYear}) requires additional documents from tax authorities.`,
             variant: "destructive",
-            action: navigateRef.current
-              ? undefined
-              : undefined,
           });
         }
       }
