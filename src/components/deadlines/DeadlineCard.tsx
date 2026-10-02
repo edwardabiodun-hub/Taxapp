@@ -3,6 +3,7 @@ import { Clock3, CloudOff, ExternalLink, ShieldAlert } from "lucide-react";
 import type { ResolvedDeadline } from "@/domain/deadlines";
 import { useDeadlineCountdown } from "@/hooks/use-deadline-countdown";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import EmptyState from "@/components/shared/EmptyState";
 
 interface DeadlineCardProps {
   deadline: ResolvedDeadline | null;
@@ -71,8 +72,8 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
     <Card className="border-border/70 shadow-card" data-source-kind={sourceClass}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-base">
+          <div className="min-w-0">
+            <CardTitle className="flex min-w-0 items-center gap-2 break-words text-base">
               <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
               {title}
             </CardTitle>
@@ -80,16 +81,18 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
               {deadline?.taxYear ? `Tax year ${deadline.taxYear}` : "Source-aware tracker"}
             </CardDescription>
           </div>
-          <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="max-w-[45%] shrink-0 break-words rounded-full bg-muted px-2 py-1 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             {sourceClass.replace("_", " ")}
           </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <p className="text-2xl font-display font-bold text-foreground">{remaining}</p>
+          <p className="break-words text-2xl font-display font-bold text-foreground" role="status" aria-live="polite" aria-atomic="true">
+            {remaining}
+          </p>
           {deadline?.dueAt && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 break-words text-xs text-muted-foreground">
               {deadline.isStale ? "Previously reported date" : "Based on the saved source date"}: {formatDate(deadline.dueAt, displayTimeZone) ?? "Date unavailable"}
               {` (${displayTimeZone})`}
             </p>
@@ -97,13 +100,14 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
         </div>
 
         {deadline?.label && (
-          <p className="text-sm font-medium text-foreground">{deadline.label}</p>
+          <p className="break-words text-sm font-medium text-foreground">{deadline.label}</p>
         )}
 
         {!deadline?.dueAt && (
-          <p className="text-xs text-muted-foreground">
-            No official filing deadline is available for this selection.
-          </p>
+          <EmptyState
+            title="Deadline not verified"
+            message="No official filing deadline is available for this selection."
+          />
         )}
 
         {deadline?.isStale && (
@@ -120,25 +124,25 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t pt-3 text-xs text-muted-foreground sm:grid-cols-3">
-          <span>Confidence: {deadline?.confidence ?? "low"}</span>
-          {verifiedDate ? <span>Verified: {verifiedDate}</span> : <span>Verification: unavailable</span>}
+        <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-2 border-t pt-3 text-xs text-muted-foreground sm:grid-cols-3">
+          <span className="break-words">Confidence: {deadline?.confidence ?? "low"}</span>
+          {verifiedDate ? <span className="break-words">Verified: {verifiedDate}</span> : <span className="break-words">Verification: unavailable</span>}
           {deadline?.source ? (
             /^https?:\/\//i.test(deadline.source) ? (
               <a
                 href={deadline.source}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
+                className="inline-flex min-w-0 items-center gap-1 break-all text-primary underline-offset-2 hover:underline"
                 aria-label="Deadline source"
               >
                 Source <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </a>
             ) : (
-              <span>Source: {deadline.source}</span>
+              <span className="break-words">Source: {deadline.source}</span>
             )
           ) : (
-            <span>Source: unavailable</span>
+            <span className="break-words">Source: unavailable</span>
           )}
         </div>
       </CardContent>

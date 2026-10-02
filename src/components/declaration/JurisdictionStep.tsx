@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import EmptyState from "@/components/shared/EmptyState";
 
 export interface JurisdictionStepProps {
   selectedCode: string;
@@ -78,7 +79,7 @@ const JurisdictionStep = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Nigerian jurisdictions">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="group" aria-label="Nigerian jurisdictions">
         {filteredCapabilities.map((capability) => {
           const selected = selectedCode === capability.jurisdictionCode;
           return (
@@ -87,6 +88,12 @@ const JurisdictionStep = ({
               type="button"
               aria-pressed={selected}
               onClick={() => onSelect(capability.jurisdictionCode)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(capability.jurisdictionCode);
+                }
+              }}
               className={cn(
                 "relative flex min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 selected
@@ -96,10 +103,10 @@ const JurisdictionStep = ({
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-foreground">
+                  <p className="min-w-0 break-words text-sm font-semibold text-foreground">
                     {capability.name}
                   </p>
-                  <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                  <span className="max-w-[40%] shrink-0 break-words rounded-full bg-muted px-1.5 py-0.5 text-right text-[9px] font-semibold text-muted-foreground">
                     {capability.shortName}
                   </span>
                 </div>
@@ -119,9 +126,7 @@ const JurisdictionStep = ({
       </div>
 
       {filteredCapabilities.length === 0 && (
-        <p className="rounded-xl bg-muted/50 px-3 py-4 text-center text-xs text-muted-foreground">
-          No Nigerian jurisdictions match that search.
-        </p>
+        <EmptyState title="No jurisdictions found" message="No Nigerian jurisdictions match that search." />
       )}
     </div>
   );
