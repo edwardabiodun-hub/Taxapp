@@ -153,7 +153,7 @@ export function isAllowedReceiptCategory(value: unknown): value is ReceiptCatego
 
 export function isValidReceiptFieldValue(name: ReceiptFieldName, value: unknown): boolean {
   if (value === null || value === "") return true;
-  if (typeof value !== "string" || value.length > 200 || !isSafeReceiptScalar(value)) return false;
+  if (!isSafeReceiptText(value)) return false;
   if (name === "currency") return isAllowedReceiptCurrency(value);
   if (name === "category") return isAllowedReceiptCategory(value);
   if (name === "date") {
@@ -198,6 +198,10 @@ function inputsEqual(left: ConfirmedReceiptInput | undefined, right: ConfirmedRe
 
 function isSafeOptionalText(value: unknown): boolean {
   return value === undefined || (typeof value === "string" && SAFE_PROVENANCE_VALUE.test(value));
+}
+
+export function isSafeReceiptText(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 200 && isSafeReceiptScalar(value);
 }
 
 function isSafeReceiptScalar(value: string): boolean {

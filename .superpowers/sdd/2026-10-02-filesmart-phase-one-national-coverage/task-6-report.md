@@ -63,3 +63,24 @@ Implemented with verification constrained by the existing test-runner environmen
   `npm run test -- src/domain/__tests__/receipts.test.ts src/lib/__tests__/managed-ocr-provider.test.ts`
 - Result: blocked before test discovery by the existing esbuild/worktree access error: `Cannot read directory "../../../../..": Access is denied` and unresolved `vitest.config.ts`.
 - No long test suite or environment repair was run. Temporary configs were not created in this fix round.
+
+## Security Review Fix Round 4
+
+### Status
+
+Implemented and committed as `fix: harden legacy receipt persistence`.
+
+### Findings addressed
+
+- Legacy receipt records now apply the shared safe receipt-text guard to required metadata and optional `errorMessage`/`confirmedAt` values, including payload/secret-like and oversized-value rejection.
+- Legacy `extractedData` strings and numeric values are bounded and validated before persistence; data URLs, blob URLs, base64/raw payload markers, secret/key-like strings, and oversized values are rejected.
+- Optional legacy metadata is validated through the existing strict provenance, field, correction-history, and calculation-input schemas, so unknown nested keys cannot be persisted. Partial modern records are no longer treated as legacy records.
+- Existing new-record OCR safeguards remain enforced, including confirmed-only calculation inputs and nested schema validation.
+
+### Verification
+
+- Focused no-SWC Vitest command: `npx vitest run --config .task6-legacy-vitest.config.ts`
+- Result: PASS — 1 test file, 37 tests.
+- Standard focused command was also attempted and remained blocked before discovery by the existing esbuild/worktree access error. No long test suite or environment repair was run.
+- The temporary focused configuration was removed after verification.
+- `git diff --check` was run after the fix and passed.

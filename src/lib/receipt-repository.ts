@@ -5,6 +5,7 @@ import {
   isReceiptCorrectionHistorySafe,
   isReceiptProvenanceSafe,
   isConfirmedReceiptRecord,
+  isSafeReceiptText,
   type ReceiptRecord as DomainReceiptRecord,
   type ReceiptFields,
 } from "@/domain/receipts";
@@ -44,18 +45,25 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
   if (!isPlainObject(value) || !hasOnlyKeys(value, receiptFields)) return false;
 
   if (
-    !isNonEmptyString(value.id) ||
-    !isNonEmptyString(value.preparationId) ||
+    !isSafeNonEmptyString(value.id) ||
+    !isSafeNonEmptyString(value.preparationId) ||
     !isOpaqueAssetReference(value.assetRef) ||
-    !isNonEmptyString(value.fileName) ||
-    !isNonEmptyString(value.mimeType) ||
+    !isSafeNonEmptyString(value.fileName) ||
+    !isSafeNonEmptyString(value.mimeType) ||
     typeof value.size !== "number" ||
     !Number.isInteger(value.size) ||
     value.size < 0 ||
-    (!isNewReceiptRecord(value) &&
-      !["captured", "processing", "needs_review", "confirmed", "rejected"].includes(String(value.status))) ||
-    !isNonEmptyString(value.createdAt) ||
-    !isNonEmptyString(value.updatedAt)
+    (value.size > 10 * 1024 * 1024) ||
+    (!isNewReceiptRecord(value) && !isLegacyStatus(value.status)) ||
+    (isNewReceiptRecord(value) && value.status !== undefined && !isLegacyStatus(value.status)) ||
+    !isSafeNonEmptyString(value.createdAt) ||
+    !isSafeNonEmptyString(value.updatedAt) ||
+    (value.errorMessage !== undefined && !isSafeReceiptText(value.errorMessage)) ||
+    (value.confirmedAt !== undefined && !isSafeNonEmptyString(value.confirmedAt)) ||
+    !isReceiptProvenanceSafe(value.provenance) ||
+    (value.originalFields !== undefined && !isNewReceiptFieldsPersistable(value.originalFields)) ||
+    !isReceiptCorrectionHistorySafe(value.correctionHistory) ||
+    (value.calculationInput !== undefined && !isCalculationInputPersistable(value.calculationInput))
   ) {
     return false;
   }
@@ -64,9 +72,7 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
     const statusValid = ["captured", "processing", "needs_review", "confirmed", "rejected"].includes(
       String(value.reviewStatus),
     );
-    if (!statusValid || !isNewReceiptFieldsPersistable(value.fields) || !isReceiptProvenanceSafe(value.provenance)) return false;
-    if (value.originalFields !== undefined && !isNewReceiptFieldsPersistable(value.originalFields)) return false;
-    if (!isReceiptCorrectionHistorySafe(value.correctionHistory)) return false;
+    if (!statusValid || !isNewReceiptFieldsPersistable(value.fields)) return false;
     if (value.reviewStatus === "confirmed") {
       const record = value as unknown as DomainReceiptRecord;
       return isConfirmedReceiptRecord(record) && isCalculationInputPersistable(value.calculationInput) &&
@@ -75,17 +81,7 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
     return value.calculationInput === undefined;
   }
 
-  if (value.extractedData === undefined) return true;
-  if (!isPlainObject(value.extractedData) || !hasOnlyKeys(value.extractedData, extractedFields)) {
-    return false;
-  }
-
-  return Object.entries(value.extractedData).every(([key, entry]) => {
-    if (!["vendorName", "receiptNumber", "receiptDate", "currency"].includes(key)) {
-      return typeof entry === "number" && Number.isFinite(entry);
-    }
-    return typeof entry === "string";
-  });
+  return isLegacyExtractedDataPersistable(value.extractedData);
 }
 
 export async function saveReceiptRecord(
@@ -116,7 +112,7 @@ export async function listReceiptRecords(
 function isNewReceiptRecord(
   value: Record<string, unknown>,
 ): value is Record<string, unknown> & Pick<DomainReceiptRecord, "reviewStatus" | "fields"> {
-  return "reviewStatus" in value && "fields" in value;
+  return "reviewStatus" in value || "fields" in value;
 }
 
 function isNewReceiptFieldsPersistable(value: unknown): boolean {
@@ -152,12 +148,28 @@ function hasOnlyKeys(value: Record<string, unknown>, allowed: Set<string>): bool
   return Object.keys(value).every((key) => allowed.has(key));
 }
 
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
+function isSafeNonEmptyString(value: unknown): value is string {
+  return isSafeReceiptText(value) && value.trim().length > 0;
+}
+
+function isLegacyStatus(value: unknown): boolean {
+  return ["captured", "processing", "needs_review", "confirmed", "rejected"].includes(String(value));
+}
+
+function isLegacyExtractedDataPersistable(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (!isPlainObject(value) || !hasOnlyKeys(value, extractedFields)) return false;
+
+  return Object.entries(value).every(([key, entry]) => {
+    if (["vendorName", "receiptNumber", "receiptDate", "currency"].includes(key)) {
+      return isSafeReceiptText(entry) && entry.trim().length > 0;
+    }
+    return typeof entry === "number" && Number.isFinite(entry) && entry >= 0 && entry <= 1_000_000_000_000;
+  });
 }
 
 function isOpaqueAssetReference(value: unknown): value is string {
-  if (!isNonEmptyString(value)) return false;
+  if (!isSafeNonEmptyString(value)) return false;
 
   const reference = value.trim();
   if (/^(data|blob):/i.test(reference) || /^base64(?:[:,])/i.test(reference)) {

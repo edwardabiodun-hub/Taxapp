@@ -100,6 +100,64 @@ describe("receipt persistence validation", () => {
     ).toBe(false);
   });
 
+  it("preserves valid legacy receipt metadata", () => {
+    expect(
+      isReceiptRecordPersistable({
+        ...receipt,
+        status: "needs_review",
+        extractedData: {
+          vendorName: "Acme Foods",
+          receiptNumber: "INV-1001",
+          receiptDate: "2026-09-30",
+          currency: "NGN",
+          subtotal: 11562.5,
+          taxAmount: 937.5,
+          totalAmount: 12500,
+        },
+        errorMessage: "OCR requires manual review.",
+      }),
+    ).toBe(true);
+  });
+
+  it.each([
+    ["id", "data:text/plain;base64,cmF3LXJlY2VpcHQ="],
+    ["preparationId", "blob:https://example.test/receipt-1"],
+    ["fileName", "base64:JVBERi0xLjQ="],
+    ["mimeType", "raw-receipt-bytes"],
+    ["createdAt", "api-key=client-secret"],
+    ["updatedAt", "x".repeat(201)],
+    ["errorMessage", "secret receipt payload"],
+    ["confirmedAt", "bearer token-value"],
+  ] as const)("rejects unsafe legacy scalar %s", (field, value) => {
+    expect(isReceiptRecordPersistable({ ...receipt, [field]: value })).toBe(false);
+  });
+
+  it.each([
+    ["vendorName", "data:text/plain;base64,cmF3LXJlY2VpcHQ="],
+    ["receiptNumber", "blob:https://example.test/receipt-1"],
+    ["receiptDate", "base64:JVBERi0xLjQ="],
+    ["currency", "api-key=client-secret"],
+    ["vendorName", "x".repeat(201)],
+  ] as const)("rejects unsafe legacy extractedData string %s", (field, value) => {
+    expect(
+      isReceiptRecordPersistable({
+        ...receipt,
+        extractedData: { [field]: value },
+      }),
+    ).toBe(false);
+  });
+
+  it.each([
+    ["provenance", { provider: "managed", staleMetadata: "do-not-persist" }],
+    ["fields", { vendor: { value: "Acme", staleField: "do-not-persist" } }],
+    ["originalFields", { vendor: { value: "Acme", staleField: "do-not-persist" } }],
+    ["correctionHistory", [{ field: "amount", staleCorrection: "do-not-persist" }]],
+    ["calculationInput", { receiptId: "receipt-1", staleInput: "do-not-persist" }],
+    ["errorMessage", { nestedPayload: "do-not-persist" }],
+  ] as const)("rejects unknown nested keys in legacy %s metadata", (field, value) => {
+    expect(isReceiptRecordPersistable({ ...receipt, [field]: value })).toBe(false);
+  });
+
   it.each([
     ["receipt field", { ...reviewedReceipt, fields: { ...fields, amount: { ...fields.amount, staleValue: "x" } } }],
     ["provenance", { ...reviewedReceipt, provenance: { provider: "managed", model: "receipt-v1", version: "1", staleMetadata: "x" } }],
