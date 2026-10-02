@@ -1,7 +1,6 @@
 import { FileText, Paperclip, Calculator } from "lucide-react";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
-import { calculateNigeriaTax } from "@/lib/tax-calculator";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { CalculationResult } from "@/lib/calculation-service";
 
@@ -9,7 +8,7 @@ interface ReviewStepProps {
   form: NigeriaDeclarationForm;
   documents?: UploadedDoc[];
   capability?: JurisdictionCapability;
-  calculation?: Pick<CalculationResult, "label" | "ruleProfile" | "ruleProfileVersion" | "source" | "missingInputWarnings">;
+  calculation: CalculationResult;
 }
 
 const SummaryRow = ({ label, value, badge }: { label: string; value: string; badge?: string }) => (
@@ -39,7 +38,9 @@ const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProps) => {
-  const tax = calculateNigeriaTax(form);
+  const tax = calculation;
+  const showTaxEstimate =
+    tax.label !== "Not filing-ready" && tax.missingInputWarnings.length === 0;
 
   return (
     <div className="space-y-4">
@@ -49,7 +50,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
       </div>
 
       {/* Tax Calculation Card */}
-      {tax.grossIncome > 0 && (
+      {showTaxEstimate && tax.grossIncome > 0 && (
         <div className="gradient-hero rounded-2xl p-5 text-primary-foreground shadow-elevated space-y-4">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />

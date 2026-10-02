@@ -15,10 +15,10 @@ import {
 import { calculatePreparation } from "@/lib/calculation-service";
 import {
   createPreparationRecord,
-  type PreparationRecord,
 } from "@/domain/preparations";
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
+import { getDocumentMetadata } from "@/lib/preparation-documents";
 import { validateStep } from "@/lib/validation";
 import StepIndicator from "@/components/declaration/StepIndicator";
 import JurisdictionStep from "@/components/declaration/JurisdictionStep";
@@ -95,7 +95,7 @@ const NewDeclaration = () => {
       jurisdictionCode,
       taxYear: form.taxYear,
       ruleProfileVersion: calculation.ruleProfileVersion,
-      formData: { ...form },
+      formData: { ...form, documents: getDocumentMetadata(documents) },
       confirmedReceiptIds: [],
       confirmedReceiptInputs: {},
       createdAt: now,
@@ -103,21 +103,15 @@ const NewDeclaration = () => {
     };
 
     try {
-      const draft = createPreparationRecord(
-        { ...baseInput, status: "draft" },
+      const status =
+        targetStatus === "ready_for_review" && requiredDataComplete()
+          ? "ready_for_review"
+          : "draft";
+      const savedRecord = createPreparationRecord(
+        { ...baseInput, status },
         capability ?? getJurisdictionCapability("NG-UNKNOWN"),
       );
-      await savePreparation(draft);
-
-      let savedRecord: PreparationRecord = draft;
-      if (targetStatus === "ready_for_review" && requiredDataComplete()) {
-        savedRecord = {
-          ...draft,
-          status: "ready_for_review",
-          updatedAt: new Date().toISOString(),
-        } as PreparationRecord;
-        await savePreparation(savedRecord);
-      }
+      await savePreparation(savedRecord);
 
       setPreparationId(savedRecord.id);
       setSavedStatus(savedRecord.status);

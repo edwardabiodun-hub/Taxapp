@@ -7,7 +7,17 @@ import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import { getCalculationLabel } from "@/domain/tax-readiness";
 import { calculatePreparation } from "@/lib/calculation-service";
 
-export type PreparationFormData = Record<string, unknown>;
+export interface PreparationDocumentMetadata {
+  readonly id: string;
+  readonly name: string;
+  readonly size: number;
+  readonly type: string;
+  readonly category: string;
+}
+
+export interface PreparationFormData extends Record<string, unknown> {
+  readonly documents?: readonly PreparationDocumentMetadata[];
+}
 export type ConfirmedReceiptInputs = Readonly<Record<string, unknown>>;
 export type PreparationFilingReadiness = ReadinessLabel | "Not filing-ready";
 
