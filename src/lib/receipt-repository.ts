@@ -6,6 +6,8 @@ import {
   isReceiptProvenanceSafe,
   isConfirmedReceiptRecord,
   isSafeReceiptText,
+  type ReceiptCorrections,
+  type ReceiptFieldName,
   type ReceiptRecord as DomainReceiptRecord,
   type ReceiptFields,
 } from "@/domain/receipts";
@@ -87,6 +89,37 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
 export async function saveReceiptRecord(
   receipt: ReceiptRecord | DomainReceiptRecord,
 ): Promise<void> {
+  if (isConfirmationManagedRecord(receipt)) {
+    throw new Error("Receipt confirmation records may only be persisted by confirmReceipt.");
+  }
+  await persistReceiptRecord(receipt);
+}
+
+export interface ReceiptRepositoryBoundary {
+  readonly getRecord?: (id: string) => Promise<DomainReceiptRecord | undefined>;
+  readonly saveRecord?: (record: DomainReceiptRecord) => Promise<void>;
+}
+
+export interface ConfirmReceiptOptions extends ReceiptRepositoryBoundary { readonly now?: () => string; }
+
+export async function confirmReceipt(
+  id: string,
+  corrections: ReceiptCorrections = {},
+  options: ConfirmReceiptOptions = {},
+): Promise<DomainReceiptRecord> {
+  const record = await (options.getRecord ?? getReceiptRecord)(id);
+  if (!record) throw new Error("Receipt record is unavailable for confirmation.");
+  const now = options.now ?? (() => new Date().toISOString());
+  const confirmed = buildConfirmedReceipt(id, record, corrections, now());
+  await (options.saveRecord ?? saveConfirmedReceiptRecord)(confirmed);
+  return confirmed;
+}
+
+async function saveConfirmedReceiptRecord(receipt: DomainReceiptRecord): Promise<void> {
+  await persistReceiptRecord(receipt);
+}
+
+async function persistReceiptRecord(receipt: ReceiptRecord | DomainReceiptRecord): Promise<void> {
   if (!isReceiptRecordPersistable(receipt)) {
     throw new Error("Receipt records may contain metadata and asset references only.");
   }
@@ -113,6 +146,11 @@ function isNewReceiptRecord(
   value: Record<string, unknown>,
 ): value is Record<string, unknown> & Pick<DomainReceiptRecord, "reviewStatus" | "fields"> {
   return "reviewStatus" in value || "fields" in value;
+}
+
+function isConfirmationManagedRecord(value: ReceiptRecord | DomainReceiptRecord): boolean {
+  const candidate = value as unknown as Record<string, unknown>;
+  return candidate.reviewStatus === "confirmed" || candidate.calculationInput !== undefined;
 }
 
 function isNewReceiptFieldsPersistable(value: unknown): boolean {
@@ -182,4 +220,58 @@ function isOpaqueAssetReference(value: unknown): value is string {
   if (/^[A-Za-z0-9+/]+={0,2}$/.test(reference)) return false;
 
   return /[/:#]/.test(reference);
+}
+
+function buildConfirmedReceipt(
+  id: string,
+  record: DomainReceiptRecord,
+  corrections: ReceiptCorrections,
+  now: string,
+): DomainReceiptRecord {
+  if (record.id !== id) throw new Error("Receipt ID does not match the record.");
+  if (record.reviewStatus === "rejected") throw new Error("Rejected receipts cannot be confirmed.");
+  const fields = { ...record.fields } as Record<ReceiptFieldName, ReceiptFields[ReceiptFieldName]>;
+  const history = [...(record.correctionHistory ?? [])];
+  for (const [name, value] of Object.entries(corrections) as [ReceiptFieldName, string | null][]) {
+    if (!isCorrectionAllowed(name, value)) throw new Error(`Invalid receipt ${name} value.`);
+    const previousValue = fields[name].value;
+    const nextValue = value === null || value === "" ? null : value;
+    if (previousValue !== nextValue) history.push({ field: name, previousValue, correctedValue: nextValue, at: now });
+    fields[name] = { ...fields[name], value: nextValue, source: "user", userConfirmed: true } as ReceiptFields[ReceiptFieldName];
+  }
+  const confirmedFields = Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }])) as ReceiptFields;
+  if (!isReceiptFieldsValid(confirmedFields)) throw new Error("Receipt fields are invalid or inconsistent.");
+  return {
+    ...record,
+    originalFields: record.originalFields ?? record.fields,
+    correctionHistory: history,
+    fields: confirmedFields,
+    reviewStatus: "confirmed",
+    calculationInput: {
+      receiptId: id,
+      vendor: confirmedFields.vendor.value,
+      date: confirmedFields.date.value,
+      amount: confirmedFields.amount.value,
+      taxAmount: confirmedFields.taxAmount.value,
+      currency: confirmedFields.currency.value,
+      category: confirmedFields.category.value,
+    },
+    confirmedAt: now,
+    updatedAt: now,
+    errorMessage: undefined,
+  };
+}
+
+function isCorrectionAllowed(name: ReceiptFieldName, value: string | null): boolean {
+  if (value === null || value === "") return true;
+  const field = {
+    ...emptyFields(),
+    [name]: { value, confidence: null, source: "user" as const, userConfirmed: true },
+  } as ReceiptFields;
+  return isReceiptFieldsValid(field);
+}
+
+function emptyFields(): ReceiptFields {
+  const empty = { value: null, confidence: null, source: "ocr" as const, userConfirmed: false };
+  return { vendor: empty, date: empty, amount: empty, taxAmount: empty, currency: empty, category: empty } as ReceiptFields;
 }

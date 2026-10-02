@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isReceiptRecordPersistable } from "@/lib/receipt-repository";
+import { isReceiptRecordPersistable, saveReceiptRecord } from "@/lib/receipt-repository";
 
 const receipt = {
   id: "receipt-1",
@@ -175,5 +175,13 @@ describe("receipt persistence validation", () => {
         calculationInput: { ...confirmedReceipt.calculationInput, staleValue: "x" },
       }),
     ).toBe(false);
+  });
+
+  it("rejects public writes of confirmed records and calculation inputs", async () => {
+    await expect(saveReceiptRecord(confirmedReceipt)).rejects.toThrow(/confirmation/i);
+    await expect(saveReceiptRecord({
+      ...reviewedReceipt,
+      calculationInput: confirmedReceipt.calculationInput,
+    })).rejects.toThrow(/confirmation/i);
   });
 });

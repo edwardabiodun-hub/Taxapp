@@ -3,13 +3,15 @@ import {
   RECEIPT_MAX_FILE_SIZE_BYTES,
   isReceiptFieldsValid,
   type ReceiptAsset,
-  type ReceiptCorrections,
   type ReceiptFieldName,
   type ReceiptFields,
   type ReceiptRecord,
 } from "@/domain/receipts";
 import type { OcrExtraction, OcrProvider } from "@/lib/ocr/ocr-provider";
-import { getReceiptRecord, saveReceiptRecord } from "@/lib/receipt-repository";
+import { confirmReceipt, getReceiptRecord, saveReceiptRecord } from "@/lib/receipt-repository";
+import type { ConfirmReceiptOptions } from "@/lib/receipt-repository";
+export { confirmReceipt } from "@/lib/receipt-repository";
+export type { ConfirmReceiptOptions } from "@/lib/receipt-repository";
 
 const EXECUTABLE_EXTENSIONS = /\.(?:php|php[0-9]?|jsp|jspx|exe|sh|bash|bat|cmd|com|msi|dll|scr|ps1|vbs|js|mjs|cjs)$/i;
 
@@ -21,11 +23,6 @@ export interface OcrServiceOptions {
   readonly persistRecord?: (record: ReceiptRecord) => Promise<void>;
   readonly now?: () => string;
 }
-export interface ReceiptRepositoryBoundary {
-  readonly getRecord?: (id: string) => Promise<ReceiptRecord | undefined>;
-  readonly saveRecord?: (record: ReceiptRecord) => Promise<void>;
-}
-export interface ConfirmReceiptOptions extends ReceiptRepositoryBoundary { readonly now?: () => string; }
 export type OcrServiceState = "consent_required" | "needs_review" | "manual_entry";
 export interface OcrServiceResult { readonly state: OcrServiceState; readonly record: ReceiptRecord; }
 
@@ -75,56 +72,12 @@ export async function createManualReceipt(input: ReceiptCaptureInput, options: P
   return { state: "manual_entry", record: manual };
 }
 
-export async function confirmReceipt(id: string, corrections: ReceiptCorrections = {}, options: ConfirmReceiptOptions = {}): Promise<ReceiptRecord> {
-  const record = await (options.getRecord ?? getReceiptRecord)(id);
-  if (!record) throw new Error("Receipt record is unavailable for confirmation.");
-  const now = options.now ?? (() => new Date().toISOString());
-  const confirmed = buildConfirmedReceipt(id, record, corrections, now());
-  await (options.saveRecord ?? saveReceiptRecord)(confirmed);
-  return confirmed;
-}
-
 export async function rejectReceipt(id: string, options: ConfirmReceiptOptions = {}): Promise<ReceiptRecord> {
   const record = await (options.getRecord ?? getReceiptRecord)(id);
   if (!record) throw new Error("Receipt record is unavailable for rejection.");
   const rejected: ReceiptRecord = { ...record, reviewStatus: "rejected", calculationInput: undefined, confirmedAt: undefined, updatedAt: (options.now ?? (() => new Date().toISOString()))() };
   await (options.saveRecord ?? saveReceiptRecord)(rejected);
   return rejected;
-}
-
-function buildConfirmedReceipt(id: string, record: ReceiptRecord, corrections: ReceiptCorrections, now: string): ReceiptRecord {
-  if (record.id !== id) throw new Error("Receipt ID does not match the record.");
-  if (record.reviewStatus === "rejected") throw new Error("Rejected receipts cannot be confirmed.");
-  const fields = { ...record.fields } as Record<ReceiptFieldName, ReceiptFields[ReceiptFieldName]>;
-  const history = [...(record.correctionHistory ?? [])];
-  for (const [name, value] of Object.entries(corrections) as [ReceiptFieldName, string | null][]) {
-    if (!isCorrectionAllowed(name, value)) throw new Error(`Invalid receipt ${name} value.`);
-    const previousValue = fields[name].value;
-    const nextValue = value === null || value === "" ? null : value;
-    if (previousValue !== nextValue) history.push({ field: name, previousValue, correctedValue: nextValue, at: now });
-    fields[name] = { ...fields[name], value: nextValue, source: "user", userConfirmed: true } as ReceiptFields[ReceiptFieldName];
-  }
-  const confirmedFields = Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }])) as ReceiptFields;
-  if (!isReceiptFieldsValid(confirmedFields)) throw new Error("Receipt fields are invalid or inconsistent.");
-  return {
-    ...record,
-    originalFields: record.originalFields ?? record.fields,
-    correctionHistory: history,
-    fields: confirmedFields,
-    reviewStatus: "confirmed",
-    calculationInput: {
-      receiptId: id,
-      vendor: confirmedFields.vendor.value,
-      date: confirmedFields.date.value,
-      amount: confirmedFields.amount.value,
-      taxAmount: confirmedFields.taxAmount.value,
-      currency: confirmedFields.currency.value,
-      category: confirmedFields.category.value,
-    },
-    confirmedAt: now,
-    updatedAt: now,
-    errorMessage: undefined,
-  };
 }
 
 function createReceiptRecord(asset: ReceiptAsset, now: string, reviewStatus: ReceiptRecord["reviewStatus"]): ReceiptRecord {
@@ -144,10 +97,4 @@ function withProcessingError(record: ReceiptRecord, errorMessage: string, now: s
 function emptyFields(): ReceiptFields {
   const empty = { value: null, confidence: null, source: "ocr" as const, userConfirmed: false };
   return { vendor: empty, date: empty, amount: empty, taxAmount: empty, currency: empty, category: empty } as ReceiptFields;
-}
-
-function isCorrectionAllowed(name: ReceiptFieldName, value: string | null): boolean {
-  if (value === null || value === "") return true;
-  const field = { ...emptyFields(), [name]: { value, confidence: null, source: "user" as const, userConfirmed: true } } as ReceiptFields;
-  return isReceiptFieldsValid(field);
 }

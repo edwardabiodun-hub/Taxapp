@@ -84,3 +84,20 @@ Implemented and committed as `fix: harden legacy receipt persistence`.
 - Standard focused command was also attempted and remained blocked before discovery by the existing esbuild/worktree access error. No long test suite or environment repair was run.
 - The temporary focused configuration was removed after verification.
 - `git diff --check` was run after the fix and passed.
+
+## Final Confirmation-Boundary Fix
+
+### Status
+
+Implemented as `fix: enforce receipt confirmation boundary`.
+
+### Finding addressed
+
+- `saveReceiptRecord` now rejects confirmed records and any attached `calculationInput` on the public persistence path.
+- Confirmed records are persisted only through the module-private writer used by `confirmReceipt`; confirmation construction and calculation-input attachment remain inside that operation.
+- Added a repository regression test covering both crafted confirmed writes and calculation-input attachment to a review record.
+
+### Verification limitations
+
+- The focused Vitest command remained blocked before test discovery by the existing esbuild/worktree access error.
+- A quick application TypeScript check was stopped after reporting existing preparation-repository/OCR fixture errors and current receipt-boundary typing errors; no further checks or environment repair were run per request.
