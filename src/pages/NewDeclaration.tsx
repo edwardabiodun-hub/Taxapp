@@ -15,6 +15,7 @@ import {
 import { calculatePreparation } from "@/lib/calculation-service";
 import {
   createPreparationRecord,
+  type PreparationRecord,
 } from "@/domain/preparations";
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
@@ -90,6 +91,7 @@ const NewDeclaration = () => {
     setIsSaving(true);
     const now = new Date().toISOString();
     const id = preparationId ?? `prep-${Date.now()}`;
+    const shouldBeReady = targetStatus === "ready_for_review" && requiredDataComplete();
     const baseInput = {
       id,
       jurisdictionCode,
@@ -101,17 +103,40 @@ const NewDeclaration = () => {
       createdAt: now,
       updatedAt: now,
     };
+    let draftSaved = false;
 
     try {
-      const status =
-        targetStatus === "ready_for_review" && requiredDataComplete()
-          ? "ready_for_review"
-          : "draft";
-      const savedRecord = createPreparationRecord(
-        { ...baseInput, status },
-        capability ?? getJurisdictionCapability("NG-UNKNOWN"),
-      );
-      await savePreparation(savedRecord);
+      let savedRecord: PreparationRecord;
+      const preparationCapability = capability ?? getJurisdictionCapability("NG-UNKNOWN");
+
+      if (!preparationId) {
+        const draft = createPreparationRecord(
+          { ...baseInput, status: "draft" },
+          preparationCapability,
+        );
+        await savePreparation(draft);
+        draftSaved = true;
+        savedRecord = draft;
+        setPreparationId(draft.id);
+        setSavedStatus(draft.status);
+        setLastSavedAt(draft.updatedAt);
+      } else {
+        savedRecord = createPreparationRecord(
+          { ...baseInput, status: shouldBeReady ? "ready_for_review" : "draft" },
+          preparationCapability,
+        );
+        await savePreparation(savedRecord);
+      }
+
+      if (shouldBeReady && savedRecord.status === "draft") {
+        const readyForReview: PreparationRecord = {
+          ...savedRecord,
+          status: "ready_for_review",
+          updatedAt: new Date().toISOString(),
+        };
+        await savePreparation(readyForReview);
+        savedRecord = readyForReview;
+      }
 
       setPreparationId(savedRecord.id);
       setSavedStatus(savedRecord.status);
@@ -122,8 +147,12 @@ const NewDeclaration = () => {
       });
     } catch {
       toast({
-        title: "Could not save preparation",
-        description: "Your current data remains on this page. Try saving again.",
+        title: draftSaved
+          ? "Draft saved, but could not mark ready for review"
+          : "Could not save preparation",
+        description: draftSaved
+          ? "Your preparation is saved as a draft. Try marking it ready again."
+          : "Your current data remains on this page. Try saving again.",
         variant: "destructive",
       });
     } finally {

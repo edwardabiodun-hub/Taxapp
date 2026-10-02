@@ -11,14 +11,16 @@ submitted write and filing language were removed.
 
 The follow-up review fixes now persist supporting-document metadata in the
 preparation form data without raw file bytes, render review tax values only
-from the page's `calculatePreparation` result, and perform ready-for-review as
-a single intended-status save. Save failures remain on-page errors and do not
-claim success.
+from the page's `calculatePreparation` result. A fresh ready-for-review action
+now saves the preparation as `draft` before making the allowed
+`draft`-to-`ready_for_review` transition; if that transition fails, the page
+truthfully reports that the draft was saved and does not claim readiness.
 
 ## Checks
 
 - Focused regression coverage added: serializable document metadata mapping,
-  provenance-gated review output, and one-call ready-for-review persistence.
+  provenance-gated review output, and fresh ready-for-review persistence
+  through the repository's draft-first lifecycle.
 - Standard focused Vitest: blocked before test discovery by the documented
   esbuild worktree DACL error. A no-SWC config retry hit the same environment
   boundary; the temporary config was removed.

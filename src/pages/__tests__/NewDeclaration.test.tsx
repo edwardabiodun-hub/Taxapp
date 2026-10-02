@@ -43,9 +43,16 @@ describe("NewDeclaration", () => {
     ]);
   });
 
-  it("saves ready-for-review directly as one intended status", async () => {
+  it("saves a fresh ready-for-review action through draft first", async () => {
     const saveMock = vi.mocked(savePreparation);
     saveMock.mockClear();
+    const statuses: string[] = [];
+    saveMock.mockImplementation(async (record) => {
+      statuses.push(record.status);
+      if (statuses.length === 1 && record.status !== "draft") {
+        throw new Error("Invalid preparation status transition from new to ready_for_review.");
+      }
+    });
 
     render(
       <MemoryRouter>
@@ -66,8 +73,9 @@ describe("NewDeclaration", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /mark ready for review/i }));
 
-    await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
-    expect(saveMock).toHaveBeenCalledWith(
+    await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(2));
+    expect(statuses).toEqual(["draft", "ready_for_review"]);
+    expect(saveMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "ready_for_review" }),
     );
   });
