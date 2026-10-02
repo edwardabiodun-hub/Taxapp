@@ -22,6 +22,14 @@ function parseAmount(val: string): number {
   return isNaN(num) ? 0 : Math.max(0, num);
 }
 
+export function formatNaira(amount: number): string {
+  return `₦${Math.round(amount).toLocaleString("en-NG")}`;
+}
+
+function roundCurrency(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export function calculateNigeriaTax(
   form: NigeriaDeclarationForm,
   ruleInputs: PitRuleInputs = getPitRuleInputs(),
@@ -52,7 +60,7 @@ export function calculateNigeriaTax(
   // Deductions
   const pensionDeduction = parseAmount(form.employeePension);
   const rentPaid = parseAmount(form.annualRentPaid);
-  const rentRelief = Math.min(rentPaid * 0.2, 500_000);
+  const rentRelief = Math.min(rentPaid, 500_000) * 0.2;
   // Consolidated Relief Allowance (CRA): higher of ₦200,000 or 1% of gross + 20% of gross
   const craFixed = Math.max(200_000, grossIncome * 0.01);
   const craVariable = grossIncome * 0.20;
@@ -101,13 +109,13 @@ export function calculateNigeriaTax(
   const effectiveRate = grossIncome > 0 ? (finalTax / grossIncome) * 100 : 0;
 
   return {
-    grossIncome,
-    totalDeductions,
-    taxableIncome,
-    bands,
-    computedTax,
-    minimumTax,
-    finalTax,
-    effectiveRate,
+    grossIncome: roundCurrency(grossIncome),
+    totalDeductions: roundCurrency(totalDeductions),
+    taxableIncome: roundCurrency(taxableIncome),
+    bands: bands.map((band) => ({ ...band, income: roundCurrency(band.income), tax: roundCurrency(band.tax) })),
+    computedTax: roundCurrency(computedTax),
+    minimumTax: roundCurrency(minimumTax),
+    finalTax: roundCurrency(finalTax),
+    effectiveRate: roundCurrency(effectiveRate),
   };
 }

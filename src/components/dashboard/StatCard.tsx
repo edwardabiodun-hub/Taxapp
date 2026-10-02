@@ -1,21 +1,23 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 interface StatCardProps {
   icon: LucideIcon;
   label: string;
   value: string;
   subtitle?: string;
-  variant?: "default" | "primary" | "accent";
+  variant?: "default" | "primary" | "accent" | "success";
 }
 
 const StatCard = ({ icon: Icon, label, value, subtitle, variant = "default" }: StatCardProps) => {
   return (
     <div
       className={cn(
-        "rounded-xl p-4 shadow-card transition-all hover:shadow-elevated",
-        variant === "primary" && "gradient-primary text-primary-foreground",
-        variant === "accent" && "gradient-accent text-accent-foreground",
+        "rounded-xl p-4 border border-border transition-all",
+        variant === "primary" && "gradient-primary text-primary-foreground border-transparent",
+        variant === "accent" && "gradient-accent text-accent-foreground border-transparent",
+        variant === "success" && "bg-success text-success-foreground border-transparent",
         variant === "default" && "bg-card text-card-foreground"
       )}
     >
@@ -29,13 +31,13 @@ const StatCard = ({ icon: Icon, label, value, subtitle, variant = "default" }: S
           <Icon className={cn("w-4 h-4", variant === "default" ? "text-primary" : "text-current")} />
         </div>
         <span className={cn("text-xs font-medium", variant === "default" ? "text-muted-foreground" : "text-current/80")}>
-          {label}
+          <GlossaryText>{label}</GlossaryText>
         </span>
       </div>
       <p className="text-2xl font-display font-bold">{value}</p>
       {subtitle && (
         <p className={cn("text-xs mt-1", variant === "default" ? "text-muted-foreground" : "text-current/70")}>
-          {subtitle}
+          <GlossaryText>{subtitle}</GlossaryText>
         </p>
       )}
     </div>

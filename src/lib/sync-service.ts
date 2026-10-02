@@ -1,26 +1,6 @@
 import { db } from "./local-db";
-import {
-  fetchProfileFromServer,
-  pushProfileToServer,
-  fetchDeclarationsFromServer,
-  pushDeclarationsToServer,
-  fetchReferenceDataFromServer,
-  fetchActivitiesFromServer,
-  pushPreparationsToServer,
-} from "./mock-api";
-import {
-  listPendingPreparations,
-  markPreparationSynced,
-  migrateLegacyDeclarationsToPreparations,
-  migrateLegacyDeclaration,
-  savePreparationFromSync,
-} from "./preparation-repository";
+import { fetchProfileFromServer, pushProfileToServer, fetchDeclarationsFromServer, pushDeclarationsToServer, fetchActivitiesFromServer, pushActivitiesToServer, fetchMessagesFromServer, pushMessageReadStatus } from "./api";
 
-/**
- * Full bidirectional sync:
- * 1. Push locally-changed declarations to server
- * 2. Pull latest profile, declarations, and reference data from server
- */
 export interface SyncResult {
   success: boolean;
   error?: string;
@@ -29,85 +9,49 @@ export interface SyncResult {
 
 export async function syncAll(): Promise<SyncResult> {
   try {
-    // Preparation synchronization is local lifecycle synchronization only; it
-    // never promotes a preparation to an authority status.
-    await migrateLegacyDeclarationsToPreparations(await db.declarations.toArray());
-    const pendingPreparations = await listPendingPreparations();
-    if (pendingPreparations.length > 0) {
-      await pushPreparationsToServer(pendingPreparations);
-      const syncedAt = new Date().toISOString();
-      await Promise.all(
-        pendingPreparations.map((preparation) =>
-          markPreparationSynced(preparation, syncedAt),
-        ),
-      );
-    }
-
-    // ── Push pending local changes ──
-    const pending = await db.declarations
-      .where("pendingSync")
-      .equals(1)
-      .toArray();
-
+    const pending = await db.declarations.where("pendingSync").equals(1).toArray();
     if (pending.length > 0) {
       await pushDeclarationsToServer(pending);
-      await db.declarations
-        .where("pendingSync")
-        .equals(1)
-        .modify({ pendingSync: false, syncedAt: new Date().toISOString() });
+      const syncedAt = new Date().toISOString();
+      for (const snapshot of pending) {
+        const current = await db.declarations.get(snapshot.id);
+        if (current && current.updatedAt === snapshot.updatedAt) await db.declarations.update(snapshot.id, { pendingSync: 0, syncedAt });
+      }
     }
 
     const localProfile = await db.profiles.toCollection().first();
-    if (localProfile) {
-      await pushProfileToServer(localProfile);
+    if (localProfile) await pushProfileToServer(localProfile);
+
+    const pendingActivities = await db.activities.where("pendingSync").equals(1).toArray();
+    if (pendingActivities.length > 0) {
+      await pushActivitiesToServer(pendingActivities);
+      for (const activity of pendingActivities) await db.activities.update(activity.id, { pendingSync: 0 });
     }
 
-    // ── Pull from server ──
-    const [serverProfile, serverDeclarations, refData, serverActivities] = await Promise.all([
-      fetchProfileFromServer(),
-      fetchDeclarationsFromServer(),
-      fetchReferenceDataFromServer(),
-      fetchActivitiesFromServer(),
-    ]);
+    const pendingMessages = await db.messages.where("pendingSync").equals(1).toArray();
+    for (const message of pendingMessages) {
+      if (message.readAt) await pushMessageReadStatus(message.id, message.readAt);
+      await db.messages.update(message.id, { pendingSync: 0 });
+    }
 
-    await db.profiles.put({
-      ...serverProfile,
-      lastSynced: new Date().toISOString(),
-    });
+    const [serverProfile, serverDeclarations, serverActivities, serverMessages] = await Promise.all([fetchProfileFromServer(), fetchDeclarationsFromServer(), fetchActivitiesFromServer(), fetchMessagesFromServer()]);
+    if (localProfile && serverProfile) await db.profiles.put({ ...localProfile, ...serverProfile, id: localProfile.id, lastSynced: new Date().toISOString() });
 
-    // Detect new audit_request status changes
     const newAuditRequests: SyncResult["auditRequests"] = [];
-    const now = new Date().toISOString();
-
     for (const decl of serverDeclarations) {
       const local = await db.declarations.get(decl.id);
-      const shouldApplyLegacy =
-        !local || (!local.pendingSync && decl.updatedAt > local.updatedAt);
-      if (shouldApplyLegacy) {
-        // Check if status changed to audit_request
-        if (decl.status === "audit_request" && (!local || local.status !== "audit_request")) {
-          newAuditRequests.push({ id: decl.id, type: decl.type, taxYear: decl.taxYear });
-        }
+      if (!local || !local.pendingSync) {
+        if (decl.status === "audit_request" && (!local || local.status !== "audit_request")) newAuditRequests.push({ id: decl.id, type: decl.type, taxYear: decl.taxYear });
         await db.declarations.put(decl);
       }
-
-      // The preparation repository independently rejects pending or newer
-      // local data, so a legacy pull cannot clear local preparation changes.
-      await savePreparationFromSync(migrateLegacyDeclaration(decl), now);
     }
-
-    for (const [key, value] of Object.entries(refData)) {
-      await db.referenceData.put({ key, value, lastSynced: now });
+    for (const activity of serverActivities) await db.activities.put(activity);
+    for (const message of serverMessages) {
+      const local = await db.messages.get(message.id);
+      if (!local || !local.pendingSync) await db.messages.put(message);
     }
-
-    for (const activity of serverActivities) {
-      await db.activities.put(activity);
-    }
-
-    console.log("[sync] Completed successfully");
     return { success: true, auditRequests: newAuditRequests };
   } catch (err: unknown) {
-    console.error("[sync] Failed:", err);
     return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }

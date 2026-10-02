@@ -155,7 +155,7 @@ export async function migrateLegacyDeclarationsToPreparations(
         await db.preparations.put({
           ...preparation,
           createdAt: existing?.createdAt ?? preparation.createdAt,
-          pendingSync: declaration.pendingSync,
+          pendingSync: Boolean(declaration.pendingSync),
           ...(declaration.pendingSync || !declaration.syncedAt
             ? {}
             : { syncedAt: declaration.syncedAt }),

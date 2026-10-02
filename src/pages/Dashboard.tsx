@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, FileText, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, FileText, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload, ShieldCheck } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 import DeadlineCard from "@/components/deadlines/DeadlineCard";
 import { useProfile, useDeclarations, usePreparations, useSubmissionRecords } from "@/hooks/use-local-data";
-import { useSync } from "@/hooks/use-sync";
+import { useSync } from "@/contexts/SyncContext";
 import { getJurisdictionCapability, listNigeriaJurisdictions } from "@/data/jurisdiction-registry";
 import { resolveDeadline } from "@/lib/deadline-service";
+import { getGreeting } from "@/lib/greeting";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 const container = {
   hidden: {},
@@ -53,7 +55,7 @@ const Dashboard = () => {
       {/* Welcome */}
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
-          <p className="text-muted-foreground text-sm">Welcome back,</p>
+          <p className="text-muted-foreground text-sm">{getGreeting(new Date().getHours())},</p>
           <h2 className="text-2xl font-display font-bold text-foreground">
             {profile?.name || "Loading..."}
           </h2>
@@ -130,8 +132,8 @@ const Dashboard = () => {
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {auditRequests.length === 1
-                  ? `Your ${auditRequests[0].type} (${auditRequests[0].taxYear}) needs additional documents.`
-                  : `${auditRequests.length} declarations need additional documents from tax authorities.`}
+                  ? <>Your {auditRequests[0].type} ({auditRequests[0].taxYear}) <GlossaryText>needs additional documents.</GlossaryText></>
+                  : <>{auditRequests.length} declarations <GlossaryText>need additional documents from tax authorities.</GlossaryText></>}
               </p>
             </div>
           </div>
@@ -226,6 +228,19 @@ const Dashboard = () => {
             );
           })}
         </div>
+      </motion.div>
+
+      <motion.div variants={item} className="bg-[var(--info-bg)] rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary-foreground" />
+          </div>
+          <p className="text-xs font-semibold text-muted-foreground">Tip</p>
+        </div>
+        <p className="text-lg font-display font-bold text-foreground leading-tight">Documents matter</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          <GlossaryText>Attaching payslips and financial statements to your filing helps avoid audit requests, and stays securely encrypted on your device.</GlossaryText>
+        </p>
       </motion.div>
     </motion.div>
   );

@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import ReceiptScanner from "@/components/receipts/ReceiptScanner";
 import type { ReceiptRecord } from "@/domain/receipts";
 import { ManagedOcrProvider } from "@/lib/ocr/managed-ocr-provider";
+import { GlossaryText } from "@/components/glossary/GlossaryText";
 
 export interface UploadedDoc {
   id: string;
@@ -26,6 +27,7 @@ const categories = [
 interface DocumentsStepProps {
   documents: UploadedDoc[];
   onDocumentsChange: (docs: UploadedDoc[]) => void;
+  declarationId?: string;
   preparationId?: string;
   onReceiptConfirmed?: (record: ReceiptRecord) => void;
 }
@@ -101,9 +103,9 @@ const DocumentsStep = ({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-display font-bold text-foreground text-sm">Supporting Documents</h3>
+        <h3 className="font-display font-bold text-foreground text-sm"><GlossaryText>Supporting documents</GlossaryText></h3>
         <p className="text-[11px] text-muted-foreground">
-          Attach receipts, financial statements, and other supporting documents
+          <GlossaryText>Attach receipts, financial statements, and other supporting documents</GlossaryText>
         </p>
       </div>
 

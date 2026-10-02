@@ -15,7 +15,12 @@ export function validateStep(
   switch (step) {
     case 0: // Jurisdiction
       if (!form.taxYear.trim()) errors.push("Tax year is required.");
-      if (!jurisdictionCode.trim()) errors.push("Tax jurisdiction is required.");
+      if (jurisdictionCode.trim()) break;
+      if (form.country.trim() === "ng") {
+        if (!form.state.trim()) errors.push("State is required");
+      } else if (!form.country.trim()) {
+        errors.push("Country is required.");
+      }
       break;
 
     case 1: // Earned Income — at least one income source required

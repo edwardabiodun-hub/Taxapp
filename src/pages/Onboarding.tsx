@@ -1,29 +1,37 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { db } from "@/lib/local-db";
+import { signUp, type AuthResult } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 import { africanCountries } from "@/types/declaration";
+
+const MIN_PASSWORD_LENGTH = 8;
 
 interface ProfileForm {
   name: string;
   email: string;
   phone: string;
+  password: string;
+  confirmPassword: string;
   dateOfBirth: Date | undefined;
   gender: string;
   countryOfBirth: string;
   nationality: string;
   country: string;
   taxId: string;
+  consentAccepted: boolean;
 }
 
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
@@ -39,19 +47,42 @@ const steps = [
   { title: "Tax Information", subtitle: "Your tax residence & ID" },
 ];
 
+/** Decides where Onboarding sends the user once signUp() resolves.
+ * Exported and unit-tested directly (see Onboarding.test.tsx) rather than
+ * only through the full 3-step wizard UI, which Radix's Select/Calendar
+ * components make unreliable to drive in jsdom. */
+export function resolvePostSignUpRoute(
+  result: Pick<AuthResult, "needsEmailConfirmation">,
+  email: string
+): { path: string; state?: { email: string } } {
+  if (result.needsEmailConfirmation) {
+    // AuthContext won't see a session until the link is confirmed —
+    // App.tsx will correctly show the unauthenticated routes (not the
+    // main app) until then. Route to a dedicated screen rather than a
+    // toast so the "activate your email" message survives navigation
+    // and a page refresh.
+    return { path: "/check-email", state: { email } };
+  }
+  return { path: "/" };
+}
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
     name: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
     dateOfBirth: undefined,
     gender: "",
     countryOfBirth: "",
     nationality: "",
     country: "",
     taxId: "",
+    consentAccepted: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -72,6 +103,11 @@ const Onboarding = () => {
       if (!form.email.trim()) errs.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Invalid email format";
       if (!form.phone.trim()) errs.phone = "Phone number is required";
+      if (!form.password) errs.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+      else if (form.password.length < MIN_PASSWORD_LENGTH) errs.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+      if (!form.confirmPassword) errs.confirmPassword = "Please confirm your password";
+      else if (form.password !== form.confirmPassword) errs.confirmPassword = "Passwords don't match";
+      if (!form.consentAccepted) errs.consentAccepted = "You must accept the privacy notice to continue";
     } else if (step === 1) {
       if (!form.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
       if (!form.gender) errs.gender = "Gender is required";
@@ -105,27 +141,48 @@ const Onboarding = () => {
       return;
     }
 
-    await db.profiles.put({
-      id: `user-${Date.now()}`,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      dateOfBirth: form.dateOfBirth ? format(form.dateOfBirth, "yyyy-MM-dd") : "",
-      gender: form.gender,
-      countryOfBirth: form.countryOfBirth,
-      nationality: form.nationality,
-      country: form.country,
-      taxId: form.taxId.trim(),
-    });
+    setSubmitting(true);
+    try {
+      const result = await signUp(form.email.trim(), form.password);
+      if (!result.success) {
+        toast({ title: "Couldn't create your account", description: result.error, variant: "destructive" });
+        return;
+      }
+      if (!result.userId) {
+        // Shouldn't happen alongside success:true, but don't silently
+        // create a profile with no id to link it to if it somehow does.
+        toast({ title: "Something went wrong creating your account", variant: "destructive" });
+        return;
+      }
 
-    toast({ title: "Profile created!", description: "Welcome to TaxEase Africa" });
-    navigate("/");
+      await db.profiles.put({
+        id: result.userId,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        dateOfBirth: form.dateOfBirth ? format(form.dateOfBirth, "yyyy-MM-dd") : "",
+        gender: form.gender,
+        countryOfBirth: form.countryOfBirth,
+        nationality: form.nationality,
+        country: form.country,
+        taxId: form.taxId.trim(),
+        consentAcceptedAt: new Date().toISOString(),
+      });
+
+      const route = resolvePostSignUpRoute(result, form.email.trim());
+      if (route.path === "/") {
+        toast({ title: "Profile created!", description: "Welcome to FileSmart" });
+      }
+      navigate(route.path, route.state ? { state: route.state } : undefined);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="gradient-hero px-6 pt-12 pb-8 text-primary-foreground safe-area-top">
+      <div className="gradient-primary px-6 pt-12 pb-8 text-primary-foreground safe-area-top">
         <p className="text-xs font-medium opacity-70 tracking-wider uppercase">Step {step + 1} of {steps.length}</p>
         <h1 className="font-display font-bold text-2xl mt-1">{steps[step].title}</h1>
         <p className="text-sm opacity-80 mt-1">{steps[step].subtitle}</p>
@@ -183,6 +240,56 @@ const Onboarding = () => {
                     className={cn(errors.phone && "border-destructive")}
                   />
                 </Field>
+                <Field label="Password" htmlFor="sign-up-password" icon={KeyRound} error={errors.password}>
+                  <PasswordInput
+                    id="sign-up-password"
+                    autoComplete="new-password"
+                    placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+                    value={form.password}
+                    onChange={(e) => update("password", e.target.value)}
+                    className={cn(errors.password && "border-destructive")}
+                  />
+                </Field>
+                <Field label="Confirm Password" htmlFor="sign-up-confirm-password" icon={KeyRound} error={errors.confirmPassword}>
+                  <PasswordInput
+                    id="sign-up-confirm-password"
+                    autoComplete="new-password"
+                    placeholder="Re-enter your password"
+                    value={form.confirmPassword}
+                    onChange={(e) => update("confirmPassword", e.target.value)}
+                    className={cn(errors.confirmPassword && "border-destructive")}
+                  />
+                </Field>
+
+                <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <div className="space-y-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      <p className="font-semibold text-foreground text-xs">How we handle your data</p>
+                      <p>
+                        Your account and profile information is encrypted in
+                        transit and stored securely in your FileSmart account
+                        so you can use the app across devices. Uploaded
+                        document files remain encrypted on this device and are
+                        not uploaded by this app.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 pl-1">
+                    <Checkbox
+                      id="consent"
+                      checked={form.consentAccepted}
+                      onCheckedChange={(checked) => update("consentAccepted", checked === true)}
+                      className={cn("mt-0.5", errors.consentAccepted && "border-destructive")}
+                    />
+                    <Label htmlFor="consent" className="text-xs font-normal leading-snug text-foreground">
+                      I have read and agree to how my data will be handled, as described above.
+                    </Label>
+                  </div>
+                  {errors.consentAccepted && (
+                    <p className="text-xs text-destructive pl-1">{errors.consentAccepted}</p>
+                  )}
+                </div>
               </>
             )}
 
@@ -314,8 +421,12 @@ const Onboarding = () => {
               Next <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90">
-              <Check className="w-4 h-4" /> Create Profile
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90"
+            >
+              <Check className="w-4 h-4" /> {submitting ? "Creating…" : "Create Profile"}
             </Button>
           )}
         </div>
@@ -324,14 +435,15 @@ const Onboarding = () => {
   );
 };
 
-const Field = ({ label, icon: Icon, error, children }: {
+const Field = ({ label, htmlFor, icon: Icon, error, children }: {
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  htmlFor?: string;
+  icon: LucideIcon;
   error?: string;
   children: React.ReactNode;
 }) => (
   <div className="space-y-1.5">
-    <Label className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+    <Label htmlFor={htmlFor} className="flex items-center gap-2 text-sm font-medium text-card-foreground">
       <Icon className="w-4 h-4 text-primary" />
       {label} <span className="text-destructive">*</span>
     </Label>

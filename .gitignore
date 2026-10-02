@@ -13,6 +13,19 @@ dist-ssr
 *.local
 .worktrees/
 
+# Secrets — real values only ever go in .env, which is never committed.
+# .env.example is tracked and must only ever contain placeholder values.
+.env
+.env.*
+!.env.example
+
+# Supabase CLI's local link/session cache — machine-specific, not secrets
+# per se, but not something to commit either.
+supabase/.temp
+
+# Netlify demo-deploy scratch space (token .env + zipped build artifact)
+.netlify-deploy
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,3 +36,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.supabase-deploy

@@ -62,11 +62,13 @@ export interface NigeriaDeclarationForm extends DeclarationIncomeFields {
   // Personal Info
   taxYear: string;
   country: string;
+  state: string;
 }
 
 export const defaultNigeriaForm: NigeriaDeclarationForm = {
   taxYear: "",
   country: "ng",
+  state: "",
   businessIncome: "",
   businessExpenses: "",
   annualSalary: "",
@@ -135,6 +137,26 @@ export const declarationSteps = [
   "Review",
 ];
 
+export interface StateOption { code: string; name: string; active: boolean; }
+
+const stateNames = [
+  ["abia", "Abia"], ["adamawa", "Adamawa"], ["akwa-ibom", "Akwa Ibom"], ["anambra", "Anambra"],
+  ["bauchi", "Bauchi"], ["bayelsa", "Bayelsa"], ["benue", "Benue"], ["borno", "Borno"],
+  ["cross-river", "Cross River"], ["delta", "Delta"], ["ebonyi", "Ebonyi"], ["edo", "Edo"],
+  ["ekiti", "Ekiti"], ["enugu", "Enugu"], ["gombe", "Gombe"], ["imo", "Imo"], ["jigawa", "Jigawa"],
+  ["kaduna", "Kaduna"], ["kano", "Kano"], ["katsina", "Katsina"], ["kebbi", "Kebbi"], ["kogi", "Kogi"],
+  ["kwara", "Kwara"], ["lagos", "Lagos"], ["nasarawa", "Nasarawa"], ["niger", "Niger"], ["ogun", "Ogun"],
+  ["ondo", "Ondo"], ["osun", "Osun"], ["oyo", "Oyo"], ["plateau", "Plateau"], ["rivers", "Rivers"],
+  ["sokoto", "Sokoto"], ["taraba", "Taraba"], ["yobe", "Yobe"], ["zamfara", "Zamfara"], ["fct", "Federal Capital Territory (Abuja)"],
+] as const;
+
+const phaseOneStates = new Set(["lagos", "ogun", "osun", "oyo"]);
+export const nigerianStates: StateOption[] = stateNames.map(([code, name]) => ({ code, name, active: phaseOneStates.has(code) }));
+
+export function stateName(code?: string): string {
+  return nigerianStates.find((state) => state.code === code)?.name ?? "—";
+}
+
 export interface CountryOption {
   code: string;
   name: string;
@@ -152,3 +174,5 @@ export const africanCountries: CountryOption[] = [
   { code: "rw", name: "Rwanda", flag: "🇷🇼", active: false },
   { code: "et", name: "Ethiopia", flag: "🇪🇹", active: false },
 ];
+
+export const availableDeclarationCountries = africanCountries.filter((country) => country.code === "ng");
