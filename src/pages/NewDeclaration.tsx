@@ -20,6 +20,8 @@ import {
 import type { PreparationStatus } from "@/domain/tax-readiness";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
+import type { ReceiptRecord } from "@/domain/receipts";
+import { getCalculationReceiptInputs } from "@/domain/receipts";
 import DeadlineCard from "@/components/deadlines/DeadlineCard";
 import { resolveDeadline } from "@/lib/deadline-service";
 import { validateStep } from "@/lib/validation";
@@ -42,8 +44,10 @@ const NewDeclaration = () => {
   const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
   const [jurisdictionCode, setJurisdictionCode] = useState("");
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
+  const [confirmedReceipts, setConfirmedReceipts] = useState<ReceiptRecord[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [preparationId, setPreparationId] = useState<string>();
+  const [preparationId] = useState<string>(() => `prep-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const [hasSavedPreparation, setHasSavedPreparation] = useState(false);
   const [savedStatus, setSavedStatus] = useState<PreparationStatus>();
   const [lastSavedAt, setLastSavedAt] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
@@ -99,7 +103,7 @@ const NewDeclaration = () => {
   const handleSave = async (targetStatus: "draft" | "ready_for_review") => {
     setIsSaving(true);
     const now = new Date().toISOString();
-    const id = preparationId ?? `prep-${Date.now()}`;
+    const id = preparationId;
     const shouldBeReady = targetStatus === "ready_for_review" && requiredDataComplete();
     const baseInput = {
       id,
@@ -107,8 +111,13 @@ const NewDeclaration = () => {
       taxYear: form.taxYear,
       ruleProfileVersion: calculation.ruleProfileVersion,
       formData: { ...form, documents: getDocumentMetadata(documents) },
-      confirmedReceiptIds: [],
-      confirmedReceiptInputs: {},
+      confirmedReceiptIds: getCalculationReceiptInputs(confirmedReceipts).map((input) => input.receiptId),
+      confirmedReceiptInputs: Object.fromEntries(
+        getCalculationReceiptInputs(confirmedReceipts).map((input) => [
+          `receipt_${input.receiptId}`,
+          input,
+        ]),
+      ),
       createdAt: now,
       updatedAt: now,
     };
@@ -118,7 +127,7 @@ const NewDeclaration = () => {
       let savedRecord: PreparationRecord;
       const preparationCapability = capability ?? getJurisdictionCapability("NG-UNKNOWN");
 
-      if (!preparationId) {
+      if (!hasSavedPreparation) {
         const draft = createPreparationRecord(
           { ...baseInput, status: "draft" },
           preparationCapability,
@@ -126,7 +135,7 @@ const NewDeclaration = () => {
         await savePreparation(draft);
         draftSaved = true;
         savedRecord = draft;
-        setPreparationId(draft.id);
+        setHasSavedPreparation(true);
         setSavedStatus(draft.status);
         setLastSavedAt(draft.updatedAt);
       } else {
@@ -147,7 +156,6 @@ const NewDeclaration = () => {
         savedRecord = readyForReview;
       }
 
-      setPreparationId(savedRecord.id);
       setSavedStatus(savedRecord.status);
       setLastSavedAt(savedRecord.updatedAt);
       toast({
@@ -211,7 +219,19 @@ const NewDeclaration = () => {
       case 4:
         return <DeductionsStep form={form} update={update} />;
       case 5:
-        return <DocumentsStep documents={documents} onDocumentsChange={setDocuments} />;
+        return (
+          <DocumentsStep
+            documents={documents}
+            onDocumentsChange={setDocuments}
+            preparationId={preparationId}
+            onReceiptConfirmed={(record) =>
+              setConfirmedReceipts((current) => [
+                ...current.filter((item) => item.id !== record.id),
+                record,
+              ])
+            }
+          />
+        );
       case 6:
         return (
           <ReviewStep

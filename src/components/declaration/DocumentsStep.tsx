@@ -2,12 +2,17 @@ import { useRef, useState } from "react";
 import { Upload, FileText, Image, X, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import ReceiptScanner from "@/components/receipts/ReceiptScanner";
+import type { ReceiptRecord } from "@/domain/receipts";
+import { ManagedOcrProvider } from "@/lib/ocr/managed-ocr-provider";
+import { saveReceiptRecord } from "@/lib/receipt-repository";
 
 export interface UploadedDoc {
   id: string;
   file: File;
   category: string;
   preview?: string;
+  receiptId?: string;
 }
 
 const categories = [
@@ -22,9 +27,12 @@ const categories = [
 interface DocumentsStepProps {
   documents: UploadedDoc[];
   onDocumentsChange: (docs: UploadedDoc[]) => void;
+  preparationId?: string;
+  onReceiptConfirmed?: (record: ReceiptRecord) => void;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const EXECUTABLE_EXTENSIONS = /\.(?:php|php[0-9]?|jsp|jspx|exe|sh|bash|bat|cmd|com|msi|dll|scr|ps1|vbs|js|mjs|cjs)$/i;
 const ALLOWED_TYPES = [
   "application/pdf",
   "image/jpeg",
@@ -36,7 +44,12 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
-const DocumentsStep = ({ documents, onDocumentsChange }: DocumentsStepProps) => {
+const DocumentsStep = ({
+  documents,
+  onDocumentsChange,
+  preparationId = "unsaved-preparation",
+  onReceiptConfirmed,
+}: DocumentsStepProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState("receipt");
 
@@ -46,6 +59,10 @@ const DocumentsStep = ({ documents, onDocumentsChange }: DocumentsStepProps) => 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
         toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
+        continue;
+      }
+      if (EXECUTABLE_EXTENSIONS.test(file.name)) {
+        toast({ title: "Unsupported file", description: `${file.name} uses a prohibited executable or script extension.`, variant: "destructive" });
         continue;
       }
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -136,6 +153,15 @@ const DocumentsStep = ({ documents, onDocumentsChange }: DocumentsStepProps) => 
         onChange={handleFileSelect}
         className="hidden"
       />
+
+      {selectedCategory === "receipt" && (
+        <ReceiptScanner
+          preparationId={preparationId}
+          provider={new ManagedOcrProvider()}
+          persistRecord={saveReceiptRecord}
+          onConfirmed={onReceiptConfirmed}
+        />
+      )}
 
       {/* Uploaded files list */}
       {documents.length > 0 && (

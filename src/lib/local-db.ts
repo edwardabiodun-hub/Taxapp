@@ -2,6 +2,12 @@ import Dexie, { type Table } from "dexie";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { PreparationRecord } from "@/domain/preparations";
 import type { SubmissionEvent } from "@/domain/submissions";
+import type {
+  ReceiptFields,
+  ReceiptProvenance,
+  ReceiptReviewStatus,
+  ConfirmedReceiptInput,
+} from "@/domain/receipts";
 
 export interface LocalProfile {
   id: string;
@@ -54,7 +60,7 @@ export interface DeadlineRecord {
   updatedAt: string;
 }
 
-export type ReceiptStatus = "needs_review" | "confirmed" | "rejected";
+export type ReceiptStatus = ReceiptReviewStatus;
 
 export interface ReceiptExtractedData {
   vendorName?: string;
@@ -73,8 +79,15 @@ export interface ReceiptRecord {
   fileName: string;
   mimeType: string;
   size: number;
-  status: ReceiptStatus;
+  /** Legacy alias retained for older local records. New records use reviewStatus. */
+  status?: ReceiptStatus;
+  reviewStatus?: ReceiptReviewStatus;
   extractedData?: ReceiptExtractedData;
+  fields?: ReceiptFields;
+  provenance?: ReceiptProvenance;
+  calculationInput?: ConfirmedReceiptInput;
+  errorMessage?: string;
+  confirmedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
