@@ -86,6 +86,11 @@ export type ReceiptCorrections = Partial<Record<ReceiptFieldName, string | null>
 
 const FIELD_NAMES: readonly ReceiptFieldName[] = ["vendor", "date", "amount", "taxAmount", "currency", "category"];
 const SAFE_PROVENANCE_VALUE = /^(?!.*(?:data:|blob:|base64|bearer|authorization|api[_-]?key|secret|token))[\x20-\x7e]{1,160}$/i;
+const RECEIPT_FIELD_KEYS = ["value", "confidence", "source", "userConfirmed"] as const;
+const PROVENANCE_KEYS = ["provider", "model", "version", "contract"] as const;
+const CONTRACT_KEYS = ["providerCategory", "retentionPeriod", "noTraining"] as const;
+const CORRECTION_KEYS = ["field", "previousValue", "correctedValue", "at"] as const;
+const CALCULATION_INPUT_KEYS = ["receiptId", ...FIELD_NAMES] as const;
 
 export function getCalculationReceiptInputs(records: readonly ReceiptRecord[]): ConfirmedReceiptInput[] {
   return records.flatMap((record) => {
@@ -112,19 +117,28 @@ export function isConfirmedReceiptRecord(record: ReceiptRecord): boolean {
     typeof record.confirmedAt === "string" && record.confirmedAt.trim().length > 0 &&
     isReceiptFieldsValid(record.fields) && FIELD_NAMES.every((name) => record.fields[name].userConfirmed) &&
     (!record.originalFields || isReceiptFieldsValid(record.originalFields)) &&
-    isReceiptProvenanceSafe(record.provenance) && isCorrectionHistorySafe(record.correctionHistory);
+    isReceiptProvenanceSafe(record.provenance) &&
+    isReceiptCorrectionHistorySafe(record.correctionHistory) &&
+    isConfirmedReceiptInputValid(record.calculationInput);
 }
 
 export function isReceiptProvenanceSafe(provenance: unknown): provenance is ReceiptProvenance {
   if (provenance === undefined) return true;
-  if (!isPlainObject(provenance) || !SAFE_PROVENANCE_VALUE.test(String(provenance.provider)) ||
-      !SAFE_PROVENANCE_VALUE.test(String(provenance.model)) || !SAFE_PROVENANCE_VALUE.test(String(provenance.version))) return false;
+  if (!isPlainObject(provenance) || !hasExactKeys(provenance, PROVENANCE_KEYS) ||
+      !isSafeRequiredText(provenance.provider) || !isSafeRequiredText(provenance.model) ||
+      !isSafeRequiredText(provenance.version)) return false;
   if (provenance.contract === undefined) return true;
-  if (!isPlainObject(provenance.contract)) return false;
+  if (!isPlainObject(provenance.contract) || !hasExactKeys(provenance.contract, CONTRACT_KEYS)) return false;
   const contract = provenance.contract;
   return (contract.providerCategory === undefined || isSafeOptionalText(contract.providerCategory)) &&
     (contract.retentionPeriod === undefined || isSafeOptionalText(contract.retentionPeriod)) &&
     (contract.noTraining === undefined || typeof contract.noTraining === "boolean");
+}
+
+export function isConfirmedReceiptInputValid(value: unknown): value is ConfirmedReceiptInput {
+  if (!isPlainObject(value) || !hasExactKeys(value, CALCULATION_INPUT_KEYS) ||
+      !isSafeRequiredText(value.receiptId)) return false;
+  return FIELD_NAMES.every((name) => isValidReceiptFieldValue(name, value[name]));
 }
 
 export function isAllowedReceiptCurrency(value: unknown): value is ReceiptCurrency {
@@ -152,8 +166,7 @@ export function isValidReceiptFieldValue(name: ReceiptFieldName, value: unknown)
 }
 
 export function isReceiptFieldsValid(fields: ReceiptFields): boolean {
-  if (!isPlainObject(fields) || Object.keys(fields).length !== FIELD_NAMES.length ||
-      !FIELD_NAMES.every((name) => Object.prototype.hasOwnProperty.call(fields, name))) return false;
+  if (!isPlainObject(fields) || !hasExactKeys(fields, FIELD_NAMES)) return false;
   const valid = FIELD_NAMES.every((name) => {
     const field = fields[name];
     return isReceiptFieldObject(field) && isValidReceiptFieldValue(name, field.value) &&
@@ -163,14 +176,15 @@ export function isReceiptFieldsValid(fields: ReceiptFields): boolean {
 }
 
 function isReceiptFieldObject(value: unknown): value is ReceiptField {
-  return isPlainObject(value) && (value.source === "ocr" || value.source === "user") &&
+  return isPlainObject(value) && hasExactKeys(value, RECEIPT_FIELD_KEYS) &&
+    (value.source === "ocr" || value.source === "user") &&
     typeof value.userConfirmed === "boolean" && (value.value === null || typeof value.value === "string") &&
     (value.confidence === null || typeof value.confidence === "number");
 }
 
-function isCorrectionHistorySafe(history: readonly ReceiptCorrection[] | undefined): boolean {
+export function isReceiptCorrectionHistorySafe(history: unknown): history is readonly ReceiptCorrection[] {
   return history === undefined || (Array.isArray(history) && history.every((entry) =>
-    isPlainObject(entry) && FIELD_NAMES.includes(entry.field as ReceiptFieldName) &&
+    isPlainObject(entry) && hasExactKeys(entry, CORRECTION_KEYS) && FIELD_NAMES.includes(entry.field as ReceiptFieldName) &&
     (entry.previousValue === null || typeof entry.previousValue === "string") &&
     (entry.correctedValue === null || typeof entry.correctedValue === "string") &&
     typeof entry.at === "string" && entry.at.trim().length > 0));
@@ -182,6 +196,14 @@ function inputsEqual(left: ConfirmedReceiptInput | undefined, right: ConfirmedRe
 
 function isSafeOptionalText(value: unknown): boolean {
   return value === undefined || (typeof value === "string" && SAFE_PROVENANCE_VALUE.test(value));
+}
+
+function isSafeRequiredText(value: unknown): value is string {
+  return typeof value === "string" && SAFE_PROVENANCE_VALUE.test(value);
+}
+
+function hasExactKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {
+  return Object.keys(value).length === allowed.length && allowed.every((key) => Object.prototype.hasOwnProperty.call(value, key));
 }
 
 function isPlainObject(value: unknown): value is Record<string, any> {

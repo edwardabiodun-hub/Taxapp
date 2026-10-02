@@ -50,6 +50,7 @@ const NewDeclaration = () => {
   const [savedStatus, setSavedStatus] = useState<PreparationStatus>();
   const [lastSavedAt, setLastSavedAt] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string>();
 
   const capabilities = listNigeriaJurisdictions();
   const capability = useMemo(
@@ -101,31 +102,34 @@ const NewDeclaration = () => {
 
   const handleSave = async (targetStatus: "draft" | "ready_for_review") => {
     setIsSaving(true);
-    const now = new Date().toISOString();
-    const id = preparationId;
-    const receiptInputs = getCalculationReceiptInputs(
-      (await listReceiptRecords(id)).filter((record) => record.reviewStatus !== "rejected"),
-    );
-    const shouldBeReady = targetStatus === "ready_for_review" && requiredDataComplete();
-    const baseInput = {
-      id,
-      jurisdictionCode,
-      taxYear: form.taxYear,
-      ruleProfileVersion: calculation.ruleProfileVersion,
-      formData: { ...form, documents: getDocumentMetadata(documents) },
-      confirmedReceiptIds: receiptInputs.map((input) => input.receiptId),
-      confirmedReceiptInputs: Object.fromEntries(
-        receiptInputs.map((input) => [
-          `receipt_${input.receiptId}`,
-          input,
-        ]),
-      ),
-      createdAt: now,
-      updatedAt: now,
-    };
+    setSaveError(undefined);
     let draftSaved = false;
+    let receiptDataLoaded = false;
 
     try {
+      const now = new Date().toISOString();
+      const id = preparationId;
+      const receiptInputs = getCalculationReceiptInputs(
+        (await listReceiptRecords(id)).filter((record) => record.reviewStatus !== "rejected"),
+      );
+      receiptDataLoaded = true;
+      const shouldBeReady = targetStatus === "ready_for_review" && requiredDataComplete();
+      const baseInput = {
+        id,
+        jurisdictionCode,
+        taxYear: form.taxYear,
+        ruleProfileVersion: calculation.ruleProfileVersion,
+        formData: { ...form, documents: getDocumentMetadata(documents) },
+        confirmedReceiptIds: receiptInputs.map((input) => input.receiptId),
+        confirmedReceiptInputs: Object.fromEntries(
+          receiptInputs.map((input) => [
+            `receipt_${input.receiptId}`,
+            input,
+          ]),
+        ),
+        createdAt: now,
+        updatedAt: now,
+      };
       let savedRecord: PreparationRecord;
       const preparationCapability = capability ?? getJurisdictionCapability("NG-UNKNOWN");
 
@@ -165,13 +169,18 @@ const NewDeclaration = () => {
         description: "Saved locally. No tax return was filed or submitted.",
       });
     } catch {
+      const title = draftSaved
+        ? "Draft saved, but could not mark ready for review"
+        : "Could not save preparation";
+      const description = draftSaved
+        ? "Your preparation is saved as a draft. Try marking it ready again."
+        : receiptDataLoaded
+          ? "Your current data remains on this page. Try saving again."
+          : "Receipt attachments could not be loaded, so nothing was saved. Try again.";
+      setSaveError(description);
       toast({
-        title: draftSaved
-          ? "Draft saved, but could not mark ready for review"
-          : "Could not save preparation",
-        description: draftSaved
-          ? "Your preparation is saved as a draft. Try marking it ready again."
-          : "Your current data remains on this page. Try saving again.",
+        title,
+        description,
         variant: "destructive",
       });
     } finally {
@@ -295,6 +304,7 @@ const NewDeclaration = () => {
           </Button>
         )}
       </div>
+      {saveError && <p className="mt-3 text-center text-xs text-destructive" role="alert">{saveError}</p>}
       <p className="mt-3 text-center text-[10px] text-muted-foreground">
         Local-first preparation. Saving or marking ready for review does not file a tax return.
       </p>

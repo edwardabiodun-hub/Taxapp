@@ -1,6 +1,8 @@
 import {
   deriveConfirmedReceiptInput,
+  isConfirmedReceiptInputValid,
   isReceiptFieldsValid,
+  isReceiptCorrectionHistorySafe,
   isReceiptProvenanceSafe,
   isConfirmedReceiptRecord,
   type ReceiptRecord as DomainReceiptRecord,
@@ -64,7 +66,7 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
     );
     if (!statusValid || !isNewReceiptFieldsPersistable(value.fields) || !isReceiptProvenanceSafe(value.provenance)) return false;
     if (value.originalFields !== undefined && !isNewReceiptFieldsPersistable(value.originalFields)) return false;
-    if (value.correctionHistory !== undefined && (!Array.isArray(value.correctionHistory) || value.correctionHistory.some((entry) => !isPlainObject(entry)))) return false;
+    if (!isReceiptCorrectionHistorySafe(value.correctionHistory)) return false;
     if (value.reviewStatus === "confirmed") {
       const record = value as unknown as DomainReceiptRecord;
       return isConfirmedReceiptRecord(record) && isCalculationInputPersistable(value.calculationInput) &&
@@ -137,11 +139,7 @@ function isNewReceiptFieldsPersistable(value: unknown): boolean {
 }
 
 function isCalculationInputPersistable(value: unknown): boolean {
-  if (!isPlainObject(value)) return false;
-  const allowedKeys = ["receiptId", "vendor", "date", "amount", "taxAmount", "currency", "category"];
-  return Object.keys(value).every((key) => allowedKeys.includes(key)) &&
-    typeof value.receiptId === "string" && value.receiptId.trim().length > 0 &&
-    allowedKeys.slice(1).every((key) => value[key] === null || typeof value[key] === "string");
+  return isConfirmedReceiptInputValid(value);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

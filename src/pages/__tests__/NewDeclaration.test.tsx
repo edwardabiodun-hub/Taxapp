@@ -4,9 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 import NewDeclaration from "@/pages/NewDeclaration";
 import { savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
+import { listReceiptRecords } from "@/lib/receipt-repository";
 
 vi.mock("@/lib/preparation-repository", () => ({
   savePreparation: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/receipt-repository", () => ({
+  listReceiptRecords: vi.fn().mockResolvedValue([]),
 }));
 
 describe("NewDeclaration", () => {
@@ -41,6 +46,23 @@ describe("NewDeclaration", () => {
         category: "payslip",
       },
     ]);
+  });
+
+  it("clears saving state and reports receipt storage failures", async () => {
+    const listMock = vi.mocked(listReceiptRecords);
+    listMock.mockRejectedValueOnce(new Error("Receipt storage unavailable."));
+
+    render(
+      <MemoryRouter>
+        <NewDeclaration />
+      </MemoryRouter>,
+    );
+
+    const saveButton = screen.getByRole("button", { name: /save as draft/i });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/receipt attachments could not be loaded/i));
+    expect(saveButton).not.toBeDisabled();
   });
 
   it("saves a fresh ready-for-review action through draft first", async () => {

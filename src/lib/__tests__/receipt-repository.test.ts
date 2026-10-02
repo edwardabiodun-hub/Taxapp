@@ -13,6 +13,39 @@ const receipt = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
+const fields = {
+  vendor: { value: "Acme Foods", confidence: 0.96, source: "ocr" as const, userConfirmed: false },
+  date: { value: "2026-09-30", confidence: 0.89, source: "ocr" as const, userConfirmed: false },
+  amount: { value: "12500", confidence: 0.71, source: "ocr" as const, userConfirmed: false },
+  taxAmount: { value: "937.50", confidence: 0.67, source: "ocr" as const, userConfirmed: false },
+  currency: { value: "NGN", confidence: 0.99, source: "ocr" as const, userConfirmed: false },
+  category: { value: "meals", confidence: 0.62, source: "ocr" as const, userConfirmed: false },
+};
+
+const reviewedReceipt = {
+  ...receipt,
+  reviewStatus: "needs_review" as const,
+  fields,
+};
+
+const confirmedReceipt = {
+  ...reviewedReceipt,
+  reviewStatus: "confirmed" as const,
+  fields: Object.fromEntries(
+    Object.entries(fields).map(([name, field]) => [name, { ...field, userConfirmed: true }]),
+  ),
+  confirmedAt: "2026-10-02T00:05:00.000Z",
+  calculationInput: {
+    receiptId: "receipt-1",
+    vendor: "Acme Foods",
+    date: "2026-09-30",
+    amount: "12500",
+    taxAmount: "937.50",
+    currency: "NGN",
+    category: "meals",
+  },
+};
+
 describe("receipt persistence validation", () => {
   it("accepts only the supported extracted receipt fields", () => {
     expect(
@@ -64,6 +97,25 @@ describe("receipt persistence validation", () => {
   it("rejects raw byte values in the asset reference field", () => {
     expect(
       isReceiptRecordPersistable({ ...receipt, assetRef: new Uint8Array([1, 2, 3]) }),
+    ).toBe(false);
+  });
+
+  it.each([
+    ["receipt field", { ...reviewedReceipt, fields: { ...fields, amount: { ...fields.amount, staleValue: "x" } } }],
+    ["provenance", { ...reviewedReceipt, provenance: { provider: "managed", model: "receipt-v1", version: "1", staleMetadata: "x" } }],
+    ["trusted contract metadata", { ...reviewedReceipt, provenance: { provider: "managed", model: "receipt-v1", version: "1", contract: { staleContractClaim: "x" } } }],
+    ["original OCR fields", { ...reviewedReceipt, originalFields: { ...fields, vendor: { ...fields.vendor, staleValue: "x" } } }],
+    ["correction history", { ...reviewedReceipt, correctionHistory: [{ field: "amount", previousValue: "1", correctedValue: "2", at: "2026-10-02T00:05:00.000Z", staleCorrection: "x" }] }],
+  ])("rejects unknown properties in nested %s", (_name, value) => {
+    expect(isReceiptRecordPersistable(value)).toBe(false);
+  });
+
+  it("rejects unknown properties in confirmed calculation input", () => {
+    expect(
+      isReceiptRecordPersistable({
+        ...confirmedReceipt,
+        calculationInput: { ...confirmedReceipt.calculationInput, staleValue: "x" },
+      }),
     ).toBe(false);
   });
 });
