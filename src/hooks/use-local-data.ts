@@ -1,5 +1,9 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type LocalActivity, type LocalDeclaration, type LocalMessage, type LocalProfile } from "@/lib/local-db";
+import type { PreparationRecord } from "@/domain/preparations";
+import type { PreparationStatus } from "@/domain/tax-readiness";
+import { getPreparation, listPreparations } from "@/lib/preparation-repository";
+import { mergeSubmissionRecords, type SubmissionRecord } from "@/lib/submission-records";
 
 export function useProfile(): LocalProfile | undefined {
   return useLiveQuery(() => db.profiles.toCollection().first());
@@ -19,7 +23,48 @@ export function useDeclarations(filter?: {
   );
 }
 
-export function useReferenceData<T = any>(key: string): T | undefined {
+/** New preparation flow reads are kept behind the repository boundary. */
+export function usePreparations(filter?: {
+  status?: PreparationStatus;
+}): PreparationRecord[] {
+  return (
+    useLiveQuery(
+      async () => {
+        const preparations = await listPreparations();
+        return filter?.status
+          ? preparations.filter((preparation) => preparation.status === filter.status)
+          : preparations;
+      },
+      [filter?.status],
+    ) ?? []
+  );
+}
+
+export function useSubmissionRecords(): SubmissionRecord[] {
+  return useLiveQuery(
+    async () => mergeSubmissionRecords(
+      await listPreparations(),
+      await db.declarations.toArray(),
+    ),
+    [],
+  ) ?? [];
+}
+
+export function useDeclaration(id: string | undefined): LocalDeclaration | undefined {
+  return useLiveQuery(
+    () => (id ? db.declarations.get(id) : undefined),
+    [id],
+  );
+}
+
+export function usePreparation(id: string | undefined): PreparationRecord | undefined {
+  return useLiveQuery(
+    () => (id ? getPreparation(id) : undefined),
+    [id],
+  );
+}
+
+export function useReferenceData<T = unknown>(key: string): T | undefined {
   return useLiveQuery(async () => {
     const row = await db.referenceData.get(key);
     return row?.value as T | undefined;
@@ -44,5 +89,5 @@ export function useMessages(): LocalMessage[] {
 }
 
 export function useUnreadMessageCount(): number {
-  return useLiveQuery(() => db.messages.filter((m) => m.readAt == null).count()) ?? 0;
+  return useLiveQuery(() => db.messages.filter((message) => message.readAt == null).count()) ?? 0;
 }

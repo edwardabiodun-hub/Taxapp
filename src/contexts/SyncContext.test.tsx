@@ -7,7 +7,7 @@ const subscribeToRealtime = vi.hoisted(() => vi.fn(() => vi.fn()));
 const getUser = vi.hoisted(() => vi.fn(async () => ({ data: { user: null } })));
 
 vi.mock("@/lib/sync-service", () => ({ syncAll }));
-vi.mock("@/lib/realtime-sync", () => ({ subscribeToRealtime }), { virtual: true });
+vi.mock("@/lib/realtime-sync", () => ({ subscribeToRealtime }));
 vi.mock("@/lib/supabase-client", () => ({
   supabase: { auth: { getUser } },
 }));

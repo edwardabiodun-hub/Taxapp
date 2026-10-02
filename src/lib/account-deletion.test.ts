@@ -12,12 +12,12 @@ vi.mock("@aparajita/capacitor-secure-storage", () => {
   };
 });
 
-const deleteDeclarationFromServerMock = vi.fn(async () => {});
+const deleteDeclarationFromServerMock = vi.fn(async (_id: string) => {});
 const pseudonymizeProfileOnServerMock = vi.fn(async () => {});
 const signOutMock = vi.fn(async () => {});
 
 vi.mock("./api", () => ({
-  deleteDeclarationFromServer: (...args: unknown[]) => deleteDeclarationFromServerMock(...args),
+  deleteDeclarationFromServer: (id: string) => deleteDeclarationFromServerMock(id),
   pseudonymizeProfileOnServer: () => pseudonymizeProfileOnServerMock(),
 }));
 

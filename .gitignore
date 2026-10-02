@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.worktrees/
 
 # Secrets — real values only ever go in .env, which is never committed.
 # .env.example is tracked and must only ever contain placeholder values.

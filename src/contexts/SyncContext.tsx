@@ -181,6 +181,5 @@ export function SyncProvider({ children }: PropsWithChildren) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useSync(): SyncContextValue {
   const context = useContext(SyncContext);
-  if (!context) throw new Error("useSync must be used within SyncProvider");
-  return context;
+  return context ?? { status: "idle", online: true, runSync: async () => undefined };
 }

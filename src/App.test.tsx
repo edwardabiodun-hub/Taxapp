@@ -51,7 +51,7 @@ vi.mock("@/lib/sync-service", () => ({
 
 vi.mock("@/lib/realtime-sync", () => ({
   subscribeToRealtime: vi.fn(() => vi.fn()),
-}), { virtual: true });
+}));
 
 async function renderAppRoutes(initialPath: string) {
   const { AppRoutes } = await import("./App");

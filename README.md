@@ -60,6 +60,12 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## FileSmart Phase One
+
+The current phase supports generic Nigerian tax preparation across all 36 states and the FCT, source-aware deadline display, reviewable receipt capture, and universal PDF/CSV/XLSX exports. Exports are preparation packages for review or manual upload; they are not electronic filing or authority confirmation.
+
+Operational controls, evidence requirements, feature flags, and rollback guidance are documented in [`docs/filesmart-phase-one-operations.md`](docs/filesmart-phase-one-operations.md).
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

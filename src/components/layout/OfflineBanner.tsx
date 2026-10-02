@@ -1,5 +1,5 @@
 import { WifiOff, RefreshCw } from "lucide-react";
-import { useSync } from "@/hooks/use-sync";
+import { useSync } from "@/contexts/SyncContext";
 import { cn } from "@/lib/utils";
 
 const OfflineBanner = () => {

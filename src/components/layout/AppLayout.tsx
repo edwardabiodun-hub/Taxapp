@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import BottomNav from "./BottomNav";
 import TopBar from "./TopBar";
 import OfflineBanner from "./OfflineBanner";
+import RouteBoundary from "./RouteBoundary";
 import { SyncProvider } from "@/contexts/SyncContext";
 import { SupportChat } from "@/components/support/SupportChat";
 
@@ -15,7 +16,7 @@ const AppLayout = () => {
         <TopBar supportOpen={supportOpen} onOpenSupport={() => setSupportOpen(true)} />
         <OfflineBanner />
         <main className="flex-1 pb-20 overflow-y-auto">
-          <Outlet />
+          <RouteBoundary><Outlet /></RouteBoundary>
         </main>
         <BottomNav />
         <SupportChat open={supportOpen} onOpenChange={setSupportOpen} />

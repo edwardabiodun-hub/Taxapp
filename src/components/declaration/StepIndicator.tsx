@@ -7,11 +7,13 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
-  <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1 scrollbar-none">
+  <nav aria-label="Declaration preparation progress" className="mb-6">
+    <ol className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
     {steps.map((step, i) => (
-      <div key={step} className="flex-1 flex items-center gap-1 min-w-0">
+      <li key={step} className="flex min-w-0 flex-1 items-center gap-1">
         <div className="flex flex-col items-center flex-1 min-w-0">
           <div
+            aria-current={i === currentStep ? "step" : undefined}
             className={cn(
               "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all shrink-0",
               i < currentStep && "gradient-primary text-primary-foreground",
@@ -38,9 +40,10 @@ const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
             )}
           />
         )}
-      </div>
+      </li>
     ))}
-  </div>
+    </ol>
+  </nav>
 );
 
 export default StepIndicator;

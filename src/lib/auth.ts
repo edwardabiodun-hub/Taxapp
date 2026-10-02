@@ -76,7 +76,7 @@ async function callAuthGateway<T extends AuthGatewayData | Record<string, unknow
 
   const data = payload?.data ?? null;
   if (data && "session" in data && data.session) {
-    const sessionResult = await supabase.auth.setSession(data.session);
+    const sessionResult = await supabase.auth.setSession(data.session as { access_token: string; refresh_token: string });
     if (sessionResult?.error) return { data: null, error: sessionResult.error.message };
   }
 

@@ -2,18 +2,17 @@ import { useRef, useState } from "react";
 import { Upload, FileText, Image, X, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { saveDocumentFile, deleteDocumentFile } from "@/lib/document-storage";
+import ReceiptScanner from "@/components/receipts/ReceiptScanner";
+import type { ReceiptRecord } from "@/domain/receipts";
+import { ManagedOcrProvider } from "@/lib/ocr/managed-ocr-provider";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
-import { validateDocumentFile } from "@/lib/file-validation";
 
 export interface UploadedDoc {
-  /** The persisted documentFiles record id (see document-storage.ts) — the
-   * file's actual bytes are already durably saved, encrypted, by the time
-   * this object exists. Not just a UI list key. */
   id: string;
   file: File;
   category: string;
   preview?: string;
+  receiptId?: string;
 }
 
 const categories = [
@@ -26,61 +25,68 @@ const categories = [
 ];
 
 interface DocumentsStepProps {
-  /** Identifies the (possibly not-yet-submitted) declaration these documents
-   * belong to, so their bytes can be persisted immediately on upload rather
-   * than only if/when the surrounding form is eventually submitted. */
-  declarationId: string;
   documents: UploadedDoc[];
   onDocumentsChange: (docs: UploadedDoc[]) => void;
+  declarationId?: string;
+  preparationId?: string;
+  onReceiptConfirmed?: (record: ReceiptRecord) => void;
 }
 
-const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: DocumentsStepProps) => {
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const EXECUTABLE_EXTENSIONS = /\.(?:php|php[0-9]?|jsp|jspx|exe|sh|bash|bat|cmd|com|msi|dll|scr|ps1|vbs|js|mjs|cjs)$/i;
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+const DocumentsStep = ({
+  documents,
+  onDocumentsChange,
+  preparationId = "unsaved-preparation",
+  onReceiptConfirmed,
+}: DocumentsStepProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategory, setSelectedCategory] = useState("receipt");
-  const [saving, setSaving] = useState(false);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (fileInputRef.current) fileInputRef.current.value = "";
 
-    setSaving(true);
-    try {
-      for (const file of files) {
-        const validation = validateDocumentFile(file);
-        if (validation.reason === "too-large") {
-          toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
-          continue;
-        }
-        if (validation.reason === "unsupported-type") {
-          toast({ title: "Unsupported format", description: `${file.name} is not a supported file type.`, variant: "destructive" });
-          continue;
-        }
-
-        // Persist the file's bytes now, not at final form submission — the
-        // previous version only ever stored {name, size, type} and threw
-        // the actual content away, so closing the app mid-wizard (or even
-        // completing it) never actually saved what was uploaded.
-        const id = await saveDocumentFile(declarationId, file);
-        const newDoc: UploadedDoc = {
-          id,
-          file,
-          category: selectedCategory,
-          preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-        };
-        onDocumentsChange([...documents, newDoc]);
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({ title: "File too large", description: `${file.name} exceeds 10MB limit.`, variant: "destructive" });
+        continue;
       }
-    } catch {
-      toast({ title: "Couldn't save document", description: "Please try attaching it again.", variant: "destructive" });
-    } finally {
-      setSaving(false);
+      if (EXECUTABLE_EXTENSIONS.test(file.name)) {
+        toast({ title: "Unsupported file", description: `${file.name} uses a prohibited executable or script extension.`, variant: "destructive" });
+        continue;
+      }
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({ title: "Unsupported format", description: `${file.name} is not a supported file type.`, variant: "destructive" });
+        continue;
+      }
+
+      const newDoc: UploadedDoc = {
+        id: crypto.randomUUID(),
+        file,
+        category: selectedCategory,
+        preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      };
+      onDocumentsChange([...documents, newDoc]);
     }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeDoc = async (id: string) => {
+  const removeDoc = (id: string) => {
     const doc = documents.find((d) => d.id === id);
     if (doc?.preview) URL.revokeObjectURL(doc.preview);
     onDocumentsChange(documents.filter((d) => d.id !== id));
-    await deleteDocumentFile(id);
   };
 
   const getFileIcon = (file: File) => {
@@ -97,7 +103,7 @@ const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: Document
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-display font-bold text-foreground text-sm"><GlossaryText>Supporting Documents</GlossaryText></h3>
+        <h3 className="font-display font-bold text-foreground text-sm"><GlossaryText>Supporting documents</GlossaryText></h3>
         <p className="text-[11px] text-muted-foreground">
           <GlossaryText>Attach receipts, financial statements, and other supporting documents</GlossaryText>
         </p>
@@ -127,14 +133,13 @@ const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: Document
       {/* Upload area */}
       <button
         onClick={() => fileInputRef.current?.click()}
-        disabled={saving}
-        className="w-full border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary/40 hover:bg-primary/5 transition-all group disabled:opacity-60 disabled:pointer-events-none"
+        className="w-full border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary/40 hover:bg-primary/5 transition-all group"
       >
         <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
           <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-foreground">{saving ? "Saving…" : "Tap to upload"}</p>
+          <p className="text-sm font-semibold text-foreground">Tap to upload</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             PDF, Images, Word, Excel — Max 10MB per file
           </p>
@@ -149,6 +154,14 @@ const DocumentsStep = ({ declarationId, documents, onDocumentsChange }: Document
         onChange={handleFileSelect}
         className="hidden"
       />
+
+      {selectedCategory === "receipt" && (
+        <ReceiptScanner
+          preparationId={preparationId}
+          provider={new ManagedOcrProvider()}
+          onConfirmed={onReceiptConfirmed}
+        />
+      )}
 
       {/* Uploaded files list */}
       {documents.length > 0 && (

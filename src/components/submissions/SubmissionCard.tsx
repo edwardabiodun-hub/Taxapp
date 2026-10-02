@@ -1,22 +1,21 @@
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Clock, AlertCircle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import type { PreparationStatus } from "@/domain/tax-readiness";
+import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import SubmissionStatus, { PREPARATION_STATUS_LABELS } from "@/components/submissions/SubmissionStatus";
 
 export interface SubmissionItem {
   id: string;
   taxYear: string;
   type: string;
-  status: "draft" | "submitted" | "processing" | "audit_request" | "approved";
+  status: PreparationStatus | "submitted" | "processing" | "audit_request" | "approved";
   date: string;
   amount: string;
+  capability?: JurisdictionCapability;
+  calculationLabel?: string;
+  readiness?: string;
+  exportFormats?: readonly string[];
 }
-
-const statusConfig = {
-  draft: { icon: Clock, label: "Draft", className: "bg-muted text-muted-foreground" },
-  submitted: { icon: Clock, label: "Submitted", className: "bg-info/10 text-info" },
-  processing: { icon: Clock, label: "Processing", className: "bg-warning/10 text-warning" },
-  audit_request: { icon: AlertCircle, label: "Audit Request", className: "bg-destructive/10 text-destructive" },
-  approved: { icon: CheckCircle2, label: "Approved", className: "bg-success/10 text-success" },
-};
 
 interface SubmissionCardProps {
   submission: SubmissionItem;
@@ -24,28 +23,63 @@ interface SubmissionCardProps {
 }
 
 const SubmissionCard = ({ submission, onClick }: SubmissionCardProps) => {
-  const config = statusConfig[submission.status];
-  const StatusIcon = config.icon;
+  const isPreparationStatus = [
+    "draft",
+    "ready_for_review",
+    "exported",
+    "user_submitted",
+    "authority_confirmed",
+  ].includes(submission.status);
+  const status = isPreparationStatus
+    ? submission.status as PreparationStatus
+    : "ready_for_review" as const;
+  const legacy = !isPreparationStatus;
 
   return (
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 p-4 bg-card rounded-xl shadow-card hover:shadow-elevated transition-all text-left"
     >
-      <div className={cn("p-2 rounded-lg", config.className)}>
-        <StatusIcon className="w-4 h-4" />
+      <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+        <SubmissionStatus status={status} compact />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-card-foreground truncate">
           {submission.type} — {submission.taxYear}
         </p>
+        {submission.capability && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Jurisdiction: {submission.capability.name}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">{submission.date}</p>
+        {submission.calculationLabel && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Calculation: {submission.calculationLabel}
+          </p>
+        )}
+        {submission.readiness && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Readiness: {submission.readiness}
+          </p>
+        )}
+        {submission.exportFormats && submission.exportFormats.length > 0 && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Export package: {submission.exportFormats.join(", ")}
+          </p>
+        )}
       </div>
       <div className="text-right flex-shrink-0">
         <p className="text-sm font-display font-bold text-card-foreground">{submission.amount}</p>
-        <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", config.className)}>
-          {config.label}
-        </span>
+        {legacy ? (
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            Legacy record — review needed
+          </span>
+        ) : (
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {PREPARATION_STATUS_LABELS[status]}
+          </span>
+        )}
       </div>
       <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
     </button>

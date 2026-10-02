@@ -41,7 +41,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function hasExactKeys(value: Record<string, unknown>, names: string[]): boolean {
-  return Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
+  return Object.keys(value).length === names.length && names.every((name) => Object.prototype.hasOwnProperty.call(value, name));
 }
 
 function parseBody(value: unknown): SupportChatRequest | null {

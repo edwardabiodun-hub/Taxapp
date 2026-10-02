@@ -1,19 +1,20 @@
 import { FileText, Paperclip, Calculator } from "lucide-react";
-import { stateName, type NigeriaDeclarationForm } from "@/types/declaration";
+import type { NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
-import { calculateStateTax } from "@/lib/tax/state-tax";
-import { calculateRentRelief } from "@/lib/rent-relief";
-import { GlossaryText } from "@/components/glossary/GlossaryText";
+import type { JurisdictionCapability } from "@/domain/jurisdictions";
+import type { CalculationResult } from "@/lib/calculation-service";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
   documents?: UploadedDoc[];
+  capability?: JurisdictionCapability;
+  calculation: CalculationResult;
 }
 
 const SummaryRow = ({ label, value, badge }: { label: string; value: string; badge?: string }) => (
   <div className="flex justify-between items-center">
     <div className="flex items-center gap-2">
-      <span className="text-muted-foreground text-xs"><GlossaryText>{label}</GlossaryText></span>
+      <span className="text-muted-foreground text-xs">{label}</span>
       {badge && (
         <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${
           badge === "Exempt" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
@@ -28,7 +29,7 @@ const SummaryRow = ({ label, value, badge }: { label: string; value: string; bad
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
-    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>{title}</GlossaryText></p>
+    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{title}</p>
     {children}
   </div>
 );
@@ -36,44 +37,45 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-const ReviewStep = ({ form, documents }: ReviewStepProps) => {
-  const tax = calculateStateTax(form, form.state);
-  const rentRelief = calculateRentRelief(Number(form.annualRentPaid.replace(/,/g, "")) || 0).relief;
+const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProps) => {
+  const tax = calculation;
+  const showTaxEstimate =
+    tax.label !== "Not filing-ready" && tax.missingInputWarnings.length === 0;
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-display font-bold text-foreground text-sm">Review & Submit</h3>
-        <p className="text-[11px] text-muted-foreground">Please review all information before submitting</p>
+        <h3 className="font-display font-bold text-foreground text-sm">Review preparation</h3>
+        <p className="text-[11px] text-muted-foreground">Review the local preparation before saving or exporting it.</p>
       </div>
 
       {/* Tax Calculation Card */}
-      {tax.grossIncome > 0 && (
-        <div className="gradient-hero rounded-xl p-5 text-primary-foreground space-y-4">
+      {showTaxEstimate && tax.grossIncome > 0 && (
+        <div className="gradient-hero rounded-2xl p-5 text-primary-foreground shadow-elevated space-y-4">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />
-            <h4 className="font-display font-bold text-sm"><GlossaryText>Tax Liability Estimate</GlossaryText></h4>
+            <h4 className="font-display font-bold text-sm">Tax Liability Estimate</h4>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70"><GlossaryText>Gross Income</GlossaryText></p>
+              <p className="text-[10px] opacity-70">Gross Income</p>
               <p className="font-display font-bold text-lg">{fmtN(tax.grossIncome)}</p>
             </div>
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70"><GlossaryText>Deductions (incl. CRA)</GlossaryText></p>
+              <p className="text-[10px] opacity-70">Deductions (incl. CRA)</p>
               <p className="font-display font-bold text-lg">{fmtN(tax.totalDeductions)}</p>
             </div>
           </div>
 
           <div className="bg-background/10 rounded-xl p-3">
-            <p className="text-[10px] opacity-70"><GlossaryText>Taxable Income</GlossaryText></p>
+            <p className="text-[10px] opacity-70">Taxable Income</p>
             <p className="font-display font-bold text-xl">{fmtN(tax.taxableIncome)}</p>
           </div>
 
           {/* Band breakdown */}
           <div className="space-y-1.5">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Tax Band Breakdown</GlossaryText></p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Tax Band Breakdown</p>
             {tax.bands.map((band, i) => (
               band.income > 0 && (
                 <div key={i} className="flex justify-between items-center text-[11px]">
@@ -86,19 +88,19 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
 
           <div className="border-t border-primary-foreground/20 pt-3 space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="opacity-70"><GlossaryText>Computed Tax</GlossaryText></span>
+              <span className="opacity-70">Computed Tax</span>
               <span className="font-semibold">{fmtN(tax.computedTax)}</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="opacity-70"><GlossaryText>Minimum Tax (1%)</GlossaryText></span>
+              <span className="opacity-70">Minimum Tax (1%)</span>
               <span className="font-semibold">{fmtN(tax.minimumTax)}</span>
             </div>
           </div>
 
           <div className="bg-background/20 rounded-xl p-4 text-center">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Estimated Tax Payable</GlossaryText></p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated Tax Payable</p>
             <p className="font-display font-bold text-2xl mt-1">{fmtN(tax.finalTax)}</p>
-            <p className="text-[10px] opacity-70 mt-0.5"><GlossaryText>Effective rate</GlossaryText>: {tax.effectiveRate.toFixed(1)}%</p>
+            <p className="text-[10px] opacity-70 mt-0.5">Effective rate: {tax.effectiveRate.toFixed(1)}%</p>
           </div>
 
           <div className="bg-background/15 border border-primary-foreground/20 rounded-xl p-3 space-y-1.5">
@@ -106,9 +108,10 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
               ⚠️ Disclaimer
             </p>
             <p className="text-[10px] opacity-80 leading-relaxed">
-              <GlossaryText>
-                This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
-              </GlossaryText>
+              This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. 
+              The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) 
+              or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, 
+              audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
             </p>
           </div>
         </div>
@@ -118,9 +121,24 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
       <div className="bg-card rounded-xl p-4 shadow-card space-y-4">
         <Section title="General">
           <SummaryRow label="Tax Year" value={form.taxYear} />
-          <SummaryRow label="Country" value="Nigeria 🇳🇬" />
-          <SummaryRow label="State" value={stateName(form.state)} />
+          <SummaryRow label="Jurisdiction" value={capability?.name || "Not selected"} />
+          <SummaryRow label="Readiness" value={capability?.primaryReadiness || "Not yet supported"} />
+          <SummaryRow label="Calculation" value={calculation?.label || "Not filing-ready"} />
+          <SummaryRow label="Rule profile" value={calculation?.ruleProfile.profileId || "Not configured"} />
+          <SummaryRow label="Rule version" value={calculation?.ruleProfileVersion || "Not configured"} />
+          <SummaryRow label="Rule source" value={calculation?.source || "Not configured"} />
         </Section>
+
+        {calculation && calculation.missingInputWarnings.length > 0 && (
+          <>
+            <div className="border-t border-border" />
+            <Section title="Unresolved items">
+              <ul className="list-disc space-y-1 pl-4 text-xs text-warning">
+                {calculation.missingInputWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+              </ul>
+            </Section>
+          </>
+        )}
 
         <div className="border-t border-border" />
 
@@ -159,8 +177,7 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
 
         <Section title="Deductions">
           <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
-          <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
-          <SummaryRow label="Rent Relief" value={rentRelief > 0 ? fmtN(rentRelief) : "—"} />
+          <SummaryRow label="Rent Relief" value={fmt(form.annualRentPaid)} />
         </Section>
 
         {documents && documents.length > 0 && (
@@ -190,8 +207,8 @@ const ReviewStep = ({ form, documents }: ReviewStepProps) => {
         )}
       </div>
 
-      <p className="text-[10px] text-muted-foreground text-center">
-        By submitting, you confirm all information is accurate and complete per the Personal Income Tax Act 2025.
+      <p className="text-center text-[10px] text-muted-foreground">
+        Saving creates a local preparation only. It does not file a tax return or confirm acceptance by an authority.
       </p>
     </div>
   );

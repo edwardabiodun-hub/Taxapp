@@ -1,9 +1,4 @@
-export interface NigeriaDeclarationForm {
-  // Personal Info
-  taxYear: string;
-  country: string;
-  state: string;
-
+export interface DeclarationIncomeFields {
   // Earned Income - Trade/Business
   businessIncome: string;
   businessExpenses: string;
@@ -53,6 +48,23 @@ export interface NigeriaDeclarationForm {
   annualRentPaid: string;
 }
 
+/** Canonical declaration shape for the jurisdiction-aware flow. */
+export interface DeclarationFormData extends DeclarationIncomeFields {
+  taxYear: string;
+  jurisdictionCode: string;
+}
+
+/**
+ * Compatibility shape for the existing country-based screens and saved
+ * drafts. New domain records should use DeclarationFormData instead.
+ */
+export interface NigeriaDeclarationForm extends DeclarationIncomeFields {
+  // Personal Info
+  taxYear: string;
+  country: string;
+  state: string;
+}
+
 export const defaultNigeriaForm: NigeriaDeclarationForm = {
   taxYear: "",
   country: "ng",
@@ -93,6 +105,28 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   annualRentPaid: "",
 };
 
+/**
+ * Maps a legacy country-based draft without guessing a state. An empty
+ * jurisdiction code deliberately requires the user to confirm a jurisdiction
+ * before the draft is treated as a complete preparation.
+ */
+export function mapLegacyDeclaration(
+  draft: NigeriaDeclarationForm | Record<string, unknown>,
+): DeclarationFormData {
+  const { country: _country, jurisdictionCode, ...formData } = draft as Record<
+    string,
+    unknown
+  >;
+
+  return {
+    ...(formData as Omit<DeclarationFormData, "jurisdictionCode">),
+    jurisdictionCode:
+      typeof jurisdictionCode === "string" ? jurisdictionCode : "",
+  };
+}
+
+export const mapLegacyDraft = mapLegacyDeclaration;
+
 export const declarationSteps = [
   "Country",
   "Earned Income",
@@ -102,6 +136,26 @@ export const declarationSteps = [
   "Documents",
   "Review",
 ];
+
+export interface StateOption { code: string; name: string; active: boolean; }
+
+const stateNames = [
+  ["abia", "Abia"], ["adamawa", "Adamawa"], ["akwa-ibom", "Akwa Ibom"], ["anambra", "Anambra"],
+  ["bauchi", "Bauchi"], ["bayelsa", "Bayelsa"], ["benue", "Benue"], ["borno", "Borno"],
+  ["cross-river", "Cross River"], ["delta", "Delta"], ["ebonyi", "Ebonyi"], ["edo", "Edo"],
+  ["ekiti", "Ekiti"], ["enugu", "Enugu"], ["gombe", "Gombe"], ["imo", "Imo"], ["jigawa", "Jigawa"],
+  ["kaduna", "Kaduna"], ["kano", "Kano"], ["katsina", "Katsina"], ["kebbi", "Kebbi"], ["kogi", "Kogi"],
+  ["kwara", "Kwara"], ["lagos", "Lagos"], ["nasarawa", "Nasarawa"], ["niger", "Niger"], ["ogun", "Ogun"],
+  ["ondo", "Ondo"], ["osun", "Osun"], ["oyo", "Oyo"], ["plateau", "Plateau"], ["rivers", "Rivers"],
+  ["sokoto", "Sokoto"], ["taraba", "Taraba"], ["yobe", "Yobe"], ["zamfara", "Zamfara"], ["fct", "Federal Capital Territory (Abuja)"],
+] as const;
+
+const phaseOneStates = new Set(["lagos", "ogun", "osun", "oyo"]);
+export const nigerianStates: StateOption[] = stateNames.map(([code, name]) => ({ code, name, active: phaseOneStates.has(code) }));
+
+export function stateName(code?: string): string {
+  return nigerianStates.find((state) => state.code === code)?.name ?? "—";
+}
 
 export interface CountryOption {
   code: string;
@@ -121,60 +175,4 @@ export const africanCountries: CountryOption[] = [
   { code: "et", name: "Ethiopia", flag: "🇪🇹", active: false },
 ];
 
-// Phase 1 launches the declaration flow in Nigeria only. Keep the full
-// country catalogue above for future rollout, but expose only launched
-// countries to the declaration selector until each market is ready.
 export const availableDeclarationCountries = africanCountries.filter((country) => country.code === "ng");
-
-export interface StateOption {
-  code: string;
-  name: string;
-  active: boolean;
-}
-
-// Phase 1 launches with Lagos/Ogun/Oyo/Osun active; the remaining 32
-// states + FCT are listed inactive so activating one later is a data-only
-// change (flip `active: true`), same mechanism as africanCountries above.
-export const nigerianStates: StateOption[] = [
-  { code: "lagos", name: "Lagos", active: true },
-  { code: "ogun", name: "Ogun", active: true },
-  { code: "oyo", name: "Oyo", active: true },
-  { code: "osun", name: "Osun", active: true },
-  { code: "abia", name: "Abia", active: false },
-  { code: "adamawa", name: "Adamawa", active: false },
-  { code: "akwa-ibom", name: "Akwa Ibom", active: false },
-  { code: "anambra", name: "Anambra", active: false },
-  { code: "bauchi", name: "Bauchi", active: false },
-  { code: "bayelsa", name: "Bayelsa", active: false },
-  { code: "benue", name: "Benue", active: false },
-  { code: "borno", name: "Borno", active: false },
-  { code: "cross-river", name: "Cross River", active: false },
-  { code: "delta", name: "Delta", active: false },
-  { code: "ebonyi", name: "Ebonyi", active: false },
-  { code: "edo", name: "Edo", active: false },
-  { code: "ekiti", name: "Ekiti", active: false },
-  { code: "enugu", name: "Enugu", active: false },
-  { code: "fct", name: "Federal Capital Territory (Abuja)", active: false },
-  { code: "gombe", name: "Gombe", active: false },
-  { code: "imo", name: "Imo", active: false },
-  { code: "jigawa", name: "Jigawa", active: false },
-  { code: "kaduna", name: "Kaduna", active: false },
-  { code: "kano", name: "Kano", active: false },
-  { code: "katsina", name: "Katsina", active: false },
-  { code: "kebbi", name: "Kebbi", active: false },
-  { code: "kogi", name: "Kogi", active: false },
-  { code: "kwara", name: "Kwara", active: false },
-  { code: "nasarawa", name: "Nasarawa", active: false },
-  { code: "niger", name: "Niger", active: false },
-  { code: "ondo", name: "Ondo", active: false },
-  { code: "plateau", name: "Plateau", active: false },
-  { code: "rivers", name: "Rivers", active: false },
-  { code: "sokoto", name: "Sokoto", active: false },
-  { code: "taraba", name: "Taraba", active: false },
-  { code: "yobe", name: "Yobe", active: false },
-  { code: "zamfara", name: "Zamfara", active: false },
-];
-
-export function stateName(code?: string): string {
-  return nigerianStates.find((s) => s.code === code)?.name ?? "—";
-}

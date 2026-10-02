@@ -220,8 +220,9 @@ describe("api", () => {
       ]);
       // updated_at must NOT be sent — the DB trigger owns that column, and
       // it's a different clock than local updatedAt (see api.ts comment).
-      expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("updated_at");
-      expect(builder.upsert.mock.calls[0][0][0]).not.toHaveProperty("amount");
+      const upsertCalls = (builder.upsert as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+      expect((upsertCalls[0][0] as Array<Record<string, unknown>>)[0]).not.toHaveProperty("updated_at");
+      expect((upsertCalls[0][0] as Array<Record<string, unknown>>)[0]).not.toHaveProperty("amount");
     });
 
     it("includes state in the upserted row when present", async () => {

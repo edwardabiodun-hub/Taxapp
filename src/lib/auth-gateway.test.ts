@@ -107,7 +107,7 @@ describe("auth gateway", () => {
       supabaseAnonKey: "anon-key",
       rateLimitSalt: "test-salt",
       rateLimitClient: { rpc },
-      createAuthClient: () => authClient,
+      createAuthClient: () => authClient as never,
     });
 
     const response = await handler(
@@ -142,7 +142,7 @@ describe("auth gateway", () => {
       supabaseAnonKey: "anon-key",
       rateLimitSalt: "test-salt",
       rateLimitClient: { rpc },
-      createAuthClient: () => authClient,
+      createAuthClient: () => authClient as never,
     });
 
     const response = await handler(
@@ -174,7 +174,7 @@ describe("auth gateway", () => {
       supabaseAnonKey: "anon-key",
       rateLimitSalt: "test-salt",
       rateLimitClient: { rpc },
-      createAuthClient: () => authClient,
+      createAuthClient: () => authClient as never,
     });
 
     const response = await handler(
