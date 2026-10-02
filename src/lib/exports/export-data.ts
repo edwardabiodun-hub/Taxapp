@@ -1,4 +1,5 @@
 import { EXPORT_SCHEMA_VERSION, type ExportContext, type ExportMetadata } from "@/domain/exports";
+import type { PreparationFormData, PreparationRecord } from "@/domain/preparations";
 import type { DeclarationIncomeFields } from "@/types/declaration";
 import { isConfirmedReceiptRecord, type ReceiptRecord } from "@/domain/receipts";
 
@@ -20,6 +21,64 @@ const UNSAFE_REFERENCE = /(?:data:|blob:|base64|bearer|authorization|api[_ -]?ke
 const SAFE_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9._:/#-]*$/;
 
 export interface SanitizedExportModel { readonly metadata: ExportMetadata; readonly rows: readonly ExportRow[]; readonly unsafeReceiptReferenceCount: number; }
+
+export function sanitizePreparationForExportPersistence(preparation: PreparationRecord): PreparationRecord {
+  const formData: PreparationFormData = {};
+  for (const field of SAFE_PREPARATION_FIELDS) {
+    const value = safeScalarValue(preparation.formData[field]);
+    if (value !== undefined) formData[field] = value;
+  }
+
+  const documents = Array.isArray(preparation.formData.documents)
+    ? preparation.formData.documents.map(sanitizeDocument).filter((document): document is { id: string; name: string; category: string; size: number; type: string } => Boolean(document))
+    : [];
+  if (documents.length > 0) formData.documents = documents;
+
+  const provenance = preparation.calculationProvenance;
+  const sanitizedProvenance = {
+    label: safeValue(provenance.label) as typeof provenance.label,
+    ruleProfileId: safeValue(provenance.ruleProfileId),
+    ruleProfileVersion: safeValue(provenance.ruleProfileVersion),
+    source: safeValue(provenance.source),
+    effectiveTaxYears: sanitizeStringList(provenance.effectiveTaxYears),
+    effectiveFrom: safeValue(provenance.effectiveFrom),
+    ...(provenance.effectiveTo !== undefined ? { effectiveTo: safeValue(provenance.effectiveTo) } : {}),
+    verifiedAt: safeValue(provenance.verifiedAt),
+    confidence: provenance.confidence,
+    assumptions: sanitizeStringList(provenance.assumptions),
+    missingInputWarnings: sanitizeStringList(provenance.missingInputWarnings),
+  };
+  const safeBase = {
+    id: safeValue(preparation.id),
+    jurisdictionCode: safeValue(preparation.jurisdictionCode),
+    taxYear: safeValue(preparation.taxYear),
+    ruleProfileVersion: safeValue(preparation.ruleProfileVersion),
+    calculationLabel: safeValue(preparation.calculationLabel) as PreparationRecord["calculationLabel"],
+    filingReadiness: safeValue(preparation.filingReadiness) as PreparationRecord["filingReadiness"],
+    calculationProvenance: sanitizedProvenance,
+    formData,
+    confirmedReceiptIds: preparation.confirmedReceiptIds
+      .map((receiptId) => safeIdentifier(receiptId))
+      .filter((receiptId): receiptId is string => Boolean(receiptId)),
+    confirmedReceiptInputs: {},
+    createdAt: safeValue(preparation.createdAt),
+    updatedAt: safeValue(preparation.updatedAt),
+    ...(preparation.lastExportedAt !== undefined ? { lastExportedAt: safeValue(preparation.lastExportedAt) } : {}),
+  };
+
+  if (preparation.status === "authority_confirmed") {
+    return {
+      ...safeBase,
+      status: preparation.status,
+      authorityConfirmation: {
+        authorityReference: safeValue(preparation.authorityConfirmation.authorityReference),
+        confirmedAt: safeValue(preparation.authorityConfirmation.confirmedAt),
+      },
+    } as PreparationRecord;
+  }
+
+  return { ...safeBase, status: preparation.status } as PreparationRecord;
+}
 
 export function buildSanitizedExportModel(context: ExportContext): SanitizedExportModel {
   const metadata = sanitizeExportMetadata(context.metadata);
@@ -78,7 +137,7 @@ export function safeScalarValue(value: unknown): string | undefined {
   if (value === null || value === undefined) return "";
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : undefined;
   if (typeof value === "boolean") return String(value);
-  if (typeof value !== "string" || value.length > 500 || /[\u0000-\u001f\u007f]/.test(value) || UNSAFE_TEXT.test(value)) return undefined;
+  if (typeof value !== "string" || value.length > 500 || hasControlCharacters(value) || UNSAFE_TEXT.test(value)) return undefined;
   return value;
 }
 export function safeValue(value: unknown): string { return safeScalarValue(value) ?? ""; }
@@ -86,14 +145,27 @@ export function safeValue(value: unknown): string { return safeScalarValue(value
 export function isOpaqueAssetReferenceForExport(value: unknown): value is string {
   if (typeof value !== "string") return false;
   const reference = value.trim();
-  return reference.length > 0 && reference.length <= 300 && !/[\u0000-\u001f\u007f]/.test(reference) && !UNSAFE_REFERENCE.test(reference) && !/^base64(?:[:,])/i.test(reference) && !/^[A-Za-z0-9+/]{20,}={0,2}$/.test(reference) && SAFE_REFERENCE.test(reference) && /[/:#]/.test(reference);
+  return reference.length > 0 && reference.length <= 300 && !hasControlCharacters(reference) && !UNSAFE_REFERENCE.test(reference) && !/^base64(?:[:,])/i.test(reference) && !/^[A-Za-z0-9+/]{20,}={0,2}$/.test(reference) && SAFE_REFERENCE.test(reference) && /[/:#]/.test(reference);
 }
 
-function sanitizeDocument(value: unknown): { id: string; name: string; category: string } | undefined {
+function sanitizeDocument(value: unknown): { id: string; name: string; category: string; size: number; type: string } | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const item = value as Record<string, unknown>;
   const id = safeScalarValue(item.id); const name = safeScalarValue(item.name); const category = safeScalarValue(item.category); const type = safeScalarValue(item.type);
-  return id !== undefined && name !== undefined && category !== undefined && type !== undefined && typeof item.size === "number" && Number.isFinite(item.size) && item.size >= 0 ? { id, name, category } : undefined;
+  return id !== undefined && name !== undefined && category !== undefined && type !== undefined && typeof item.size === "number" && Number.isFinite(item.size) && item.size >= 0 ? { id, name, category, size: item.size, type } : undefined;
+}
+function sanitizeStringList(values: readonly string[]): readonly string[] {
+  return values.map(safeScalarValue).filter((value): value is string => value !== undefined);
+}
+function safeIdentifier(value: unknown): string | undefined {
+  const safe = safeScalarValue(value);
+  return safe && /^[A-Za-z0-9._:-]+$/.test(safe) ? safe : undefined;
+}
+function hasControlCharacters(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return (code >= 0 && code <= 31) || code === 127;
+  });
 }
 function humanize(value: string): string { return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 export function isConfirmedReceiptForExport(receipt: ReceiptRecord): boolean { return isConfirmedReceiptRecord(receipt) && isOpaqueAssetReferenceForExport(receipt.assetRef); }

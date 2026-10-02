@@ -17,11 +17,18 @@ export function downloadExportArtifact(artifact: ExportArtifact): void {
   anchor.download = artifact.fileName;
   anchor.style.display = "none";
   document.body.appendChild(anchor);
-  try {
-    anchor.click();
-  } finally {
+  let cleanupDeferred = false;
+  const cleanup = () => {
     anchor.remove();
     URL.revokeObjectURL(url);
+  };
+
+  try {
+    anchor.click();
+    window.setTimeout(cleanup, 0);
+    cleanupDeferred = true;
+  } finally {
+    if (!cleanupDeferred) cleanup();
   }
 }
 

@@ -196,6 +196,15 @@ describe("universal export service", () => {
   it("persists the complete export metadata alongside opaque artifact references", async () => {
     const exportRecords: unknown[] = [];
     const preparations: PreparationRecord[] = [];
+    const unsafePreparation = {
+      ...preparation,
+      formData: {
+        ...preparation.formData,
+        credentials: "token=private-secret",
+        unknownFutureField: "do-not-persist",
+        rawBytes: new Uint8Array([1, 2, 3]),
+      },
+    };
     const result = await generateExportPackage(preparation, [], capability, {
       now: () => "2026-10-02T12:34:56.000Z",
       persist: true,
@@ -226,6 +235,26 @@ describe("universal export service", () => {
     expect(preparations).toEqual([
       expect.objectContaining({ status: "exported", lastExportedAt: result.generatedAt }),
     ]);
+
+    preparations.length = 0;
+    await generateExportPackage(unsafePreparation, [], capability, {
+      now: () => "2026-10-02T12:34:56.000Z",
+      persist: true,
+      persistence: {
+        saveExportPackage: async () => undefined,
+        savePreparation: async (record) => { preparations.push(record); },
+      },
+    });
+
+    expect(preparations[0].formData).toEqual({
+      annualSalary: "1000000",
+      annualRentPaid: "120000",
+      documents: preparation.formData.documents,
+    });
+    expect(preparations[0].confirmedReceiptInputs).toEqual({});
+    expect(JSON.stringify(preparations[0])).not.toContain("private-secret");
+    expect(JSON.stringify(preparations[0])).not.toContain("do-not-persist");
+    expect(JSON.stringify(preparations[0])).not.toContain("rawBytes");
   });
 
   it("moves a draft to exported when a persisted export succeeds", async () => {

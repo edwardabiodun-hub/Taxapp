@@ -312,20 +312,22 @@ const NewDeclaration = () => {
         <DeadlineCard deadline={deadline} />
       </div>
 
-      <motion.div
-        key={currentStep}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.25 }}
-      >
-        {renderStep()}
-      </motion.div>
+      <fieldset disabled={isExported || isExporting} aria-label="Exported preparation">
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.25 }}
+        >
+          {renderStep()}
+        </motion.div>
+      </fieldset>
 
       {exportPackage && <ExportPanel exportPackage={exportPackage} />}
 
       <div className="mt-8 flex flex-wrap gap-3">
-        {currentStep > 0 && (
+        {!isExported && !isExporting && currentStep > 0 && (
           <Button variant="outline" onClick={prev} className="flex-1 gap-2">
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>

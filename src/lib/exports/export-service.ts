@@ -10,7 +10,10 @@ import {
 import { createCsvArtifact } from "@/lib/exports/csv-exporter";
 import { createPdfArtifact } from "@/lib/exports/pdf-exporter";
 import { createXlsxArtifact } from "@/lib/exports/xlsx-exporter";
-import { sanitizeExportMetadata } from "@/lib/exports/export-data";
+import {
+  sanitizeExportMetadata,
+  sanitizePreparationForExportPersistence,
+} from "@/lib/exports/export-data";
 import { saveExportPackage } from "@/lib/export-repository";
 import { savePreparation } from "@/lib/preparation-repository";
 import type { ExportPackageRecord } from "@/lib/local-db";
@@ -95,12 +98,13 @@ export async function persistExportMetadata(
   }
 
   if (preparation.status !== "authority_confirmed") {
-    await persistence.savePreparation({
+    const exportedPreparation = sanitizePreparationForExportPersistence({
       ...preparation,
       status: "exported",
       lastExportedAt: exportPackage.generatedAt,
       updatedAt: exportPackage.generatedAt,
     });
+    await persistence.savePreparation(exportedPreparation);
   }
 }
 

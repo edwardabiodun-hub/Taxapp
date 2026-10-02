@@ -51,7 +51,8 @@ describe("ExportPanel", () => {
     expect(onDownload).toHaveBeenCalledWith(expect.objectContaining({ format: "csv" }));
   });
 
-  it("removes the download link and revokes the object URL after a successful click", () => {
+  it("defers cleanup until the browser has had a chance to consume the download link", () => {
+    vi.useFakeTimers();
     const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:download");
     const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
@@ -59,12 +60,18 @@ describe("ExportPanel", () => {
     downloadExportArtifact(exportPackage.artifacts[0]);
 
     expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+    expect(document.body.querySelector('a[download="tax-export.pdf"]')).toBeInTheDocument();
+
+    vi.runOnlyPendingTimers();
+
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:download");
     expect(document.body.querySelector('a[download="tax-export.pdf"]')).not.toBeInTheDocument();
 
     click.mockRestore();
     createObjectURL.mockRestore();
     revokeObjectURL.mockRestore();
+    vi.useRealTimers();
   });
 
   it("cleans up the download link and object URL when clicking throws", () => {
