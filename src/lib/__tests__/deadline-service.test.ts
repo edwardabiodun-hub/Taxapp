@@ -111,6 +111,38 @@ describe("deadline service", () => {
     expect(resolved.verifiedAt).toBe("2025-12-01T00:00:00.000Z");
   });
 
+  it("does not treat a deadline with future effectiveFrom as verified", () => {
+    const resolved = resolveDeadline(
+      capabilityWithProfile({
+        kind: "verified_state",
+        evidence: evidence("2026-06-30T23:59:59+01:00", {
+          effectiveFrom: "2026-02-01T00:00:00.000Z",
+        }),
+      }),
+      "2026",
+      now,
+    );
+
+    expect(resolved.sourceKind).toBe("unverified");
+    expect(resolved.isStale).toBe(true);
+  });
+
+  it("requires explicit effectiveFrom metadata for verified sources", () => {
+    const resolved = resolveDeadline(
+      capabilityWithProfile({
+        kind: "verified_state",
+        evidence: evidence("2026-06-30T23:59:59+01:00", {
+          effectiveFrom: undefined,
+        }),
+      }),
+      "2026",
+      now,
+    );
+
+    expect(resolved.sourceKind).toBe("unverified");
+    expect(resolved.isStale).toBe(true);
+  });
+
   it("exposes stable source labels for cards", () => {
     expect(getDeadlineSourceLabel("verified_state")).toBe("State deadline");
     expect(getDeadlineSourceLabel("national_baseline")).toBe(

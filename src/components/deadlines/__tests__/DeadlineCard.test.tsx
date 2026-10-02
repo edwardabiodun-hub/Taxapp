@@ -61,6 +61,35 @@ describe("DeadlineCard", () => {
     ).toBeInTheDocument();
   });
 
+  it("formats deadline and verification dates in the source timezone", () => {
+    render(
+      <DeadlineCard
+        deadline={{
+          ...deadline,
+          dueAt: "2026-01-03T00:30:00.000Z",
+          verifiedAt: "2025-12-01T00:30:00.000Z",
+          timezone: "America/Los_Angeles",
+        }}
+        now={() => new Date("2026-01-01T00:00:00.000Z")}
+      />,
+    );
+
+    expect(screen.getByText(/Based on the saved source date: 02 Jan 2026 \(America\/Los_Angeles\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Verified: 30 Nov 2025/i)).toBeInTheDocument();
+  });
+
+  it("falls back to UTC when the source timezone is invalid", () => {
+    render(
+      <DeadlineCard
+        deadline={{ ...deadline, timezone: "Not/A-Timezone" }}
+        now={() => new Date("2026-01-01T00:00:00.000Z")}
+      />,
+    );
+
+    expect(screen.getByText(/Based on the saved source date: 03 Jan 2026 \(UTC\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Verified: 01 Dec 2025/i)).toBeInTheDocument();
+  });
+
   it("cleans up its boundary timer and never schedules an interval", () => {
     vi.useFakeTimers();
     const setIntervalSpy = vi.spyOn(globalThis, "setInterval");

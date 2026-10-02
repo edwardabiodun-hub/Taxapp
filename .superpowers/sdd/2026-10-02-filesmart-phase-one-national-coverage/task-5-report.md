@@ -29,3 +29,27 @@ Implemented the local-first deadline resolver, boundary-driven countdown hook, a
 ## Concerns
 
 The bundled registry intentionally has no configured Nigerian deadline source, so production cards currently render the explicit unverified state until evidence is added. No Nigerian deadline, legal source, or filing claim was invented. Runtime test execution remains unverified in this worktree because of the environment startup failure.
+
+## Review Fix Round
+
+### Findings addressed
+
+- `deadline-service` now requires a valid, explicit, timezone-qualified `effectiveFrom` for both verified state and national evidence, and rejects evidence that is not yet effective at the resolution time.
+- `use-deadline-countdown` now schedules safe minute-boundary updates for all future deadlines, keeping day/hour values current without polling or intervals; the existing effect cleanup remains in place.
+- `DeadlineCard` now formats deadline and verification dates in the evidence timezone and falls back to UTC, including the displayed timezone label, when the source zone is invalid.
+
+### Regression coverage
+
+- Future and missing `effectiveFrom` evidence remains unverified.
+- Countdown updates when an actual deadline-relative day boundary is crossed.
+- Deadline and verification dates render in `America/Los_Angeles`, with invalid-zone fallback coverage.
+
+### Review-round checks
+
+- Targeted ESLint for changed source/tests — PASS.
+- `npx tsc -p tsconfig.app.json --noEmit` — BLOCKED by the same pre-existing Task 3 errors in `src/lib/__tests__/preparation-repository.test.ts` (lines 319, 321) and `src/lib/preparation-repository.ts` (line 257); no Task 5 diagnostics were reported.
+- Focused Vitest, including the review regression tests — BLOCKED before test discovery by the existing Vite/esbuild startup error: `Cannot read directory "../../../../..": Access is denied`.
+- Temporary review Vitest configuration — removed after the blocked verification attempt.
+- `git diff --check` — PASS.
+
+Status remains `DONE_WITH_CONCERNS` because the source changes and regression tests are complete, but runtime test execution is blocked by the worktree environment.

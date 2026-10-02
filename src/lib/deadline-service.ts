@@ -78,11 +78,13 @@ function inspectCandidate(
     typeof evidence.timezone === "string" &&
     evidence.timezone.trim().length > 0 &&
     isConfidence(evidence.confidence) &&
-    (evidence.effectiveFrom === undefined ||
-      isValidIsoTimestamp(evidence.effectiveFrom)) &&
+    isValidIsoTimestamp(evidence.effectiveFrom) &&
     (evidence.effectiveTo === undefined ||
       isValidIsoTimestamp(evidence.effectiveTo));
 
+  const effectiveFrom = isValidIsoTimestamp(evidence.effectiveFrom)
+    ? Date.parse(evidence.effectiveFrom)
+    : undefined;
   const effectiveTo = isValidIsoTimestamp(evidence.effectiveTo)
     ? Date.parse(evidence.effectiveTo)
     : undefined;
@@ -90,6 +92,7 @@ function inspectCandidate(
     ? Date.parse(evidence.verifiedAt)
     : undefined;
   const stale =
+    (effectiveFrom !== undefined && effectiveFrom > now.getTime()) ||
     (effectiveTo !== undefined && effectiveTo <= now.getTime()) ||
     (verifiedAt !== undefined && verifiedAt > now.getTime());
 

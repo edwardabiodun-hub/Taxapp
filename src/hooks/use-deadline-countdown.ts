@@ -49,8 +49,7 @@ function nextBoundaryDelay(deadline: ResolvedDeadline, current: Date): number | 
   if (difference <= 0) return undefined;
 
   const minuteBoundary = MINUTE_MS - (current.getTime() % MINUTE_MS);
-  const dayBoundary = DAY_MS - (current.getTime() % DAY_MS);
-  return Math.max(1, Math.min(difference, difference > DAY_MS ? dayBoundary : minuteBoundary));
+  return Math.max(1, Math.min(difference, minuteBoundary));
 }
 
 export function useDeadlineCountdown(

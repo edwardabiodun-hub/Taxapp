@@ -11,7 +11,18 @@ interface DeadlineCardProps {
   title?: string;
 }
 
-function formatDate(value: string | undefined): string | undefined {
+function getSafeTimeZone(timezone: string | undefined): string {
+  if (!timezone) return "UTC";
+
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone: timezone }).format();
+    return timezone;
+  } catch {
+    return "UTC";
+  }
+}
+
+function formatDate(value: string | undefined, timezone?: string): string | undefined {
   if (!value) return undefined;
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return undefined;
@@ -19,7 +30,7 @@ function formatDate(value: string | undefined): string | undefined {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: getSafeTimeZone(timezone),
   }).format(timestamp);
 }
 
@@ -53,7 +64,8 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
         ? `${countdown.days} day${countdown.days === 1 ? "" : "s"} remaining`
         : `${countdown.hours} hour${countdown.hours === 1 ? "" : "s"} remaining`
       : "Deadline not verified";
-  const verifiedDate = formatDate(deadline?.verifiedAt);
+  const displayTimeZone = getSafeTimeZone(deadline?.timezone);
+  const verifiedDate = formatDate(deadline?.verifiedAt, displayTimeZone);
 
   return (
     <Card className="border-border/70 shadow-card" data-source-kind={sourceClass}>
@@ -78,8 +90,8 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
           <p className="text-2xl font-display font-bold text-foreground">{remaining}</p>
           {deadline?.dueAt && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {deadline.isStale ? "Previously reported date" : "Based on the saved source date"}: {formatDate(deadline.dueAt) ?? "Date unavailable"}
-              {deadline.timezone ? ` (${deadline.timezone})` : ""}
+              {deadline.isStale ? "Previously reported date" : "Based on the saved source date"}: {formatDate(deadline.dueAt, displayTimeZone) ?? "Date unavailable"}
+              {` (${displayTimeZone})`}
             </p>
           )}
         </div>
