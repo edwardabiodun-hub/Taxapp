@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,15 +7,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CountryThemeProvider } from "@/contexts/CountryThemeContext";
 import { useHasProfile } from "@/hooks/use-has-profile";
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
-import NewDeclaration from "./pages/NewDeclaration";
-import Submissions from "./pages/Submissions";
-import SubmissionDetail from "./pages/SubmissionDetail";
-import Profile from "./pages/Profile";
-import TaxCalculator from "./pages/TaxCalculator";
-import Onboarding from "./pages/Onboarding";
-import NotFound from "./pages/NotFound";
+import RouteBoundary from "./components/layout/RouteBoundary";
 import { loadJurisdictionCapabilities } from "@/lib/jurisdiction-service";
+
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const NewDeclaration = lazy(() => import("./pages/NewDeclaration"));
+const Submissions = lazy(() => import("./pages/Submissions"));
+const SubmissionDetail = lazy(() => import("./pages/SubmissionDetail"));
+const Profile = lazy(() => import("./pages/Profile"));
+const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -33,7 +35,7 @@ const AppRoutes = () => {
   if (!hasProfile) {
     return (
       <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={<RouteBoundary><Onboarding /></RouteBoundary>} />
         <Route path="*" element={<Navigate to="/onboarding" replace />} />
       </Routes>
     );
@@ -50,7 +52,7 @@ const AppRoutes = () => {
         <Route path="/calculator" element={<TaxCalculator />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={<RouteBoundary><NotFound /></RouteBoundary>} />
     </Routes>
   );
 };

@@ -30,6 +30,18 @@ The default nested-path Vitest/Vite invocations remain affected by the host's Wi
 
 ## Migration rehearsal expectations
 
+### Follow-up: build warning remediation
+
+- Updated only `caniuse-lite` in the npm lockfile, from `1.0.30001727` to `1.0.30001814`. The standalone database updater selected the repository's Bun lockfile, so the update used `npm update caniuse-lite --ignore-scripts --no-audit --no-fund` instead.
+- Pages now load through React lazy imports. A route boundary presents an accessible loading state and a safe error with an explicit reload action; application navigation remains outside the page boundary.
+- Main application chunk: 846.28 kB to 461.11 kB minified; 261.85 kB to 148.97 kB gzip. These figures describe the main chunk, not the total bytes needed by every route.
+- `npm run build`: PASS, with neither stale Browserslist nor oversized-chunk warnings. No warning threshold changes or manual chunk rules were needed.
+- `npm test`: PASS, 28 suites / 181 tests, including loading and failed-import navigation recovery.
+- TypeScript: PASS. ESLint: PASS, 0 errors / 10 existing Fast Refresh warnings.
+- Standard build and test commands worked in the original worktree with elevated filesystem access; no mapped-drive or copied-source workaround was needed for this follow-up.
+
+### Expected migration behavior
+
 - A legacy Nigeria `draft` remains `draft`.
 - A legacy `submitted` label without trusted local authority state becomes `ready_for_review`, never `authority_confirmed`.
 - Missing documents remain an empty document list and do not block reading the preparation.

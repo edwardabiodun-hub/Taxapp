@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import BottomNav from "./BottomNav";
 import TopBar from "./TopBar";
 import OfflineBanner from "./OfflineBanner";
+import RouteBoundary from "./RouteBoundary";
 
 const AppLayout = () => {
   const location = useLocation();
@@ -11,7 +12,7 @@ const AppLayout = () => {
       <TopBar />
       <OfflineBanner />
       <main className="flex-1 pb-20 overflow-y-auto">
-        <Outlet />
+        <RouteBoundary><Outlet /></RouteBoundary>
       </main>
       <BottomNav />
     </div>
