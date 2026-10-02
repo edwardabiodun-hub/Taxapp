@@ -42,6 +42,13 @@ const extractedFields = new Set([
   "taxAmount",
   "totalAmount",
 ]);
+const RECEIPT_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]);
+const EXECUTABLE_EXTENSIONS = /\.(?:php|php[0-9]?|jsp|jspx|exe|sh|bash|bat|cmd|com|msi|dll|scr|ps1|vbs|js|mjs|cjs)$/i;
 
 export function isReceiptRecordPersistable(value: unknown): value is ReceiptRecord {
   if (!isPlainObject(value) || !hasOnlyKeys(value, receiptFields)) return false;
@@ -52,6 +59,8 @@ export function isReceiptRecordPersistable(value: unknown): value is ReceiptReco
     !isOpaqueAssetReference(value.assetRef) ||
     !isSafeNonEmptyString(value.fileName) ||
     !isSafeNonEmptyString(value.mimeType) ||
+    EXECUTABLE_EXTENSIONS.test(value.fileName) ||
+    !RECEIPT_MIME_TYPES.has(value.mimeType.toLowerCase()) ||
     typeof value.size !== "number" ||
     !Number.isInteger(value.size) ||
     value.size < 0 ||
