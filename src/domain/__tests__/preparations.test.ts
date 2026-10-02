@@ -14,6 +14,7 @@ import {
   getPreparationCalculationLabel,
   isAuthorityConfirmationValid,
   isPreparationCalculationReady,
+  type CalculationProvenance,
   type PreparationRecord,
 } from "@/domain/preparations";
 import {
@@ -56,6 +57,21 @@ const genericCapability: JurisdictionCapability = {
   evidence: {},
   notes: "Generic preparation and universal export are available.",
   registryVersion: "2026.1",
+};
+
+const incompleteGenericProvenance: CalculationProvenance = {
+  label: "Generic Nigerian PIT estimate",
+  ruleProfileId: "ng-pit-baseline",
+  ruleProfileVersion: "",
+  source: "",
+  effectiveTaxYears: [],
+  effectiveFrom: "",
+  verifiedAt: "",
+  confidence: null,
+  assumptions: [],
+  missingInputWarnings: [
+    "Approved official Nigerian PIT baseline source is not configured.",
+  ],
 };
 
 describe("preparation domain contracts", () => {
@@ -114,6 +130,7 @@ describe("preparation domain contracts", () => {
       ruleProfileVersion: "2026.1",
       calculationLabel: "Generic Nigerian PIT estimate",
       filingReadiness: "Not yet supported",
+      calculationProvenance: incompleteGenericProvenance,
       status: "draft",
       formData: {},
       confirmedReceiptIds: [],
@@ -161,6 +178,26 @@ describe("preparation domain contracts", () => {
     expect(isPreparationCalculationReady(unselected)).toBe(false);
   });
 
+  it("does not treat a generic label without validated provenance as calculation-ready", () => {
+    const preparation = {
+      id: "prep-unverified",
+      jurisdictionCode: "NG-LA",
+      taxYear: "2026",
+      ruleProfileVersion: "",
+      calculationLabel: "Generic Nigerian PIT estimate",
+      filingReadiness: "Not filing-ready",
+      calculationProvenance: incompleteGenericProvenance,
+      status: "draft",
+      formData: {},
+      confirmedReceiptIds: [],
+      confirmedReceiptInputs: {},
+      createdAt: "2026-10-02T00:00:00.000Z",
+      updatedAt: "2026-10-02T00:00:00.000Z",
+    } satisfies PreparationRecord;
+
+    expect(isPreparationCalculationReady(preparation)).toBe(false);
+  });
+
   it("requires authority evidence for authority-confirmed records and events", () => {
     const confirmation = {
       authorityReference: "NRS-2026-0001",
@@ -173,6 +210,7 @@ describe("preparation domain contracts", () => {
       ruleProfileVersion: "2026.1",
       calculationLabel: "Generic Nigerian PIT estimate",
       filingReadiness: "Not yet supported",
+      calculationProvenance: incompleteGenericProvenance,
       status: "authority_confirmed",
       authorityConfirmation: confirmation,
       formData: {},
@@ -205,6 +243,7 @@ describe("preparation domain contracts", () => {
       ruleProfileVersion: "2026.1",
       calculationLabel: "Generic Nigerian PIT estimate",
       filingReadiness: "Not yet supported",
+      calculationProvenance: incompleteGenericProvenance,
       status: "draft",
       formData: { annualSalary: "1000000" },
       confirmedReceiptIds: [],

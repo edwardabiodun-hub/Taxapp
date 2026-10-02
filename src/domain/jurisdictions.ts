@@ -15,6 +15,7 @@ export interface EvidenceMetadata {
 
 /** Review metadata for the generic national baseline, not state verification. */
 export interface BaselineMetadata {
+  readonly status?: "configured" | "unconfigured";
   readonly source: string;
   readonly effectiveFrom: string;
   readonly effectiveTo?: string;

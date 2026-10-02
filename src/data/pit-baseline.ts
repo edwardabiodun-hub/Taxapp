@@ -11,10 +11,12 @@ export interface PitRuleInputs {
 
 export interface PitBaseline {
   readonly profileId: "ng-pit-baseline";
+  readonly status: "configured" | "unconfigured";
   readonly version: string;
   readonly effectiveTaxYears: readonly string[];
   readonly source: string;
   readonly verifiedAt: string;
+  readonly confidence: EvidenceConfidence | null;
   readonly ruleInputs: PitRuleInputs;
 }
 
@@ -51,10 +53,12 @@ const ruleInputs: PitRuleInputs = Object.freeze({
  */
 const PIT_BASELINE: PitBaseline = Object.freeze({
   profileId: "ng-pit-baseline",
-  version: "2026.1",
+  status: "unconfigured",
+  version: "",
   effectiveTaxYears: Object.freeze([]),
   source: "",
   verifiedAt: "",
+  confidence: null,
   ruleInputs,
 });
 
@@ -62,15 +66,23 @@ export function getPitRuleInputs(): PitRuleInputs {
   return PIT_BASELINE.ruleInputs;
 }
 
-export function getPitBaseline(): PitBaseline {
-  const hasSource = PIT_BASELINE.source.trim().length > 0;
-  const hasEffectiveTaxYears = PIT_BASELINE.effectiveTaxYears.some(
-    (taxYear) => taxYear.trim().length > 0,
+export function isPitBaselineConfigured(baseline: PitBaseline): boolean {
+  return (
+    baseline.status === "configured" &&
+    baseline.source.trim().length > 0 &&
+    baseline.version.trim().length > 0 &&
+    baseline.verifiedAt.trim().length > 0 &&
+    baseline.confidence !== null &&
+    baseline.effectiveTaxYears.length > 0 &&
+    baseline.effectiveTaxYears.every((taxYear) => taxYear.trim().length > 0)
   );
+}
 
-  if (!hasSource || !hasEffectiveTaxYears) {
+export function getPitBaseline(): PitBaseline {
+  if (!isPitBaselineConfigured(PIT_BASELINE)) {
     throw new PitBaselineConfigurationError();
   }
 
   return PIT_BASELINE;
 }
+import type { EvidenceConfidence } from "@/domain/jurisdictions";

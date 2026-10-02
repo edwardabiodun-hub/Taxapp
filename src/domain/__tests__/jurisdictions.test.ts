@@ -60,6 +60,22 @@ describe("Nigeria jurisdiction registry", () => {
     expect(capability.ruleProfile.kind).toBe("generic_nigerian_pit");
   });
 
+  it("keeps the generic registry profile explicitly unconfigured", () => {
+    const capability = getJurisdictionCapability("NG-LA");
+
+    expect(capability.ruleProfile).toMatchObject({
+      kind: "generic_nigerian_pit",
+      profileId: "ng-pit-baseline",
+      version: "",
+      baseline: {
+        status: "unconfigured",
+        source: "",
+        effectiveFrom: "",
+        reviewedAt: "",
+      },
+    });
+  });
+
   it("returns deeply immutable registry data", () => {
     const entries = listNigeriaJurisdictions();
     const first = entries[0];

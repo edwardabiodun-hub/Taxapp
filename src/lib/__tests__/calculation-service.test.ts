@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
+import {
+  getPitRuleInputs,
+  type PitBaseline,
+} from "@/data/pit-baseline";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
+import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import {
   calculatePreparation,
   getPitBaseline,
@@ -13,6 +18,33 @@ const minimumInput: PreparationCalculationInput = {
 };
 
 const notSupportedCapability = getJurisdictionCapability("NG-LA");
+
+const configuredBaseline: PitBaseline = {
+  profileId: "ng-pit-baseline",
+  status: "configured",
+  version: "test-2026.1",
+  effectiveTaxYears: ["2026"],
+  source: "test-approved-source",
+  verifiedAt: "2026-10-02",
+  confidence: "high",
+  ruleInputs: getPitRuleInputs(),
+};
+
+const verifiedStateCapability: JurisdictionCapability = {
+  ...notSupportedCapability,
+  ruleProfile: {
+    kind: "verified_state",
+    profileId: "ng-la-pit",
+    version: "state-2026.1",
+    evidence: {
+      source: "test-state-source",
+      effectiveFrom: "2026-01-01",
+      effectiveTo: "2026-12-31",
+      verifiedAt: "2026-10-02",
+      confidence: "high",
+    },
+  },
+};
 
 describe("calculation service", () => {
   it("fails closed when the approved PIT baseline source is not configured", () => {
@@ -58,6 +90,36 @@ describe("calculation service", () => {
   it("rejects an unconfigured baseline instead of returning fabricated metadata", () => {
     expect(() => getPitBaseline()).toThrow(
       "Nigerian PIT baseline source and effective tax-year metadata are required.",
+    );
+  });
+
+  it("uses the applied verified-state profile for calculation provenance", () => {
+    const result = calculatePreparation(
+      minimumInput,
+      verifiedStateCapability,
+      configuredBaseline,
+    );
+
+    expect(result.label).toBe("State-specific estimate");
+    expect(result.ruleProfileVersion).toBe("state-2026.1");
+    expect(result.source).toBe("test-state-source");
+    expect(result.effectiveFrom).toBe("2026-01-01");
+    expect(result.effectiveTo).toBe("2026-12-31");
+    expect(result.verifiedAt).toBe("2026-10-02");
+    expect(result.confidence).toBe("high");
+    expect(result.provenance?.source).toBe("test-state-source");
+  });
+
+  it("fails closed when the configured baseline does not cover the requested tax year", () => {
+    const result = calculatePreparation(
+      minimumInput,
+      notSupportedCapability,
+      { ...configuredBaseline, effectiveTaxYears: ["2025"] },
+    );
+
+    expect(result.label).toBe("Not filing-ready");
+    expect(result.missingInputWarnings).toContain(
+      "Approved Nigerian PIT baseline does not cover tax year 2026.",
     );
   });
 });

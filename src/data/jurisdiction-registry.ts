@@ -7,9 +7,8 @@ import type {
 } from "@/domain/jurisdictions";
 
 const REGISTRY_VERSION = "2026.1";
-const GENERIC_RULE_PROFILE_VERSION = "2026.1";
-const REGISTRY_REVIEW_DATE = "2026-10-02";
-const GENERIC_RULE_SOURCE = "Nigerian PIT baseline; state-specific source verification pending";
+const GENERIC_RULE_PROFILE_VERSION = "";
+const GENERIC_RULE_SOURCE = "";
 
 const freezeEvidence = (evidence: EvidenceMetadata): EvidenceMetadata =>
   Object.freeze({ ...evidence });
@@ -58,9 +57,10 @@ const genericRuleProfile = (): RuleProfile => ({
   profileId: "ng-pit-baseline" as const,
   version: GENERIC_RULE_PROFILE_VERSION,
   baseline: {
+    status: "unconfigured",
     source: GENERIC_RULE_SOURCE,
-    effectiveFrom: "2026-01-01",
-    reviewedAt: REGISTRY_REVIEW_DATE,
+    effectiveFrom: "",
+    reviewedAt: "",
   },
 });
 
@@ -81,7 +81,7 @@ const createConservativeCapability = (
   exportFormats: ["pdf", "csv", "xlsx"],
   evidence: {},
   notes:
-    "Generic Nigerian PIT preparation and universal export are available; state-specific rules and filing workflows require verified evidence.",
+    "Generic Nigerian PIT preparation is not filing-ready until an approved national baseline source is configured; state-specific rules and filing workflows require verified evidence.",
   registryVersion: REGISTRY_VERSION,
 });
 
