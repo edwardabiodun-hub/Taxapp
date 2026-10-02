@@ -6,15 +6,16 @@ DONE_WITH_CONCERNS
 
 Task 3 source changes and the remaining re-review fixes are complete. Sync
 acknowledgement now compares the full prepared snapshot, new persistence starts
-only at `draft`, legacy migration applies explicit transition checks without
-downgrading local records, and receipt records reject inline/raw asset data.
+only at `draft`, first-time legacy/sync records are materialized through each
+valid lifecycle transition, evidence-backed authority records are preserved,
+and receipt records require opaque storage references.
 The post-fix focused test rerun was intentionally stopped at the user's
 request; prior bounded runs remain limited by the documented environment
 issues below.
 
 ## Commit hash
 
-`3461b56147aceabca3dcdbd27d69880e833f320a`.
+`246feb9` (source/test fix commit; report finalization follows in this commit).
 
 ## Files changed
 
@@ -165,11 +166,12 @@ Result: PASS. Git emitted only normal LF-to-CRLF working-copy warnings.
   authority-confirmed preparation is never downgraded by a legacy pull.
 - Sync acknowledgement uses a full stable serialization of the prepared
   snapshot, so an equal-timestamp local edit remains pending.
-- New records can only start as `draft`; legacy migration may materialize
-  `ready_for_review` only through the explicit draft-to-ready path and skips
-  authority-confirmed records without a valid local lifecycle path.
-- Receipt `assetRef` values are limited to opaque references; `data:`, `blob:`,
-  base64, and byte payloads are rejected.
+- New records can only start as `draft`; first-time legacy/sync migration
+  materializes the target status through each valid lifecycle transition,
+  including the evidence-gated path to `authority_confirmed`. Existing records
+  with invalid transitions are left unchanged.
+- Receipt `assetRef` values require an opaque storage delimiter; `data:`,
+  `blob:`, padded or unpadded Base64, and raw payloads are rejected.
 
 ## Concerns
 
