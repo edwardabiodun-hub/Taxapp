@@ -9,12 +9,17 @@ import {
   type JurisdictionCapability,
 } from "@/domain/jurisdictions";
 import {
+  createPreparationRecord,
   getConfirmedCalculationInputs,
   getPreparationCalculationLabel,
   isAuthorityConfirmationValid,
   isPreparationCalculationReady,
   type PreparationRecord,
 } from "@/domain/preparations";
+import {
+  defaultNigeriaForm,
+  mapLegacyDeclaration,
+} from "@/types/declaration";
 import {
   isSubmissionEventValid,
   type SubmissionEvent,
@@ -129,22 +134,27 @@ describe("preparation domain contracts", () => {
     expect(event.type).toBe("created");
   });
 
-  it("keeps an unselected jurisdiction out of calculation-ready preparation", () => {
-    const unselected = {
-      id: "prep-unselected",
-      jurisdictionCode: "",
-      taxYear: "2026",
-      ruleProfileVersion: "2026.1",
-      calculationLabel: "Not filing-ready",
-      filingReadiness: "Not yet supported",
-      status: "draft",
-      formData: {},
-      confirmedReceiptIds: [],
-      confirmedReceiptInputs: {},
-      createdAt: "2026-10-02T00:00:00.000Z",
-      updatedAt: "2026-10-02T00:00:00.000Z",
-    } satisfies PreparationRecord;
+  it("keeps a mapped empty-jurisdiction legacy draft out of calculation-ready preparation", () => {
+    const legacyDraft = mapLegacyDeclaration({ ...defaultNigeriaForm });
+    const unselected = createPreparationRecord(
+      {
+        id: "prep-unselected",
+        jurisdictionCode: legacyDraft.jurisdictionCode,
+        taxYear: "2026",
+        ruleProfileVersion: "2026.1",
+        status: "draft",
+        formData: { ...legacyDraft },
+        confirmedReceiptIds: [],
+        confirmedReceiptInputs: {},
+        createdAt: "2026-10-02T00:00:00.000Z",
+        updatedAt: "2026-10-02T00:00:00.000Z",
+      },
+      genericCapability,
+    );
 
+    expect(legacyDraft.jurisdictionCode).toBe("");
+    expect(unselected.calculationLabel).toBe("Not filing-ready");
+    expect(unselected.filingReadiness).toBe("Not filing-ready");
     expect(getPreparationCalculationLabel(unselected, genericCapability)).toBe(
       "Not filing-ready",
     );

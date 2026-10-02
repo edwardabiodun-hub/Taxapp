@@ -8,6 +8,7 @@ import { getCalculationLabel } from "@/domain/tax-readiness";
 
 export type PreparationFormData = Record<string, unknown>;
 export type ConfirmedReceiptInputs = Readonly<Record<string, unknown>>;
+export type PreparationFilingReadiness = ReadinessLabel | "Not filing-ready";
 
 export interface AuthorityConfirmation {
   readonly authorityReference: string;
@@ -20,7 +21,7 @@ interface PreparationRecordBase {
   readonly taxYear: string;
   readonly ruleProfileVersion: string;
   readonly calculationLabel: CalculationLabel;
-  readonly filingReadiness: ReadinessLabel;
+  readonly filingReadiness: PreparationFilingReadiness;
   readonly formData: PreparationFormData;
   readonly confirmedReceiptIds: readonly string[];
   /** Receipt-derived values are kept outside formData and enter only after confirmation. */
@@ -29,6 +30,14 @@ interface PreparationRecordBase {
   readonly updatedAt: string;
   readonly lastExportedAt?: string;
 }
+
+export type PreparationRecordInput = Omit<
+  PreparationRecordBase,
+  "calculationLabel" | "filingReadiness"
+> & {
+  readonly status: PreparationStatus;
+  readonly authorityConfirmation?: AuthorityConfirmation;
+};
 
 export type PreparationRecord =
   | (PreparationRecordBase & {
@@ -39,6 +48,50 @@ export type PreparationRecord =
       readonly status: "authority_confirmed";
       readonly authorityConfirmation: AuthorityConfirmation;
     });
+
+/**
+ * Creates a preparation from a capability without allowing an unresolved
+ * legacy draft to inherit a generic calculation label or filing readiness.
+ */
+export function createPreparationRecord(
+  input: PreparationRecordInput,
+  capability: JurisdictionCapability,
+): PreparationRecord {
+  const jurisdictionCode = input.jurisdictionCode.trim();
+  const isSelected = jurisdictionCode.length > 0;
+
+  if (
+    input.status === "authority_confirmed" &&
+    (!input.authorityConfirmation ||
+      input.authorityConfirmation.authorityReference.trim().length === 0 ||
+      input.authorityConfirmation.confirmedAt.trim().length === 0)
+  ) {
+    throw new Error(
+      "Authority confirmation requires a non-empty authority reference and timestamp.",
+    );
+  }
+
+  if (input.status !== "authority_confirmed" && input.authorityConfirmation) {
+    throw new Error(
+      "Only authority-confirmed preparations may include authority confirmation.",
+    );
+  }
+
+  if (!isSelected && input.status === "authority_confirmed") {
+    throw new Error(
+      "An unselected jurisdiction cannot be authority confirmed.",
+    );
+  }
+
+  return {
+    ...input,
+    jurisdictionCode,
+    calculationLabel: getCalculationLabel(capability, jurisdictionCode),
+    filingReadiness: isSelected
+      ? capability.primaryReadiness
+      : "Not filing-ready",
+  } as PreparationRecord;
+}
 
 export function getPreparationCalculationLabel(
   preparation: Pick<PreparationRecord, "jurisdictionCode">,
