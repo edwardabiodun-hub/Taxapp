@@ -7,6 +7,7 @@ import {
   type ReceiptFields,
   type ReceiptRecord,
 } from "@/domain/receipts";
+import type { PreparationRecord } from "@/domain/preparations";
 import { db, type LocalDeclaration } from "@/lib/local-db";
 import {
   getPreparation,
@@ -143,7 +144,7 @@ describe("phase one security boundaries", () => {
   });
 
   it("requires an authority reference before confirmation", async () => {
-    let current = {
+    let current: PreparationRecord = {
       id: "prep-authority",
       jurisdictionCode: "NG-FCT",
       taxYear: "2026",
