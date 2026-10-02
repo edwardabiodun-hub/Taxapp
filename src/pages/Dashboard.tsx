@@ -188,7 +188,7 @@ const Dashboard = () => {
       {/* Recent */}
       <motion.div variants={item}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display font-bold text-foreground">Recent Submissions</h3>
+          <h3 className="font-display font-bold text-foreground">Recent preparations</h3>
           <button
             onClick={() => navigate("/submissions")}
             className="text-xs font-medium text-primary hover:underline"
@@ -214,6 +214,9 @@ const Dashboard = () => {
                   status: preparation?.status || declaration?.status || "draft",
                   date: new Date(preparation?.updatedAt || declaration?.updatedAt || declaration?.createdAt || "").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
                   amount: declaration?.amount || "—",
+                  calculationLabel: preparation?.calculationLabel,
+                  readiness: preparation?.filingReadiness,
+                  exportFormats: preparation?.status === "exported" ? ["PDF", "CSV", "XLSX"] : undefined,
                 }}
                 onClick={() => navigate(`/submissions/${record.id}`)}
               />

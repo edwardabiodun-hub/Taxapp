@@ -12,6 +12,9 @@ export interface SubmissionItem {
   date: string;
   amount: string;
   capability?: JurisdictionCapability;
+  calculationLabel?: string;
+  readiness?: string;
+  exportFormats?: readonly string[];
 }
 
 interface SubmissionCardProps {
@@ -45,6 +48,21 @@ const SubmissionCard = ({ submission, onClick }: SubmissionCardProps) => {
           {submission.type} — {submission.taxYear}
         </p>
         <p className="text-xs text-muted-foreground">{submission.date}</p>
+        {submission.calculationLabel && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Calculation: {submission.calculationLabel}
+          </p>
+        )}
+        {submission.readiness && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Readiness: {submission.readiness}
+          </p>
+        )}
+        {submission.exportFormats && submission.exportFormats.length > 0 && (
+          <p className="break-words text-[10px] text-muted-foreground">
+            Export package: {submission.exportFormats.join(", ")}
+          </p>
+        )}
       </div>
       <div className="text-right flex-shrink-0">
         <p className="text-sm font-display font-bold text-card-foreground">{submission.amount}</p>

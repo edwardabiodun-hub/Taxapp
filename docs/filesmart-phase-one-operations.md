@@ -8,6 +8,7 @@ Phase One is a Nigeria-wide, local-first preparation experience. Users may selec
 
 - Review each jurisdiction capability before changing its readiness, submission mode, rule profile, deadline, or API status.
 - Record the authority source, effective date, verification date, confidence, and reviewer for every verified rule or deadline.
+- Recheck verified rule and deadline evidence at least quarterly and immediately after a Finance Act, tax authority notice, or portal-template change. Mark entries stale when the review date exceeds that cadence.
 - Keep unverified entries conservative. Do not promote a state to portal-ready or direct filing without current evidence, validated templates, and an approved integration test.
 - Refreshes may update cached registry entries only when the incoming version is newer; equal-version cached evidence is preserved.
 
@@ -15,6 +16,7 @@ Phase One is a Nigeria-wide, local-first preparation experience. Users may selec
 
 - The Nigerian PIT baseline remains unconfigured until an approved legal source and effective tax-year scope are recorded.
 - Universal exports must include schema version, jurisdiction, tax year, readiness, calculation provenance, source metadata, and `notSubmitted: true`.
+- Treat `schemaVersion` as a compatibility contract: readers must accept the current version and one prior version, migrations must be additive and tested, and a breaking change requires a new version plus an explicit export-reader migration before rollout.
 - Exported packages are for review or manual upload. They do not submit returns or confirm authority acceptance.
 
 ## Receipt/OCR controls

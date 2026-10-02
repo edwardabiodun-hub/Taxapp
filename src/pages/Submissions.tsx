@@ -94,6 +94,9 @@ const Submissions = () => {
                 }),
                 amount: declaration?.amount || "—",
                 capability,
+                calculationLabel: preparation?.calculationLabel,
+                readiness: preparation?.filingReadiness,
+                exportFormats: preparation?.status === "exported" ? ["PDF", "CSV", "XLSX"] : undefined,
               }}
               onClick={() => navigate(`/submissions/${record.id}`)}
             />
