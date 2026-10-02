@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
 import type { PreparationRecord } from "@/domain/preparations";
+import { buildExportRows } from "@/lib/exports/export-data";
 import { generateExportPackage } from "@/lib/exports/export-service";
 
 const capability = getJurisdictionCapability("NG-LA");
@@ -107,11 +108,123 @@ describe("universal export service", () => {
     const csv = await result.artifacts.find((artifact) => artifact.format === "csv")!.data.text();
 
     expect(csv).toContain("schema_version,section,field,label,value,source,reference,category,date,amount,status");
-    expect(csv).toContain("'@do-not-execute");
+    expect(csv).toContain("'=1+1");
     expect(csv).toContain("meal-receipt.jpg");
     expect(csv).not.toContain("receipt-needs-review");
     expect(csv).not.toContain("do-not-export");
     expect(csv).not.toContain("rawBytes");
+  });
+
+  it("exports only an explicit safe preparation allowlist across the shared export model", async () => {
+    const unsafePreparation = {
+      ...preparation,
+      formData: {
+        ...preparation.formData,
+        annualSalary: "=1+1",
+        receiptImage: "data:image/png;base64,PRIVATE_BYTES",
+        imageData: "blob:http://localhost/private-image",
+        credentials: "token=private-secret",
+        unknownFutureField: "do-not-export",
+        rawBytes: new Uint8Array([1, 2, 3]),
+      },
+    };
+
+    const rows = buildExportRows({
+      preparation: unsafePreparation,
+      receipts: [],
+      capability,
+      metadata: {
+        preparationId: preparation.id,
+        jurisdiction: capability.name,
+        jurisdictionCode: capability.jurisdictionCode,
+        taxYear: preparation.taxYear,
+        registryVersion: capability.registryVersion,
+        ruleProfileId: "ng-pit-baseline",
+        ruleProfileVersion: "2026.1",
+        calculationLabel: preparation.calculationLabel,
+        readiness: preparation.filingReadiness,
+        source: "Nigerian PIT baseline",
+        sourceVerifiedAt: "2026-10-01",
+        deadlineSource: "NRS",
+        deadlineVerifiedAt: "2026-10-01",
+        generatedAt: "2026-10-02T00:00:00.000Z",
+        notSubmitted: true,
+      },
+    });
+
+    const serializedRows = JSON.stringify(rows);
+    expect(serializedRows).toContain("annualSalary");
+    expect(serializedRows).not.toContain("receiptImage");
+    expect(serializedRows).not.toContain("imageData");
+    expect(serializedRows).not.toContain("credentials");
+    expect(serializedRows).not.toContain("unknownFutureField");
+    expect(serializedRows).not.toContain("PRIVATE_BYTES");
+    expect(serializedRows).not.toContain("private-image");
+    expect(serializedRows).not.toContain("private-secret");
+
+    const result = await generateExportPackage(unsafePreparation, [], capability, { persist: false });
+    for (const artifact of result.artifacts) {
+      const text = await artifact.data.text();
+      expect(text).not.toContain("PRIVATE_BYTES");
+      expect(text).not.toContain("private-image");
+      expect(text).not.toContain("private-secret");
+      expect(text).not.toContain("unknownFutureField");
+    }
+  });
+
+  it.each([
+    "data:image/png;base64,PRIVATE_BYTES",
+    "blob:http://localhost/private-image",
+    "base64:PRIVATE_BYTES",
+    "raw-receipt-bytes",
+    "receipts/private-token-secret",
+  ])("omits and flags unsafe confirmed receipt assetRef %s", async (assetRef) => {
+    const result = await generateExportPackage(
+      preparation,
+      [{ ...confirmedReceipt, assetRef }],
+      capability,
+      { persist: false },
+    );
+    const csv = await result.artifacts.find((artifact) => artifact.format === "csv")!.data.text();
+
+    expect(csv).toContain("unsafe_receipt_reference");
+    expect(csv).toContain("Omitted unsafe receipt reference");
+    expect(csv).not.toContain(assetRef);
+  });
+
+  it("persists the complete export metadata alongside opaque artifact references", async () => {
+    const exportRecords: Array<Record<string, unknown>> = [];
+    const preparations: PreparationRecord[] = [];
+    const result = await generateExportPackage(preparation, [], capability, {
+      now: () => "2026-10-02T12:34:56.000Z",
+      persist: true,
+      persistence: {
+        saveExportPackage: async (record) => exportRecords.push(record),
+        savePreparation: async (record) => preparations.push(record),
+      },
+    });
+
+    expect(exportRecords).toHaveLength(3);
+    expect(exportRecords).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        schemaVersion: result.schemaVersion,
+        preparationId: result.metadata.preparationId,
+        jurisdiction: result.metadata.jurisdiction,
+        jurisdictionCode: result.metadata.jurisdictionCode,
+        taxYear: result.metadata.taxYear,
+        ruleProfileVersion: result.metadata.ruleProfileVersion,
+        calculationLabel: result.metadata.calculationLabel,
+        readiness: result.metadata.readiness,
+        generatedAt: result.metadata.generatedAt,
+        notSubmitted: true,
+        source: result.metadata.source,
+        assetRef: expect.stringMatching(/^exports\/prep-export-1\/(pdf|csv|xlsx)\//),
+        metadata: result.metadata,
+      }),
+    ]));
+    expect(preparations).toEqual([
+      expect.objectContaining({ status: "exported", lastExportedAt: result.generatedAt }),
+    ]);
   });
 
   it("includes required workbook sheets and a not-submitted notice", async () => {
