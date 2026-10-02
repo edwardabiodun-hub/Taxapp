@@ -88,7 +88,7 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <p className="break-words text-2xl font-display font-bold text-foreground" role="status">
+          <p className="break-words text-2xl font-display font-bold text-foreground">
             {remaining}
           </p>
           <p className="sr-only" aria-live="polite" aria-atomic="true">

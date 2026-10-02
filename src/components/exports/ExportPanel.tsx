@@ -51,13 +51,13 @@ const ExportPanel = ({ exportPackage, onDownload }: ExportPanelProps) => {
     <Card aria-label="Export package" className="mt-5">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <CardTitle className="text-base">Download tax package</CardTitle>
-            <CardDescription className="mt-1">
+            <CardDescription className="mt-1 break-words">
               {exportPackage.metadata.jurisdiction} · {exportPackage.metadata.taxYear} · {exportPackage.metadata.calculationLabel}
             </CardDescription>
           </div>
-          <span className="rounded-full bg-warning/10 px-2.5 py-1 text-[10px] font-semibold text-warning">
+          <span className="max-w-[40%] shrink-0 break-words rounded-full bg-warning/10 px-2.5 py-1 text-right text-[10px] font-semibold text-warning">
             Not submitted
           </span>
         </div>
