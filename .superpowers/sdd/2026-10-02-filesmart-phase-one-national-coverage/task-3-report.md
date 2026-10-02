@@ -4,16 +4,17 @@
 
 DONE_WITH_CONCERNS
 
-Task 3 source changes are complete. The required migration tests execute and
-pass under the bounded no-SWC configuration, but the repository tests cannot
-open Dexie in the current jsdom environment because IndexedDB/fake-indexeddb is
-not available. The normal Vitest/build path is also blocked before execution
-by the documented SWC native-cache failure. The source-level Task 3 typecheck
-passes.
+Task 3 source changes and the remaining re-review fixes are complete. Sync
+acknowledgement now compares the full prepared snapshot, new persistence starts
+only at `draft`, legacy migration applies explicit transition checks without
+downgrading local records, and receipt records reject inline/raw asset data.
+The post-fix focused test rerun was intentionally stopped at the user's
+request; prior bounded runs remain limited by the documented environment
+issues below.
 
 ## Commit hash
 
-`ef88c35bdf647c36690a485510a5d30cd14c8239`.
+`3461b56147aceabca3dcdbd27d69880e833f320a`.
 
 ## Files changed
 
@@ -27,6 +28,7 @@ passes.
 - `src/lib/sync-service.ts`
 - `src/lib/__tests__/local-db-migration.test.ts`
 - `src/lib/__tests__/preparation-repository.test.ts`
+- `src/lib/__tests__/receipt-repository.test.ts`
 
 Pre-existing workspace changes were preserved and not staged: the modified
 Task 2 report and the untracked `.superpowers/sdd/.gitignore`.
@@ -161,12 +163,21 @@ Result: PASS. Git emitted only normal LF-to-CRLF working-copy warnings.
   synchronization leaves local records and authority status unchanged; legacy
   server declarations are migrated conservatively, and an existing
   authority-confirmed preparation is never downgraded by a legacy pull.
+- Sync acknowledgement uses a full stable serialization of the prepared
+  snapshot, so an equal-timestamp local edit remains pending.
+- New records can only start as `draft`; legacy migration may materialize
+  `ready_for_review` only through the explicit draft-to-ready path and skips
+  authority-confirmed records without a valid local lifecycle path.
+- Receipt `assetRef` values are limited to opaque references; `data:`, `blob:`,
+  base64, and byte payloads are rejected.
 
 ## Concerns
 
 - Runtime repository tests remain unverified because this worktree has no
   IndexedDB implementation for jsdom. Adding or repairing test-environment
   dependencies was outside the requested bounded verification scope.
+- The newly added regression cases were not rerun after implementation because
+  the user requested immediate finalization and no long-running checks.
 - Standard Vitest and build remain blocked by the pre-existing SWC native
   package/cache issue. No extended environment repair was attempted.
 - Full application typecheck and lint remain blocked by unrelated baseline
