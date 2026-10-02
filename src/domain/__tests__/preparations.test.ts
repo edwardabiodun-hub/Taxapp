@@ -131,6 +131,30 @@ describe("preparation domain contracts", () => {
     ).toBe("Generic Nigerian PIT estimate");
   });
 
+  it("returns not filing-ready for an empty jurisdiction despite complete state provenance", () => {
+    const verifiedCapability: JurisdictionCapability = {
+      ...genericCapability,
+      ruleProfile: {
+        kind: "verified_state",
+        profileId: "ng-la-pit",
+        version: "state-2026.1",
+        evidence: verifiedEvidence,
+      },
+    };
+
+    for (const jurisdictionCode of ["", "   "]) {
+      expect(
+        getPreparationCalculationLabel(
+          {
+            jurisdictionCode,
+            calculationProvenance: completeStateProvenance,
+          },
+          verifiedCapability,
+        ),
+      ).toBe("Not filing-ready");
+    }
+  });
+
   it("requires complete persisted provenance before returning a state-specific label", () => {
     const verifiedCapability: JurisdictionCapability = {
       ...genericCapability,

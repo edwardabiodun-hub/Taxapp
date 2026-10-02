@@ -126,6 +126,10 @@ export function getPreparationCalculationLabel(
   >,
   capability: JurisdictionCapability,
 ): CalculationLabel {
+  if (preparation.jurisdictionCode.trim().length === 0) {
+    return "Not filing-ready";
+  }
+
   if (!preparation.calculationProvenance) {
     return "Not filing-ready";
   }
