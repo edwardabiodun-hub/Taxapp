@@ -10,6 +10,15 @@ export type PreparationFormData = Record<string, unknown>;
 export type ConfirmedReceiptInputs = Readonly<Record<string, unknown>>;
 export type PreparationFilingReadiness = ReadinessLabel | "Not filing-ready";
 
+export interface CalculationProvenance {
+  readonly label: CalculationLabel;
+  readonly ruleProfileId: string;
+  readonly ruleProfileVersion: string;
+  readonly source: string;
+  readonly assumptions: readonly string[];
+  readonly missingInputWarnings: readonly string[];
+}
+
 export interface AuthorityConfirmation {
   readonly authorityReference: string;
   readonly confirmedAt: string;
@@ -22,6 +31,7 @@ interface PreparationRecordBase {
   readonly ruleProfileVersion: string;
   readonly calculationLabel: CalculationLabel;
   readonly filingReadiness: PreparationFilingReadiness;
+  readonly calculationProvenance?: CalculationProvenance;
   readonly formData: PreparationFormData;
   readonly confirmedReceiptIds: readonly string[];
   /** Receipt-derived values are kept outside formData and enter only after confirmation. */

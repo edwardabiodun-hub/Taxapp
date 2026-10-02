@@ -1,20 +1,10 @@
+import { getPitRuleInputs, type PitRuleInputs } from "@/data/pit-baseline";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 
 /**
  * Nigerian PIT bands (Personal Income Tax Act)
  * Based on current rates from PWC/FIRS
  */
-const TAX_BANDS = [
-  { limit: 300_000, rate: 0.07 },
-  { limit: 300_000, rate: 0.11 },
-  { limit: 500_000, rate: 0.15 },
-  { limit: 500_000, rate: 0.19 },
-  { limit: 1_600_000, rate: 0.21 },
-  { limit: Infinity, rate: 0.24 },
-];
-
-const MINIMUM_TAX_RATE = 0.01; // 1% of gross income
-
 export interface TaxBreakdown {
   grossIncome: number;
   totalDeductions: number;
@@ -32,7 +22,10 @@ function parseAmount(val: string): number {
   return isNaN(num) ? 0 : Math.max(0, num);
 }
 
-export function calculateNigeriaTax(form: NigeriaDeclarationForm): TaxBreakdown {
+export function calculateNigeriaTax(
+  form: NigeriaDeclarationForm,
+  ruleInputs: PitRuleInputs = getPitRuleInputs(),
+): TaxBreakdown {
   // Earned income (taxable portions)
   const employment =
     parseAmount(form.annualSalary) +
@@ -74,7 +67,7 @@ export function calculateNigeriaTax(form: NigeriaDeclarationForm): TaxBreakdown 
   let cumulative = 0;
   const bands: TaxBreakdown["bands"] = [];
 
-  for (const band of TAX_BANDS) {
+  for (const band of ruleInputs.taxBands) {
     const taxableInBand = Math.min(remaining, band.limit);
     if (taxableInBand <= 0) {
       bands.push({
@@ -103,7 +96,7 @@ export function calculateNigeriaTax(form: NigeriaDeclarationForm): TaxBreakdown 
   }
 
   // Minimum tax: 1% of gross income (whichever is higher applies)
-  const minimumTax = grossIncome * MINIMUM_TAX_RATE;
+  const minimumTax = grossIncome * ruleInputs.minimumTaxRate;
   const finalTax = Math.max(computedTax, minimumTax);
   const effectiveRate = grossIncome > 0 ? (finalTax / grossIncome) * 100 : 0;
 
