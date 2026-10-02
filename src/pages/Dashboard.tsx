@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, TrendingUp, FileCheck, DollarSign, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
+import { FilePlus, TrendingUp, FileCheck, FileText, ArrowRight, Calculator, RefreshCw, AlertTriangle, Upload } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import SubmissionCard from "@/components/submissions/SubmissionCard";
 import DeadlineCard from "@/components/deadlines/DeadlineCard";
-import { useProfile, useDeclarations, usePreparations } from "@/hooks/use-local-data";
+import { useProfile, useDeclarations, usePreparations, useSubmissionRecords } from "@/hooks/use-local-data";
 import { useSync } from "@/hooks/use-sync";
-import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
+import { getJurisdictionCapability, listNigeriaJurisdictions } from "@/data/jurisdiction-registry";
 import { resolveDeadline } from "@/lib/deadline-service";
 
 const container = {
@@ -24,20 +24,24 @@ const Dashboard = () => {
   const profile = useProfile();
   const declarations = useDeclarations();
   const preparations = usePreparations();
+  const submissionRecords = useSubmissionRecords();
   const { status: syncStatus, runSync } = useSync();
 
   const latestPreparation = preparations[0];
+  const latestCapability = latestPreparation
+    ? getJurisdictionCapability(latestPreparation.jurisdictionCode)
+    : undefined;
   const dashboardDeadline = latestPreparation?.jurisdictionCode
     ? resolveDeadline(
-        getJurisdictionCapability(latestPreparation.jurisdictionCode),
+        latestCapability ?? getJurisdictionCapability("NG-UNKNOWN"),
         latestPreparation.taxYear,
       )
     : null;
 
-  const approved = declarations.filter((d) => d.status === "approved").length;
-  const pending = declarations.filter((d) => d.status === "submitted" || d.status === "processing" || d.status === "audit_request").length;
   const auditRequests = declarations.filter((d) => d.status === "audit_request");
-  const recentSubmissions = declarations.slice(0, 3);
+  const readyPreparations = preparations.filter((preparation) => preparation.status === "ready_for_review").length;
+  const exportedPreparations = preparations.filter((preparation) => preparation.status === "exported").length;
+  const recentRecords = submissionRecords.slice(0, 3);
 
   return (
     <motion.div
@@ -75,6 +79,39 @@ const Dashboard = () => {
 
       <motion.div variants={item}>
         <DeadlineCard deadline={dashboardDeadline} />
+      </motion.div>
+
+      <motion.div variants={item} className="rounded-2xl border border-border/70 bg-card p-4 shadow-card space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-display font-bold text-sm text-card-foreground">Preparation overview</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Choose any Nigerian jurisdiction, prepare locally, and export a package for your own review.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+            Local-first
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl bg-muted/60 px-2 py-2">
+            <p className="text-lg font-display font-bold text-foreground">{preparations.length}</p>
+            <p className="text-[10px] text-muted-foreground">Saved</p>
+          </div>
+          <div className="rounded-xl bg-muted/60 px-2 py-2">
+            <p className="text-lg font-display font-bold text-foreground">{readyPreparations}</p>
+            <p className="text-[10px] text-muted-foreground">Ready to review</p>
+          </div>
+          <div className="rounded-xl bg-muted/60 px-2 py-2">
+            <p className="text-lg font-display font-bold text-foreground">{exportedPreparations}</p>
+            <p className="text-[10px] text-muted-foreground">Exported</p>
+          </div>
+        </div>
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          {latestPreparation && latestCapability
+            ? `${latestCapability.name}: ${latestPreparation.calculationLabel} · ${latestCapability.primaryReadiness}.`
+            : `${listNigeriaJurisdictions().length} Nigerian jurisdictions are available for generic preparation.`}
+        </p>
       </motion.div>
 
       {/* Audit Request Banner */}
@@ -118,8 +155,8 @@ const Dashboard = () => {
           <FilePlus className="w-6 h-6" />
         </div>
         <div className="flex-1 text-left">
-          <p className="font-display font-bold text-lg">New Tax Declaration</p>
-          <p className="text-sm opacity-80">File your taxes quickly & easily</p>
+          <p className="font-display font-bold text-lg">Start a preparation</p>
+          <p className="text-sm opacity-80">Choose a jurisdiction and save your work locally</p>
         </div>
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </motion.button>
@@ -135,17 +172,17 @@ const Dashboard = () => {
         </div>
         <div className="flex-1 text-left">
           <p className="font-display font-bold">Tax Estimator</p>
-          <p className="text-xs opacity-80">Calculate your liability before filing</p>
+          <p className="text-xs opacity-80">Explore a generic Nigerian PIT estimate</p>
         </div>
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </motion.button>
 
       {/* Stats */}
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
-        <StatCard icon={FileCheck} label="Filed" value={String(declarations.length)} subtitle="Total submissions" variant="default" />
-        <StatCard icon={TrendingUp} label="Approved" value={String(approved)} subtitle={`${declarations.length ? Math.round((approved / declarations.length) * 100) : 0}% success`} variant="primary" />
-        <StatCard icon={DollarSign} label="Tax Paid" value="—" subtitle="This year" variant="default" />
-        <StatCard icon={FilePlus} label="Pending" value={String(pending)} subtitle="Awaiting review" variant="accent" />
+        <StatCard icon={FileCheck} label="Preparations" value={String(preparations.length)} subtitle="Saved locally" variant="default" />
+        <StatCard icon={TrendingUp} label="Ready" value={String(readyPreparations)} subtitle="For your review" variant="primary" />
+        <StatCard icon={FileText} label="Exported" value={String(exportedPreparations)} subtitle="Packages created" variant="default" />
+        <StatCard icon={FilePlus} label="Jurisdictions" value={String(listNigeriaJurisdictions().length)} subtitle="Generic preparation" variant="accent" />
       </motion.div>
 
       {/* Recent */}
@@ -160,23 +197,28 @@ const Dashboard = () => {
           </button>
         </div>
         <div className="space-y-2">
-          {recentSubmissions.length === 0 && (
-            <p className="text-center text-muted-foreground py-6 text-sm">No declarations yet.</p>
+          {recentRecords.length === 0 && (
+            <p className="text-center text-muted-foreground py-6 text-sm">No preparations yet.</p>
           )}
-          {recentSubmissions.map((sub) => (
-            <SubmissionCard
-              key={sub.id}
-              submission={{
-                id: sub.id,
-                taxYear: sub.taxYear,
-                type: sub.type,
-                status: sub.status as any,
-                date: new Date(sub.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-                amount: sub.amount || "—",
-              }}
-              onClick={() => navigate(`/submissions/${sub.id}`)}
-            />
-          ))}
+          {recentRecords.map((record) => {
+            const preparation = record.kind === "preparation" ? record.preparation : undefined;
+            const declaration = record.kind === "legacy" ? record.declaration : record.legacy;
+            const capability = getJurisdictionCapability(preparation?.jurisdictionCode || declaration?.country || "NG-UNKNOWN");
+            return (
+              <SubmissionCard
+                key={record.id}
+                submission={{
+                  id: record.id,
+                  taxYear: preparation?.taxYear || declaration?.taxYear || "—",
+                  type: preparation ? `${capability.shortName} PIT preparation` : declaration?.type || "Legacy declaration",
+                  status: preparation?.status || declaration?.status || "draft",
+                  date: new Date(preparation?.updatedAt || declaration?.updatedAt || declaration?.createdAt || "").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+                  amount: declaration?.amount || "—",
+                }}
+                onClick={() => navigate(`/submissions/${record.id}`)}
+              />
+            );
+          })}
         </div>
       </motion.div>
     </motion.div>
