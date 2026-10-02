@@ -94,18 +94,21 @@ export async function migrateLegacyDeclarationsToPreparations(
         continue;
       }
 
-      if (!isValidMigratedPreparationTransition(existing?.status, migrated)) {
+      const lifecycle = getMigratedPreparationLifecycle(existing?.status, migrated);
+      if (!lifecycle) {
         continue;
       }
 
-      await db.preparations.put({
-        ...migrated,
-        createdAt: existing?.createdAt ?? migrated.createdAt,
-        pendingSync: declaration.pendingSync,
-        ...(declaration.pendingSync || !declaration.syncedAt
-          ? {}
-          : { syncedAt: declaration.syncedAt }),
-      });
+      for (const preparation of lifecycle) {
+        await db.preparations.put({
+          ...preparation,
+          createdAt: existing?.createdAt ?? preparation.createdAt,
+          pendingSync: declaration.pendingSync,
+          ...(declaration.pendingSync || !declaration.syncedAt
+            ? {}
+            : { syncedAt: declaration.syncedAt }),
+        });
+      }
     }
   });
 }
@@ -182,17 +185,20 @@ export async function savePreparationFromSync(
     ) {
       return;
     }
-    if (!isValidMigratedPreparationTransition(existing?.status, preparation)) {
+    const lifecycle = getMigratedPreparationLifecycle(existing?.status, preparation);
+    if (!lifecycle) {
       return;
     }
     assertAuthorityConfirmation(preparation);
 
-    await db.preparations.put({
-      ...preparation,
-      createdAt: existing?.createdAt ?? preparation.createdAt,
-      pendingSync: false,
-      syncedAt,
-    });
+    for (const lifecyclePreparation of lifecycle) {
+      await db.preparations.put({
+        ...lifecyclePreparation,
+        createdAt: existing?.createdAt ?? lifecyclePreparation.createdAt,
+        pendingSync: false,
+        syncedAt,
+      });
+    }
   });
 }
 
@@ -218,21 +224,46 @@ function assertAuthorityConfirmation(preparation: PreparationRecord): void {
   }
 }
 
-function isValidMigratedPreparationTransition(
+function getMigratedPreparationLifecycle(
   from: PreparationStatus | undefined,
   preparation: PreparationRecord,
-): boolean {
-  if (isValidPreparationStatusTransition(from, preparation.status)) return true;
+): readonly PreparationRecord[] | undefined {
+  if (from !== undefined) {
+    return isValidPreparationStatusTransition(from, preparation.status)
+      ? [preparation]
+      : undefined;
+  }
 
-  // Legacy records may carry a non-draft lifecycle label, but migration must
-  // still follow the explicit draft -> ready_for_review path. A legacy row
-  // cannot establish an authority-confirmed lifecycle without local history.
-  return (
-    from === undefined &&
-    preparation.status === "ready_for_review" &&
-    isValidPreparationStatusTransition(undefined, "draft") &&
-    isValidPreparationStatusTransition("draft", preparation.status)
-  );
+  // A first-time legacy/sync record must materialize the local lifecycle one
+  // valid transition at a time. This also preserves explicit authority
+  // evidence without treating the legacy status label as proof by itself.
+  const statuses: readonly PreparationStatus[] = [
+    "draft",
+    "ready_for_review",
+    "exported",
+    "user_submitted",
+    "authority_confirmed",
+  ];
+  const targetIndex = statuses.indexOf(preparation.status);
+  if (targetIndex < 0) return undefined;
+
+  return statuses
+    .slice(0, targetIndex + 1)
+    .map((status) => preparationAtStatus(preparation, status));
+}
+
+function preparationAtStatus(
+  preparation: PreparationRecord,
+  status: PreparationStatus,
+): PreparationRecord {
+  if (status === "authority_confirmed") {
+    assertAuthorityConfirmation(preparation);
+    return { ...preparation, status };
+  }
+
+  const { authorityConfirmation: _authorityConfirmation, ...withoutConfirmation } =
+    preparation as PreparationRecord & { authorityConfirmation?: unknown };
+  return { ...withoutConfirmation, status } as PreparationRecord;
 }
 
 function stripSyncMetadata(

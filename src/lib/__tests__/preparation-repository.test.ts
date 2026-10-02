@@ -171,6 +171,60 @@ describe("preparation repository", () => {
     });
   });
 
+  it("materializes a first-time legacy ready record through draft first", async () => {
+    await db.delete();
+    await db.open();
+
+    const legacy = {
+      id: "legacy-ready",
+      taxYear: "2025",
+      country: "ng",
+      type: "Income Tax",
+      status: "submitted" as const,
+      formData: {},
+      documents: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+      pendingSync: false,
+    } satisfies LocalDeclaration;
+
+    await migrateLegacyDeclarationsToPreparations([legacy]);
+
+    await expect(getPreparation(legacy.id)).resolves.toMatchObject({
+      status: "ready_for_review",
+    });
+  });
+
+  it("preserves evidence-backed authority confirmation through explicit lifecycle steps", async () => {
+    await db.delete();
+    await db.open();
+
+    const legacy: LocalDeclaration = {
+      id: "legacy-confirmed",
+      taxYear: "2025",
+      country: "ng",
+      type: "Income Tax",
+      status: "submitted",
+      formData: {},
+      documents: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+      pendingSync: false,
+      authorityReference: "NRS-2025-0001",
+      authorityConfirmedAt: "2026-02-02T00:00:00.000Z",
+    };
+
+    await migrateLegacyDeclarationsToPreparations([legacy]);
+
+    await expect(getPreparation(legacy.id)).resolves.toMatchObject({
+      status: "authority_confirmed",
+      authorityConfirmation: {
+        authorityReference: "NRS-2025-0001",
+        confirmedAt: "2026-02-02T00:00:00.000Z",
+      },
+    });
+  });
+
   it("preserves a newer local preparation instead of downgrading it during migration", async () => {
     await db.delete();
     await db.open();

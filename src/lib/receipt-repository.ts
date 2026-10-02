@@ -91,12 +91,10 @@ function isOpaqueAssetReference(value: unknown): value is string {
     return false;
   }
 
-  // A raw base64 payload has no storage boundary and must not be persisted as
-  // an asset reference. Opaque paths/URLs/IDs contain a delimiter or are not
-  // valid padded base64, so they remain allowed.
-  return !(
-    reference.length >= 8 &&
-    reference.length % 4 === 0 &&
-    /^[A-Za-z0-9+/]+={0,2}$/.test(reference)
-  );
+  // A raw Base64 payload has no storage boundary. Accept only references with
+  // an explicit opaque-reference delimiter; this rejects padded and unpadded
+  // Base64 as well as arbitrary raw strings and inline/blob forms.
+  if (/^[A-Za-z0-9+/]+={0,2}$/.test(reference)) return false;
+
+  return /[/:#]/.test(reference);
 }

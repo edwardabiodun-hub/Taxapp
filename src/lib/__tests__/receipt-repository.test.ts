@@ -48,9 +48,18 @@ describe("receipt persistence validation", () => {
     "blob:https://example.test/receipt-1",
     "base64:JVBERi0xLjQ=",
     "SGVsbG8=",
+    "SGVsbG8",
+    "raw-receipt-bytes",
   ])("rejects inline asset reference %s", (assetRef) => {
     expect(isReceiptRecordPersistable({ ...receipt, assetRef })).toBe(false);
   });
+
+  it.each(["receipts/receipt-1.pdf", "s3://bucket/receipt-1"]) (
+    "accepts opaque storage reference %s",
+    (assetRef) => {
+      expect(isReceiptRecordPersistable({ ...receipt, assetRef })).toBe(true);
+    },
+  );
 
   it("rejects raw byte values in the asset reference field", () => {
     expect(
