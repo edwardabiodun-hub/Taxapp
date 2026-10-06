@@ -9,6 +9,29 @@ import type {
 const REGISTRY_VERSION = "2026.1";
 const GENERIC_RULE_PROFILE_VERSION = "";
 const GENERIC_RULE_SOURCE = "";
+const NATIONAL_PIT_DEADLINE_SOURCE =
+  "https://www.jrb.gov.ng/assets/2026-pit-guidelines-TJG3n9-T.pdf";
+const NATIONAL_PIT_DEADLINE_PROFILE: DeadlineProfile = {
+  kind: "national_baseline",
+  evidence: {
+    dueAt: "2027-03-31T23:59:59+01:00",
+    taxYear: "2026",
+    source: NATIONAL_PIT_DEADLINE_SOURCE,
+    verifiedAt: "2026-10-06T00:00:00+01:00",
+    effectiveFrom: "2026-01-01T00:00:00+01:00",
+    confidence: "high",
+    timezone: "Africa/Lagos",
+    recurrence: "Annual, by March 31 following the income year",
+    filingBasis:
+      "Income earned from January 1, 2026 through December 31, 2026.",
+    eligibilityNote:
+      "All taxable individuals should file an annual PIT return, including employees, self-employed persons, freelancers, and business owners.",
+    penaltyNote:
+      "Late filing may attract ₦100,000 for the first month and ₦50,000 for each subsequent month under the Nigeria Tax Administration Act 2025.",
+    authorityNote:
+      "This is the national statutory baseline. Confirm state-specific instructions, extensions, and filing channels with the relevant State IRS or FCT-IRS.",
+  },
+};
 
 const freezeEvidence = <T extends EvidenceMetadata>(evidence: T): T =>
   Object.freeze({ ...evidence });
@@ -81,6 +104,7 @@ const createConservativeCapability = (
   submissionModes: ["generic_export"],
   apiStatus: "not_pursued",
   deadlineProfile: { kind: "unverified", confidence: "low" },
+  nationalDeadlineProfile: NATIONAL_PIT_DEADLINE_PROFILE,
   exportFormats: ["pdf", "csv", "xlsx"],
   evidence: {},
   notes:

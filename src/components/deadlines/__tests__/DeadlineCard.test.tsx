@@ -13,6 +13,10 @@ const deadline: ResolvedDeadline = {
   confidence: "medium",
   effectiveFrom: "2025-01-01T00:00:00.000Z",
   timezone: "Africa/Lagos",
+  filingBasis: "Income earned from January 1, 2026 through December 31, 2026.",
+  eligibilityNote: "All taxable individuals should file an annual PIT return.",
+  penaltyNote: "Late filing may attract N100,000 for the first month and N50,000 for each subsequent month.",
+  authorityNote: "Confirm state-specific instructions with your tax authority.",
   isStale: false,
 };
 
@@ -25,11 +29,14 @@ describe("DeadlineCard", () => {
       />,
     );
 
-    expect(screen.getByText("Tax deadline")).toBeInTheDocument();
+    expect(screen.getByText("Personal Income Tax deadline")).toBeInTheDocument();
     expect(screen.getByText(/National statutory baseline/)).toBeInTheDocument();
     expect(screen.getByText(/2 days remaining/)).toBeInTheDocument();
     expect(screen.getByText(/Confidence: medium/i)).toBeInTheDocument();
     expect(screen.getByText(/Verified: 01 Dec 2025/i)).toBeInTheDocument();
+    expect(screen.getByText(/Income earned from January 1, 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(/All taxable individuals should file/i)).toBeInTheDocument();
+    expect(screen.getByText(/N100,000 for the first month/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /deadline source/i })).toHaveAttribute(
       "href",
       deadline.source,

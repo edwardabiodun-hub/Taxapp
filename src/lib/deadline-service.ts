@@ -40,6 +40,10 @@ type DeadlineEvidence = {
   effectiveTo?: unknown;
   timezone?: unknown;
   recurrence?: unknown;
+  filingBasis?: unknown;
+  eligibilityNote?: unknown;
+  penaltyNote?: unknown;
+  authorityNote?: unknown;
   confidence?: unknown;
 };
 
@@ -138,6 +142,18 @@ function createUnverifiedDeadline(
     ...(typeof evidence?.recurrence === "string"
       ? { recurrence: evidence.recurrence }
       : {}),
+    ...(typeof evidence?.filingBasis === "string"
+      ? { filingBasis: evidence.filingBasis }
+      : {}),
+    ...(typeof evidence?.eligibilityNote === "string"
+      ? { eligibilityNote: evidence.eligibilityNote }
+      : {}),
+    ...(typeof evidence?.penaltyNote === "string"
+      ? { penaltyNote: evidence.penaltyNote }
+      : {}),
+    ...(typeof evidence?.authorityNote === "string"
+      ? { authorityNote: evidence.authorityNote }
+      : {}),
     confidence: isConfidence(evidence?.confidence) ? evidence.confidence : "low",
     isStale: staleResult?.stale ?? false,
     isAvailable: dueAt !== undefined,
@@ -165,6 +181,18 @@ function createResolvedDeadline(
     timezone: evidence.timezone as string,
     ...(typeof evidence.recurrence === "string"
       ? { recurrence: evidence.recurrence }
+      : {}),
+    ...(typeof evidence.filingBasis === "string"
+      ? { filingBasis: evidence.filingBasis }
+      : {}),
+    ...(typeof evidence.eligibilityNote === "string"
+      ? { eligibilityNote: evidence.eligibilityNote }
+      : {}),
+    ...(typeof evidence.penaltyNote === "string"
+      ? { penaltyNote: evidence.penaltyNote }
+      : {}),
+    ...(typeof evidence.authorityNote === "string"
+      ? { authorityNote: evidence.authorityNote }
       : {}),
     confidence: evidence.confidence as DeadlineConfidence,
     isStale: false,
