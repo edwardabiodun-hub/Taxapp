@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setPageMetadata } from "@/lib/seo";
+import { taxGuides } from "@/content/tax-guides";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -240,6 +242,18 @@ const Landing = () => {
                 );
               })}
             </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-24">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#b06b12]"><BookOpen className="h-4 w-4" /> Learn with FileSmart</p>
+              <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">Start with clearer tax information</h2>
+            </div>
+            <Button asChild variant="link" className="h-auto justify-start p-0 text-[#12352f] sm:justify-end"><Link to="/learn">View all guides <ArrowRight className="h-4 w-4" /></Link></Button>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {taxGuides.slice(0, 3).map((guide) => <Link key={guide.slug} to={`/learn/${guide.slug}`} className="rounded-2xl border border-[#dce6df] bg-white/60 p-5 transition-colors hover:border-[#12352f]"><p className="text-sm font-semibold text-[#b06b12]">{guide.readTimeMinutes} min read</p><h3 className="mt-3 text-lg font-bold leading-snug">{guide.title}</h3><p className="mt-2 text-sm leading-6 text-[#55736c]">{guide.summary}</p></Link>)}
           </div>
         </section>
       </main>

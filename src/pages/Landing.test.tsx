@@ -29,4 +29,13 @@ describe("Landing", () => {
     fireEvent.click(question);
     expect(question).toHaveAttribute("aria-expanded", "true");
   });
+
+  it("links visitors to the first three education guides and the full library", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+
+    expect(screen.getByRole("link", { name: /view all guides/i })).toHaveAttribute("href", "/learn");
+    expect(screen.getByRole("link", { name: /nigerian personal income tax basics/i })).toHaveAttribute("href", "/learn/nigerian-pit-basics");
+    expect(screen.getByRole("link", { name: /paye in nigeria/i })).toHaveAttribute("href", "/learn/paye-explained");
+    expect(screen.getByRole("link", { name: /finding your nigerian tax filing deadline/i })).toHaveAttribute("href", "/learn/filing-deadlines");
+  });
 });

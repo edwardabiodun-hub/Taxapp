@@ -26,6 +26,9 @@ const Messages = lazy(() => import("./pages/Messages"));
 const Profile = lazy(() => import("./pages/Profile"));
 const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Landing = lazy(() => import("./pages/Landing"));
+const Learn = lazy(() => import("./pages/Learn"));
+const Guide = lazy(() => import("./pages/Guide"));
 
 const queryClient = new QueryClient();
 
@@ -56,6 +59,9 @@ export const AppRoutes = () => {
   }
 
   if (!isUnlocked) return <Routes>
+    <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
+    <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
+    <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
     <Route path="/welcome" element={<RouteBoundary><WelcomePage /></RouteBoundary>} />
     <Route path="/login" element={<RouteBoundary><LoginPage /></RouteBoundary>} />
     <Route path="/onboarding" element={<RouteBoundary><OnboardingPage /></RouteBoundary>} />
@@ -66,6 +72,8 @@ export const AppRoutes = () => {
   </Routes>;
 
   return <Routes>
+      <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
+      <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
       <Route path="/welcome" element={<Navigate to="/" replace />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/onboarding" element={<Navigate to="/" replace />} />
