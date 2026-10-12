@@ -57,6 +57,16 @@ describe("Landing", () => {
     expect(screen.getByRole("link", { name: /see how it works/i }).className).toContain("min-h-11");
   });
 
+  it("keeps desktop landing navigation controls at least 44px tall", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+
+    const navigation = screen.getByRole("navigation", { name: /main navigation/i });
+    expect(screen.getByRole("link", { name: /learn more/i }).className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='#how-it-works']")?.className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='#why-filesmart']")?.className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='#questions']")?.className).toContain("min-h-11");
+  });
+
   it("keeps a single page heading and a focusable public control", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
 

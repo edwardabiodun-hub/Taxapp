@@ -41,7 +41,7 @@ const Guide = () => {
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#b06b12]">FileSmart education</p>
           <h1 className="mt-4 font-display text-4xl font-bold tracking-tight">Guide not found</h1>
           <p className="mx-auto mt-5 max-w-lg leading-7 text-[#55736c]">That guide may have moved or the link may be incomplete. Browse the full education library to find another topic.</p>
-          <Button asChild className="mx-auto mt-8 rounded-full bg-[#12352f] text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/learn">Back to all guides <ArrowRight className="h-4 w-4" /></Link></Button>
+          <Button asChild className="mx-auto mt-8 min-h-11 rounded-full bg-[#12352f] text-[#fbfaf5] hover:bg-[#1c4e44]"><Link className="inline-flex min-h-11 items-center" to="/learn">Back to all guides <ArrowRight className="h-4 w-4" /></Link></Button>
         </main>
       </div>
     );
@@ -51,8 +51,8 @@ const Guide = () => {
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
       <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link to="/learn" className="inline-flex items-center gap-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]"><ArrowLeft className="h-4 w-4" /> All guides</Link>
-          <Link to="/" className="font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
+          <Link to="/learn" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]"><ArrowLeft className="h-4 w-4" /> All guides</Link>
+          <Link to="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
         </div>
       </header>
 
@@ -75,7 +75,7 @@ const Guide = () => {
         </article>
 
         <aside className="mt-10 border-t border-[#dce6df] pt-6 text-sm leading-6 text-[#55736c]"><p>{guide.sourceNote}</p></aside>
-        <Button asChild variant="link" className="mt-8 h-auto px-0 text-[#12352f]"><Link to="/learn"><ArrowLeft className="h-4 w-4" /> Read another guide</Link></Button>
+        <Button asChild variant="link" className="mt-8 min-h-11 h-auto px-0 text-[#12352f]"><Link className="inline-flex min-h-11 items-center" to="/learn"><ArrowLeft className="h-4 w-4" /> Read another guide</Link></Button>
       </main>
     </div>
   );

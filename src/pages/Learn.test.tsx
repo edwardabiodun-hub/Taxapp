@@ -35,6 +35,23 @@ describe("public education routes", () => {
     expect(document.querySelectorAll("h1")).toHaveLength(1);
   });
 
+  it("keeps public education navigation and guide actions at least 44px tall", () => {
+    renderRoute("/learn", <Learn />);
+
+    expect(screen.getByRole("link", { name: /filesmart home/i }).className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /start online/i }).className).toContain("min-h-11");
+    expect(screen.getAllByRole("link", { name: /nigerian personal income tax basics/i })[0].className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /read nigerian personal income tax basics/i }).className).toContain("min-h-11");
+  });
+
+  it("keeps guide navigation and primary actions at least 44px tall", () => {
+    renderRoute("/learn/paye-explained", <Guide />);
+
+    expect(screen.getByRole("link", { name: /all guides/i }).className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /filesmart home/i }).className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /read another guide/i }).className).toContain("min-h-11");
+  });
+
   it("sets index metadata for the education route", () => {
     renderRoute("/learn", <Learn />);
 

@@ -80,9 +80,9 @@ const Landing = () => {
           </a>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#55736c] md:flex" aria-label="Main navigation">
-            <a href="#how-it-works" className="transition-colors hover:text-[#12352f]">How it works</a>
-            <a href="#why-filesmart" className="transition-colors hover:text-[#12352f]">Why FileSmart</a>
-            <a href="#questions" className="transition-colors hover:text-[#12352f]">Questions</a>
+            <a href="#how-it-works" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">How it works</a>
+            <a href="#why-filesmart" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">Why FileSmart</a>
+            <a href="#questions" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">Questions</a>
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">

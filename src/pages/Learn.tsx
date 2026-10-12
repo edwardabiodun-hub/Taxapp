@@ -28,7 +28,7 @@ const Learn = () => {
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
       <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link to="/" className="font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
+          <Link to="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
           <Button asChild variant="outline" className="min-h-11 rounded-full border-[#12352f] text-[#12352f]">
             <Link to="/onboarding">Start online <ArrowRight className="h-4 w-4" /></Link>
           </Button>
@@ -58,11 +58,11 @@ const Learn = () => {
             <Card key={guide.slug} className="min-w-0 flex h-full flex-col border-[#dce6df] bg-white/70 shadow-none">
               <CardHeader>
                 <Badge variant="secondary" className="w-fit capitalize">{categoryLabel(guide.category)}</Badge>
-                <CardTitle className="min-w-0 break-words pt-3 text-xl leading-snug"><Link className="break-words hover:underline" to={`/learn/${guide.slug}`}>{guide.title}</Link></CardTitle>
+                <CardTitle className="min-w-0 break-words pt-3 text-xl leading-snug"><Link className="inline-flex min-h-11 items-center break-words hover:underline" to={`/learn/${guide.slug}`}>{guide.title}</Link></CardTitle>
                 <CardDescription className="leading-6">{guide.summary}</CardDescription>
               </CardHeader>
               <CardContent className="flex-1 text-sm text-[#55736c]">{guide.readTimeMinutes} min read</CardContent>
-              <CardFooter><Button asChild variant="link" className="h-auto p-0 text-[#12352f]"><Link to={`/learn/${guide.slug}`}>Read {guide.title} <ArrowRight className="h-4 w-4" /></Link></Button></CardFooter>
+              <CardFooter><Button asChild variant="link" className="min-h-11 h-auto p-0 text-[#12352f]"><Link className="inline-flex min-h-11 items-center" to={`/learn/${guide.slug}`}>Read {guide.title} <ArrowRight className="h-4 w-4" /></Link></Button></CardFooter>
             </Card>
           ))}
         </div>
