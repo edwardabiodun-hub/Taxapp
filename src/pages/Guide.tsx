@@ -48,7 +48,7 @@ const Guide = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f3] text-[#12352f]">
+    <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
       <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8">
           <Link to="/learn" className="inline-flex items-center gap-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]"><ArrowLeft className="h-4 w-4" /> All guides</Link>
@@ -56,13 +56,13 @@ const Guide = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
+      <main className="mx-auto max-w-3xl overflow-x-hidden px-5 py-12 sm:px-8 sm:py-16">
         <Badge variant="secondary" className="capitalize">{categoryLabel(guide.category)}</Badge>
-        <h1 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{guide.title}</h1>
+        <h1 className="mt-5 break-words font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{guide.title}</h1>
         <p className="mt-5 text-lg leading-8 text-[#55736c]">{guide.summary}</p>
         <p className="mt-4 text-sm text-[#55736c]">{guide.readTimeMinutes} min read · Updated {guide.updatedAt}</p>
 
-        <article className="mt-10 space-y-6">
+        <article className="mt-10 break-words space-y-6">
           {guide.blocks.map((block, index) => {
             if (block.type === "list") {
               return <ul key={`${block.type}-${index}`} className="list-disc space-y-3 pl-6 leading-7 text-[#23483f]">{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;

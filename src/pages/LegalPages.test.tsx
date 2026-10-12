@@ -29,6 +29,7 @@ describe("public legal pages", () => {
     expect(screen.getByText(/operator identity pending approval/i)).toBeInTheDocument();
     expect(screen.getAllByText(/privacy contact pending approval/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/requires operator approval before launch/i)).toBeInTheDocument();
+    expect(screen.getByRole("article").className).toContain("break-words");
     expect(document.querySelectorAll("h1")).toHaveLength(1);
   });
 

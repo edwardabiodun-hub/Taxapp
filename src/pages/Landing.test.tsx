@@ -22,12 +22,39 @@ describe("Landing", () => {
   it("expands and collapses FAQ answers accessibly", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
     const question = screen.getByRole("button", { name: /can i start my tax preparation/i });
+    const answerId = question.getAttribute("aria-controls");
 
     expect(question).toHaveAttribute("aria-expanded", "true");
+    expect(answerId).toBeTruthy();
+    expect(document.getElementById(answerId!)).not.toHaveAttribute("hidden");
     fireEvent.click(question);
     expect(question).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById(answerId!)).toHaveAttribute("hidden");
     fireEvent.click(question);
     expect(question).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("exposes mobile navigation state and keeps the control keyboard-focusable", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+    const menuButton = screen.getByRole("button", { name: /open navigation menu/i });
+
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+    expect(menuButton).toHaveAttribute("aria-controls", "mobile-navigation");
+    expect(menuButton.className).toContain("focus-visible:ring");
+
+    fireEvent.click(menuButton);
+
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("navigation", { name: /mobile navigation/i })).toHaveAttribute("id", "mobile-navigation");
+  });
+
+  it("keeps a single page heading and a focusable public control", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+    const faqButton = screen.getByRole("button", { name: /can i start my tax preparation/i });
+    faqButton.focus();
+    expect(document.activeElement).toBe(faqButton);
   });
 
   it("links visitors to the first three education guides and the full library", () => {

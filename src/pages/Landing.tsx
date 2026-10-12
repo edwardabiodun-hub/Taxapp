@@ -94,16 +94,17 @@ const Landing = () => {
 
           <button
             type="button"
-            className="rounded-full p-2 text-[#12352f] md:hidden"
+            className="rounded-full p-2 text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2 md:hidden"
             aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={menuOpen}
+            aria-controls="mobile-navigation"
             onClick={() => setMenuOpen((open) => !open)}
           >
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
         {menuOpen && (
-          <nav className="border-t border-[#dce6df] px-5 py-4 md:hidden" aria-label="Mobile navigation">
+          <nav id="mobile-navigation" className="border-t border-[#dce6df] px-5 py-4 md:hidden" aria-label="Mobile navigation">
             <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm font-semibold">
               <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
               <a href="#why-filesmart" onClick={() => setMenuOpen(false)}>Why FileSmart</a>
@@ -234,10 +235,12 @@ const Landing = () => {
                 const isOpen = openFaq === index;
                 return (
                   <div key={faq.question} className="border-b border-[#376057]">
-                    <button type="button" className="flex w-full items-center justify-between gap-4 py-5 text-left font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b84b]" aria-expanded={isOpen} onClick={() => setOpenFaq(isOpen ? null : index)}>
+                    <button type="button" className="flex w-full items-center justify-between gap-4 py-5 text-left font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b84b]" aria-expanded={isOpen} aria-controls={`faq-answer-${index}`} onClick={() => setOpenFaq(isOpen ? null : index)}>
                       <span>{faq.question}</span><ChevronDown className={cn("h-5 w-5 shrink-0 text-[#f2b84b] transition-transform", isOpen && "rotate-180")} />
                     </button>
-                    {isOpen && <p className="max-w-2xl pb-5 pr-8 leading-7 text-[#b9d2c5]">{faq.answer}</p>}
+                    <div id={`faq-answer-${index}`} hidden={!isOpen}>
+                      <p className="max-w-2xl pb-5 pr-8 leading-7 text-[#b9d2c5]">{faq.answer}</p>
+                    </div>
                   </div>
                 );
               })}

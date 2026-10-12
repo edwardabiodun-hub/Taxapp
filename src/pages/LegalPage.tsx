@@ -52,7 +52,7 @@ const LegalPage = ({ title, effectiveDate, sections, disclaimerTone = "neutral" 
         <p><strong className="text-[#12352f]">Privacy contact:</strong> {LEGAL_CONFIG.privacyContactLabel}</p>
       </div>
 
-      <article className="mt-10 space-y-8 text-[#23483f]">
+      <article className="mt-10 break-words space-y-8 text-[#23483f]">
         {sections.map((section) => (
           <section key={section.heading}>
             <h2 className="font-display text-2xl font-bold tracking-tight text-[#12352f]">{section.heading}</h2>

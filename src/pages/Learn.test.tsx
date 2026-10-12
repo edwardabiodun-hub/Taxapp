@@ -22,6 +22,9 @@ describe("public education routes", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: /learn about your tax/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /all guides/i })).toBeInTheDocument();
+    expect(screen.getByRole("main").className).toContain("overflow-x-hidden");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("break-words");
+    expect(screen.getByRole("heading", { name: /nigerian personal income tax basics/i })).toHaveClass("min-w-0");
     taxGuides.forEach((guide) => {
       expect(screen.getAllByRole("link", { name: new RegExp(guide.title, "i") })).toEqual(
         expect.arrayContaining([
@@ -50,6 +53,9 @@ describe("public education routes", () => {
     renderRoute("/learn/paye-explained", <Guide />);
 
     expect(screen.getByRole("heading", { level: 1, name: /paye in nigeria/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("break-words");
+    expect(screen.getByRole("main").className).toContain("overflow-x-hidden");
+    expect(screen.getByRole("article").className).toContain("break-words");
     expect(screen.getByRole("list")).toBeInTheDocument();
     expect(screen.getByText(/general educational information only/i)).toBeInTheDocument();
     expect(document.querySelectorAll("h1")).toHaveLength(1);
