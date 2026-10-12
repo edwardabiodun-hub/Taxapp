@@ -48,7 +48,7 @@ describe("public legal pages", () => {
     expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute("content");
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      `http://localhost:3000${path}`,
+      `https://filesmart-demo.netlify.app${path}`,
     );
   });
 

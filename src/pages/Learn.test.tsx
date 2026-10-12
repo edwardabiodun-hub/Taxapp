@@ -45,7 +45,7 @@ describe("public education routes", () => {
     );
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "http://localhost:3000/learn",
+      "https://filesmart-demo.netlify.app/learn",
     );
   });
 
@@ -67,7 +67,7 @@ describe("public education routes", () => {
     expect(document.title).toBe("PAYE in Nigeria: what employees should know | FileSmart");
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "http://localhost:3000/learn/paye-explained",
+      "https://filesmart-demo.netlify.app/learn/paye-explained",
     );
     expect(document.head.querySelector('meta[property="og:type"]')).toHaveAttribute("content", "article");
     expect(document.head.querySelector('meta[property="article:published_time"]')).toHaveAttribute(

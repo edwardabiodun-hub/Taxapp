@@ -86,15 +86,15 @@ const Landing = () => {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
-            <a href="#questions" className="px-3 py-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]">Learn more</a>
-            <Button asChild className="rounded-full bg-[#12352f] px-5 text-[#fbfaf5] shadow-none hover:bg-[#1c4e44]">
+            <a href="#questions" className="inline-flex min-h-11 items-center px-3 py-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]">Learn more</a>
+            <Button asChild className="min-h-11 rounded-full bg-[#12352f] px-5 text-[#fbfaf5] shadow-none hover:bg-[#1c4e44]">
               <Link to="/onboarding">Start online <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
 
           <button
             type="button"
-            className="rounded-full p-2 text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2 md:hidden"
+            className="h-11 w-11 rounded-full p-2 text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2 md:hidden"
             aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
@@ -106,10 +106,10 @@ const Landing = () => {
         {menuOpen && (
           <nav id="mobile-navigation" className="border-t border-[#dce6df] px-5 py-4 md:hidden" aria-label="Mobile navigation">
             <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm font-semibold">
-              <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-              <a href="#why-filesmart" onClick={() => setMenuOpen(false)}>Why FileSmart</a>
-              <a href="#questions" onClick={() => setMenuOpen(false)}>Questions</a>
-              <Button asChild className="w-full rounded-full bg-[#12352f] text-[#fbfaf5]">
+              <a className="inline-flex min-h-11 items-center" href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
+              <a className="inline-flex min-h-11 items-center" href="#why-filesmart" onClick={() => setMenuOpen(false)}>Why FileSmart</a>
+              <a className="inline-flex min-h-11 items-center" href="#questions" onClick={() => setMenuOpen(false)}>Questions</a>
+              <Button asChild className="min-h-11 w-full rounded-full bg-[#12352f] text-[#fbfaf5]">
                 <Link to="/onboarding">Start filing online <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
@@ -130,10 +130,10 @@ const Landing = () => {
               FileSmart helps Nigerian individuals prepare their personal income tax information with a guided online experience built for real life.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-13 rounded-full bg-[#12352f] px-7 text-[#fbfaf5] shadow-[0_12px_24px_rgba(18,53,47,0.16)] hover:bg-[#1c4e44]">
+              <Button asChild size="lg" className="min-h-11 h-13 rounded-full bg-[#12352f] px-7 text-[#fbfaf5] shadow-[0_12px_24px_rgba(18,53,47,0.16)] hover:bg-[#1c4e44]">
                 <Link to="/onboarding">Start filing online <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <a href="#how-it-works" className="inline-flex h-13 items-center justify-center gap-2 rounded-full border border-[#b8cec4] px-7 text-sm font-bold text-[#12352f] transition-colors hover:bg-white">
+              <a href="#how-it-works" className="inline-flex min-h-11 h-13 items-center justify-center gap-2 rounded-full border border-[#b8cec4] px-7 text-sm font-bold text-[#12352f] transition-colors hover:bg-white">
                 See how it works
               </a>
             </div>
@@ -205,7 +205,7 @@ const Landing = () => {
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#d48a18]">How it works</p>
               <h2 className="mt-3 max-w-sm font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">A guided path, from first question to ready review.</h2>
               <p className="mt-5 max-w-sm leading-7 text-[#55736c]">Start online, work at your own pace, and keep your information organized as you go.</p>
-              <Button asChild className="mt-8 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">Begin your preparation <ArrowRight className="h-4 w-4" /></Link></Button>
+              <Button asChild className="mt-8 min-h-11 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">Begin your preparation <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>
             <div className="space-y-5">
               {[
@@ -253,7 +253,7 @@ const Landing = () => {
               <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-[#b06b12]"><BookOpen className="h-4 w-4" /> Learn with FileSmart</p>
               <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">Start with clearer tax information</h2>
             </div>
-            <Button asChild variant="link" className="h-auto justify-start p-0 text-[#12352f] sm:justify-end"><Link to="/learn">View all guides <ArrowRight className="h-4 w-4" /></Link></Button>
+            <Button asChild variant="link" className="min-h-11 h-auto justify-start p-0 text-[#12352f] sm:justify-end"><Link to="/learn">View all guides <ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {taxGuides.slice(0, 3).map((guide) => <Link key={guide.slug} to={`/learn/${guide.slug}`} className="rounded-2xl border border-[#dce6df] bg-white/60 p-5 transition-colors hover:border-[#12352f]"><p className="text-sm font-semibold text-[#b06b12]">{guide.readTimeMinutes} min read</p><h3 className="mt-3 text-lg font-bold leading-snug">{guide.title}</h3><p className="mt-2 text-sm leading-6 text-[#55736c]">{guide.summary}</p></Link>)}

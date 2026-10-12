@@ -29,7 +29,7 @@ const Learn = () => {
       <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
           <Link to="/" className="font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
-          <Button asChild variant="outline" className="rounded-full border-[#12352f] text-[#12352f]">
+          <Button asChild variant="outline" className="min-h-11 rounded-full border-[#12352f] text-[#12352f]">
             <Link to="/onboarding">Start online <ArrowRight className="h-4 w-4" /></Link>
           </Button>
         </div>
@@ -43,11 +43,11 @@ const Learn = () => {
         </div>
 
         <div className="mt-10 flex flex-wrap gap-2" aria-label="Guide categories">
-          <Button type="button" variant={selectedCategory ? "outline" : "default"} onClick={() => setSelectedCategory(undefined)}>
+          <Button type="button" className="min-h-11" variant={selectedCategory ? "outline" : "default"} onClick={() => setSelectedCategory(undefined)}>
             {!selectedCategory && <Check className="h-4 w-4" />} All guides
           </Button>
           {categories.map((category) => (
-            <Button key={category} type="button" variant={selectedCategory === category ? "default" : "outline"} onClick={() => setSelectedCategory(category)}>
+            <Button key={category} type="button" className="min-h-11" variant={selectedCategory === category ? "default" : "outline"} onClick={() => setSelectedCategory(category)}>
               {categoryLabel(category)}
             </Button>
           ))}

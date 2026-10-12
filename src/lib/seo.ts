@@ -1,3 +1,5 @@
+import { resolvePublicSiteOrigin } from "./public-site-origin";
+
 export interface PageMetadata {
   title: string;
   description: string;
@@ -14,7 +16,9 @@ type ElementSnapshot = {
   attributes: Array<[string, string]>;
 };
 
-const getPageUrl = (path: string) => new URL(path, window.location.origin).toString();
+export const PUBLIC_SITE_ORIGIN = resolvePublicSiteOrigin(import.meta.env.VITE_PUBLIC_SITE_URL);
+
+const getPageUrl = (path: string) => new URL(path, `${PUBLIC_SITE_ORIGIN}/`).toString();
 
 export function setPageMetadata(metadata: PageMetadata): () => void {
   const previousTitle = document.title;

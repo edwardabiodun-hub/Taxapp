@@ -1,10 +1,29 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { setPageMetadata } from "./seo";
+import { PUBLIC_SITE_ORIGIN, setPageMetadata } from "./seo";
 
 describe("setPageMetadata", () => {
   beforeEach(() => {
     document.head.innerHTML = "";
     document.title = "Original title";
+  });
+
+  it("uses the configured public site origin for canonical and Open Graph URLs", () => {
+    expect(PUBLIC_SITE_ORIGIN).toBe("https://filesmart-demo.netlify.app");
+
+    setPageMetadata({
+      title: "Article title",
+      description: "Article description",
+      path: "/learn/example",
+    });
+
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://filesmart-demo.netlify.app/learn/example",
+    );
+    expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
+      "content",
+      "https://filesmart-demo.netlify.app/learn/example",
+    );
   });
 
   it("sets page, canonical, and Open Graph metadata", () => {
@@ -21,7 +40,7 @@ describe("setPageMetadata", () => {
     );
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "http://localhost:3000/",
+      "https://filesmart-demo.netlify.app/",
     );
     expect(document.head.querySelector('meta[property="og:title"]')).toHaveAttribute(
       "content",
@@ -34,7 +53,7 @@ describe("setPageMetadata", () => {
     expect(document.head.querySelector('meta[property="og:type"]')).toHaveAttribute("content", "website");
     expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
       "content",
-      "http://localhost:3000/",
+      "https://filesmart-demo.netlify.app/",
     );
   });
 

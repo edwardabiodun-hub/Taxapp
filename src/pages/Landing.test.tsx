@@ -41,11 +41,20 @@ describe("Landing", () => {
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
     expect(menuButton).toHaveAttribute("aria-controls", "mobile-navigation");
     expect(menuButton.className).toContain("focus-visible:ring");
+    expect(menuButton.className).toContain("h-11");
+    expect(menuButton.className).toContain("w-11");
 
     fireEvent.click(menuButton);
 
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("navigation", { name: /mobile navigation/i })).toHaveAttribute("id", "mobile-navigation");
+  });
+
+  it("keeps the primary public actions at least 44px tall", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+
+    expect(screen.getAllByRole("link", { name: /start filing online/i })[0].className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /see how it works/i }).className).toContain("min-h-11");
   });
 
   it("keeps a single page heading and a focusable public control", () => {
