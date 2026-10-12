@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import LegalPage, { LEGAL_CONFIG, type LegalSection } from "./LegalPage";
+import { setPageMetadata } from "@/lib/seo";
 
 const sections: LegalSection[] = [
   {
@@ -27,6 +29,18 @@ const sections: LegalSection[] = [
   },
 ];
 
-const Terms = () => <LegalPage title="Terms of use" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} />;
+const Terms = () => {
+  useEffect(
+    () =>
+      setPageMetadata({
+        title: "Terms of use | FileSmart",
+        description: "Review the FileSmart draft terms for using its Nigerian tax preparation and education experience.",
+        path: "/terms",
+      }),
+    [],
+  );
+
+  return <LegalPage title="Terms of use" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} />;
+};
 
 export default Terms;

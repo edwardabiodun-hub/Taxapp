@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import LegalPage, { LEGAL_CONFIG, type LegalSection } from "./LegalPage";
+import { setPageMetadata } from "@/lib/seo";
 
 const sections: LegalSection[] = [
   {
@@ -27,6 +29,18 @@ const sections: LegalSection[] = [
   },
 ];
 
-const Privacy = () => <LegalPage title="Privacy policy" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} />;
+const Privacy = () => {
+  useEffect(
+    () =>
+      setPageMetadata({
+        title: "Privacy policy | FileSmart",
+        description: "Read the FileSmart draft privacy notice for its Nigerian tax preparation and education experience.",
+        path: "/privacy",
+      }),
+    [],
+  );
+
+  return <LegalPage title="Privacy policy" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} />;
+};
 
 export default Privacy;

@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import LegalPage, { LEGAL_CONFIG, type LegalSection } from "./LegalPage";
+import { setPageMetadata } from "@/lib/seo";
 
 const sections: LegalSection[] = [
   {
@@ -23,6 +25,18 @@ const sections: LegalSection[] = [
   },
 ];
 
-const Disclaimer = () => <LegalPage title="Disclaimer" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} disclaimerTone="caution" />;
+const Disclaimer = () => {
+  useEffect(
+    () =>
+      setPageMetadata({
+        title: "Disclaimer | FileSmart",
+        description: "Understand the educational scope and limitations of FileSmart tax preparation information.",
+        path: "/disclaimer",
+      }),
+    [],
+  );
+
+  return <LegalPage title="Disclaimer" effectiveDate={LEGAL_CONFIG.effectiveDate} sections={sections} disclaimerTone="caution" />;
+};
 
 export default Disclaimer;

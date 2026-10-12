@@ -32,6 +32,25 @@ describe("public legal pages", () => {
     expect(document.querySelectorAll("h1")).toHaveLength(1);
   });
 
+  it.each([
+    [Privacy, "Privacy policy | FileSmart", "/privacy"],
+    [Terms, "Terms of use | FileSmart", "/terms"],
+    [Disclaimer, "Disclaimer | FileSmart", "/disclaimer"],
+  ] as const)("sets unique metadata for %s", (Component, title, path) => {
+    render(
+      <MemoryRouter>
+        <Component />
+      </MemoryRouter>,
+    );
+
+    expect(document.title).toBe(title);
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute("content");
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      `http://localhost:3000${path}`,
+    );
+  });
+
   it("replaces landing footer placeholders with real legal routes", () => {
     render(
       <MemoryRouter>

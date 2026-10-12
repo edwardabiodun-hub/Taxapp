@@ -1,14 +1,13 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Allow: /learn
+Allow: /privacy
+Allow: /terms
+Allow: /disclaimer
+Disallow: /onboarding
+Disallow: /declare
+Disallow: /calculator
+Disallow: /submissions
+Disallow: /profile
+
+Sitemap: https://filesmart-demo.netlify.app/sitemap.xml
