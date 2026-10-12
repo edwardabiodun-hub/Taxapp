@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { setPageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -58,21 +59,15 @@ const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  useEffect(() => {
-    document.title = "FileSmart | Simple Nigerian tax preparation";
-    const description = "Prepare your Nigerian personal income tax information with a clear, guided online experience.";
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "description";
-      document.head.appendChild(meta);
-    }
-    meta.content = description;
-
-    return () => {
-      document.title = "FileSmart";
-    };
-  }, []);
+  useEffect(
+    () =>
+      setPageMetadata({
+        title: "FileSmart | Simple Nigerian tax preparation",
+        description: "Prepare your Nigerian personal income tax information with a clear, guided online experience.",
+        path: "/",
+      }),
+    [],
+  );
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
