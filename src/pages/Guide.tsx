@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getTaxGuide } from "@/content/tax-guides";
 import { setPageMetadata } from "@/lib/seo";
 
-const categoryLabel = (category: string) => category.replaceAll("-", " ");
+const categoryLabel = (category: string) => category.replace(/-/g, " ");
 
 const Guide = () => {
   const { slug } = useParams<{ slug: string }>();

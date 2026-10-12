@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { getTaxGuidesByCategory, taxGuides } from "@/content/tax-guides";
 import { setPageMetadata } from "@/lib/seo";
 
-const categoryLabel = (category: string) => category.replaceAll("-", " ");
+const categoryLabel = (category: string) => category.replace(/-/g, " ");
 
 const Learn = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>();

@@ -24,3 +24,9 @@ Implemented the public education index and guide detail routes.
 
 - Vitest/build verification required the temporary user-owned SWC cache because the sandbox rejected the repository cache ACL.
 - The existing production chunk-size warning remains; no new dependency or unrelated refactor was added.
+
+## Review Finding Fix
+
+- Replaced `String.replaceAll` with ES2020-compatible regex `replace` in `Guide.tsx` and `Learn.tsx`.
+- Focused tests: 7/7 passed.
+- TypeScript verification: the Task 4 errors are resolved; the project check still reports pre-existing errors in `export-repository.ts`, `receipt-repository.ts`, and `NewDeclaration.tsx`.
