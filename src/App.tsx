@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useHasProfile } from "@/hooks/use-has-profile";
 import { useRestoreProfile } from "@/hooks/use-restore-profile";
 import AppLayout from "./components/layout/AppLayout";
+<<<<<<< HEAD
 import RouteBoundary from "./components/layout/RouteBoundary";
 import { loadJurisdictionCapabilities } from "@/lib/jurisdiction-service";
 import WelcomePage from "./pages/Welcome";
@@ -29,6 +30,9 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Learn = lazy(() => import("./pages/Learn"));
 const Guide = lazy(() => import("./pages/Guide"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 
 const queryClient = new QueryClient();
 
@@ -37,6 +41,27 @@ const LoadingScreen = ({ message = "Loading…" }: { message?: string }) => (
     <div className="animate-pulse text-muted-foreground text-sm">{message}</div>
   </div>
 );
+=======
+import Dashboard from "./pages/Dashboard";
+import NewDeclaration from "./pages/NewDeclaration";
+import Submissions from "./pages/Submissions";
+import SubmissionDetail from "./pages/SubmissionDetail";
+import Profile from "./pages/Profile";
+import TaxCalculator from "./pages/TaxCalculator";
+import Onboarding from "./pages/Onboarding";
+import NotFound from "./pages/NotFound";
+import Landing from "./pages/Landing";
+import Learn from "./pages/Learn";
+import Guide from "./pages/Guide";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Disclaimer from "./pages/Disclaimer";
+
+const queryClient = new QueryClient();
+
+export const AppRoutes = () => {
+  const { loading, hasProfile } = useHasProfile();
+>>>>>>> 5c75e84 (feat: add public legal pages)
 
 export const AppRoutes = () => {
   const { loading: profileLoading, hasProfile } = useHasProfile();
@@ -62,6 +87,9 @@ export const AppRoutes = () => {
     <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
     <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
     <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+    <Route path="/privacy" element={<RouteBoundary><Privacy /></RouteBoundary>} />
+    <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
+    <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
     <Route path="/welcome" element={<RouteBoundary><WelcomePage /></RouteBoundary>} />
     <Route path="/login" element={<RouteBoundary><LoginPage /></RouteBoundary>} />
     <Route path="/onboarding" element={<RouteBoundary><OnboardingPage /></RouteBoundary>} />
@@ -74,6 +102,9 @@ export const AppRoutes = () => {
   return <Routes>
       <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
       <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+      <Route path="/privacy" element={<RouteBoundary><Privacy /></RouteBoundary>} />
+      <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
+      <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
       <Route path="/welcome" element={<Navigate to="/" replace />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/onboarding" element={<Navigate to="/" replace />} />

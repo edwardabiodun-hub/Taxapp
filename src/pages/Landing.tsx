@@ -261,7 +261,7 @@ const Landing = () => {
       <footer className="bg-[#0d2924] text-[#b9d2c5]">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-8 text-sm sm:px-8 md:flex-row md:items-center md:justify-between">
           <div><img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-14 w-14 max-w-full object-contain" /><p className="mt-1">Simple Nigerian tax preparation.</p></div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2"><a href="#questions" className="hover:text-white">Support</a><span>Privacy notice</span><span>Terms and conditions</span></div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2"><a href="#questions" className="hover:text-white">Support</a><Link to="/privacy" className="hover:text-white">Privacy notice</Link><Link to="/terms" className="hover:text-white">Terms and conditions</Link><Link to="/disclaimer" className="hover:text-white">Disclaimer</Link></div>
           <p className="max-w-xs text-xs leading-5 md:text-right">General information only. FileSmart is not a substitute for professional tax advice.</p>
         </div>
       </footer>
