@@ -1,5 +1,8 @@
 {
   "imports": {
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.117.1"
+  },
+  "tasks": {
+    "test:support-retrieval": "deno test support-chat/retrieval.test.ts"
   }
 }
