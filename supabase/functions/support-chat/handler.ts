@@ -1,7 +1,7 @@
 import { enforceDualLimit, getTrustedClientIp, type DualLimitInput, type RateLimitClient } from '../_shared/rate-limit.ts';
 import { selectKnowledgeEntries, type KnowledgeRow } from './knowledge.ts';
 import { classifySupportRequest } from './policy.ts';
-import { buildSupportSystemPrompt, sanitizeAssistantText, type AccountSummaryDto } from './prompt.ts';
+import { buildSupportContextMessage, buildSupportSystemPrompt, sanitizeAssistantText, type AccountSummaryDto } from './prompt.ts';
 import type { AnswerProvider, ChatTurn } from './provider.ts';
 
 type RpcResult = { data: unknown; error: unknown };
@@ -246,6 +246,7 @@ export function createSupportChatHandler(dependencies: SupportChatDependencies):
     try {
       const answer = await dependencies.provider.generateAnswer({
         system: buildSupportSystemPrompt({ asOf, knowledgeEntries, accountSummary }),
+        approvedContext: buildSupportContextMessage({ asOf, knowledgeEntries, accountSummary }),
         history: body.history,
         userMessage: body.message,
       });
