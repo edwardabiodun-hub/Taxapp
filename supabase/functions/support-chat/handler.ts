@@ -2,7 +2,9 @@ import { enforceDualLimit, getTrustedClientIp, type DualLimitInput, type RateLim
 import { selectKnowledgeEntries, type KnowledgeRow } from './knowledge.ts';
 import { classifySupportRequest } from './policy.ts';
 import { buildSupportContextMessage, buildSupportSystemPrompt, sanitizeAssistantText, type AccountSummaryDto } from './prompt.ts';
-import type { AnswerProvider, ChatTurn } from './provider.ts';
+import { filterSafeEvidence, type AnswerProvider, type ChatTurn } from './provider.ts';
+import { fetchTaxEvidence, type SearchConfig, type TaxSearchProvider } from './retrieval.ts';
+import type { EvidenceItem } from './policy.ts';
 
 type RpcResult = { data: unknown; error: unknown };
 type RpcClient = { rpc: (name: string, args?: Record<string, unknown>) => Promise<RpcResult> };
@@ -17,6 +19,9 @@ export interface SupportChatDependencies {
   knowledgeClient: RpcClient;
   rateLimitClient: RateLimitClient;
   provider: AnswerProvider;
+  searchProvider?: TaxSearchProvider;
+  fetchEvidence?: (query: string, provider: TaxSearchProvider, config: SearchConfig) => Promise<EvidenceItem[]>;
+  searchConfig?: SearchConfig;
   enforceLimit?: (client: RateLimitClient, input: DualLimitInput) => Promise<{ allowed: boolean }>;
   now?: () => Date;
 }
@@ -228,12 +233,22 @@ export function createSupportChatHandler(dependencies: SupportChatDependencies):
     const asOf = (dependencies.now ?? (() => new Date()))().toISOString().slice(0, 10);
     let knowledgeEntries: KnowledgeRow[] = [];
     let accountSummary: AccountSummaryDto | undefined;
+    let externalEvidence: EvidenceItem[] = [];
     try {
       if (classification.kind === 'education') {
         const result = await dependencies.knowledgeClient.rpc('search_support_knowledge', { p_query: body.message, p_as_of: asOf, p_limit: 5 });
         if (result.error) throw new Error('Knowledge unavailable');
         knowledgeEntries = projectKnowledge(result.data, asOf);
-        if (!knowledgeEntries.length) return response(request, appOrigin, 200, {
+        if (!knowledgeEntries.length && dependencies.searchProvider && dependencies.searchConfig) {
+          try {
+            externalEvidence = filterSafeEvidence(await (dependencies.fetchEvidence ?? fetchTaxEvidence)(
+              body.message, dependencies.searchProvider, dependencies.searchConfig,
+            ));
+          } catch {
+            externalEvidence = [];
+          }
+        }
+        if (!knowledgeEntries.length && !externalEvidence.length) return response(request, appOrigin, 200, {
           answer: 'I cannot confirm an answer from the approved Nigerian tax sources for this question. Please contact human support for guidance.', citations: [],
         });
       } else {
@@ -249,9 +264,12 @@ export function createSupportChatHandler(dependencies: SupportChatDependencies):
         approvedContext: buildSupportContextMessage({ asOf, knowledgeEntries, accountSummary }),
         history: body.history,
         userMessage: body.message,
+        externalEvidence,
       });
       const safeAnswer = sanitizeAssistantText(answer);
-      const citations = knowledgeEntries.map((entry) => ({ title: entry.term, url: entry.source_url, statutoryReference: entry.statutory_reference }));
+      const citations = knowledgeEntries.length
+        ? knowledgeEntries.map((entry) => ({ title: entry.term, url: entry.source_url, statutoryReference: entry.statutory_reference }))
+        : externalEvidence.map((entry) => ({ title: entry.sourceTitle, url: entry.sourceUrl }));
       return response(request, appOrigin, 200, {
         answer: accountSummary ? `Based on your synced FileSmart records. ${safeAnswer}` : safeAnswer,
         citations,
