@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useHasProfile } from "@/hooks/use-has-profile";
 import { useRestoreProfile } from "@/hooks/use-restore-profile";
 import AppLayout from "./components/layout/AppLayout";
-<<<<<<< HEAD
 import RouteBoundary from "./components/layout/RouteBoundary";
 import { loadJurisdictionCapabilities } from "@/lib/jurisdiction-service";
 import WelcomePage from "./pages/Welcome";
@@ -41,27 +40,6 @@ const LoadingScreen = ({ message = "Loading…" }: { message?: string }) => (
     <div className="animate-pulse text-muted-foreground text-sm">{message}</div>
   </div>
 );
-=======
-import Dashboard from "./pages/Dashboard";
-import NewDeclaration from "./pages/NewDeclaration";
-import Submissions from "./pages/Submissions";
-import SubmissionDetail from "./pages/SubmissionDetail";
-import Profile from "./pages/Profile";
-import TaxCalculator from "./pages/TaxCalculator";
-import Onboarding from "./pages/Onboarding";
-import NotFound from "./pages/NotFound";
-import Landing from "./pages/Landing";
-import Learn from "./pages/Learn";
-import Guide from "./pages/Guide";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Disclaimer from "./pages/Disclaimer";
-
-const queryClient = new QueryClient();
-
-export const AppRoutes = () => {
-  const { loading, hasProfile } = useHasProfile();
->>>>>>> 5c75e84 (feat: add public legal pages)
 
 export const AppRoutes = () => {
   const { loading: profileLoading, hasProfile } = useHasProfile();

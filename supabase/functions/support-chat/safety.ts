@@ -45,3 +45,17 @@ export function hasForbiddenDocumentContent(text: string): boolean {
   const documentSafeText = stripHttpUrls(text);
   return DOCUMENT_REFERENCES.test(documentSafeText) && DOCUMENT_CONTENT_OR_HANDLING.test(documentSafeText);
 }
+const INSTRUCTION_PATTERNS = [
+  /\b(?:ignore|override|bypass|discard|disregard|forget|delete)\b.{0,80}\b(?:previous|prior|above|system|developer|safety|policy|rules?|instructions?)\b/i,
+  /\b(?:system|developer|hidden|internal)\s+(?:prompts?|instructions?|messages?|rules?)\b/i,
+  /\b(?:reveal|show|print|dump|expose|send|leak|provide|give|share)\b.{0,80}\b(?:prompts?|instructions?|secrets?|passwords?|api\s*keys?|tokens?|credentials?)\b/i,
+  /\b(?:call|invoke|execute|activate|run|use)\b.{0,60}\b(?:tools?|functions?|apis?|rpcs?|shell|commands?)\b/i,
+  /\b(?:tools?|functions?|apis?|rpcs?)\b.{0,40}\b(?:call|invoke|execute|activate|run)\b/i,
+  /\b(?:you are now|new instructions?|act as (?:system|developer)|priority override)\b/i,
+  /\b(?:api[\s_-]*keys?|secrets?|passwords?|access[\s_-]*tokens?|private[\s_-]*keys?|credentials?)\b/i,
+];
+
+export function hasInstructionInjection(text: string): boolean {
+  const normalized = normalizeSupportText(text);
+  return INSTRUCTION_PATTERNS.some((pattern) => pattern.test(normalized));
+}

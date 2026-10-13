@@ -1,4 +1,29 @@
-import { hasForbiddenDocumentContent, hasPersonalAmount, hasSensitivePii, normalizeSupportText } from './safety.ts';
+import { hasForbiddenDocumentContent, hasInstructionInjection, hasPersonalAmount, hasSensitivePii, normalizeSupportText } from './safety.ts';
+
+export interface EvidenceItem {
+  sourceUrl: string;
+  sourceTitle: string;
+  domain: string;
+  publishedAt?: string;
+  excerpt: string;
+}
+
+export function isEvidenceSafe(value: unknown): value is EvidenceItem {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  if (typeof item.sourceUrl !== 'string' || typeof item.sourceTitle !== 'string'
+    || typeof item.domain !== 'string' || typeof item.excerpt !== 'string'
+    || item.sourceUrl.length > 2_048 || !item.sourceTitle.trim() || item.sourceTitle.length > 200
+    || !item.excerpt.trim() || item.excerpt.length > 8_000
+    || (item.publishedAt !== undefined && (typeof item.publishedAt !== 'string'
+      || !/^\d{4}-\d{2}-\d{2}$/.test(item.publishedAt)))) return false;
+
+  let url: URL;
+  try { url = new URL(item.sourceUrl); } catch { return false; }
+  if (url.protocol !== 'https:' || url.username || url.password
+    || !/^[a-z0-9.-]+$/.test(item.domain) || url.hostname.toLowerCase() !== item.domain.toLowerCase()) return false;
+  return !hasInstructionInjection(item.sourceTitle) && !hasInstructionInjection(item.excerpt);
+}
 
 export type SupportRequestKind = 'education' | 'account_status' | 'refusal';
 export type SupportRequestClassification = { kind: SupportRequestKind };
