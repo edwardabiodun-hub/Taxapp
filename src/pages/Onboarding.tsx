@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound, type LucideIcon } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowLeft, User, Phone, MapPin, Calendar, Globe, Users, Building2, Check, ShieldCheck, KeyRound, ListChecks, BadgeCheck, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -87,6 +87,7 @@ const Onboarding = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const update = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
+    setIsDirty(true);
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -180,7 +181,20 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
+      <div className="grid min-h-screen lg:grid-cols-2">
+        <section data-testid="onboarding-registration-panel" className="order-2 flex min-h-screen flex-col bg-card lg:order-1">
+          <header className="border-b border-border px-4 py-4 sm:px-6">
+            <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-4">
+              <Link to="/" aria-label="FileSmart home" className="inline-flex min-h-11 items-center">
+                <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-10 w-auto" />
+              </Link>
+              <Link to="/" onClick={requestExit} className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                Return to home
+              </Link>
+            </div>
+          </header>
+
       {/* Header */}
       <div className="gradient-primary px-6 pt-12 pb-8 text-primary-foreground safe-area-top">
         <p className="text-xs font-medium opacity-70 tracking-wider uppercase">Step {step + 1} of {steps.length}</p>
@@ -431,9 +445,33 @@ const Onboarding = () => {
           )}
         </div>
       </div>
-    </div>
+
+        </section>
+
+        <aside data-testid="onboarding-brand-panel" className="order-1 flex min-h-[28rem] flex-col justify-center bg-gradient-to-br from-[#eff7f0] via-[#f8f7f3] to-[#f7ead2] px-6 py-12 sm:px-10 lg:order-2 lg:min-h-screen lg:px-14">
+          <div className="mx-auto w-full max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Your preparation, made clearer</p>
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-foreground sm:text-5xl">Prepare your Nigerian tax information with confidence.</h2>
+            <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">Answer a few focused questions, keep your information organized, and review your preparation before deciding your next filing step.</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <TrustPoint icon={ListChecks} title="Step by step" text="Plain-language questions, one stage at a time." />
+              <TrustPoint icon={ShieldCheck} title="Privacy-conscious" text="A focused experience for sensitive tax information." />
+              <TrustPoint icon={BadgeCheck} title="Review before you finish" text="Prepare information for your applicable filing route." />
+            </div>
+            <p className="mt-8 max-w-lg text-xs leading-5 text-muted-foreground">FileSmart provides guided tax preparation support and general information. It is not a substitute for professional tax advice. Submission requirements depend on your applicable tax authority and filing route.</p>
+          </div>
+        </aside>
+      </div>
   );
 };
+
+const TrustPoint = ({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) => (
+  <div className="rounded-2xl border border-border bg-background/70 p-3">
+    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+    <p className="mt-2 text-sm font-semibold text-foreground">{title}</p>
+    <p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p>
+  </div>
+);
 
 const Field = ({ label, htmlFor, icon: Icon, error, children }: {
   label: string;

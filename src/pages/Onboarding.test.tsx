@@ -64,6 +64,15 @@ function fillRequiredFields() {
 }
 
 describe("Onboarding consent gate", () => {
+  it("uses a balanced split layout with registration left and reassurance content right", async () => {
+    await renderOnboarding();
+
+    expect(screen.getByTestId("onboarding-registration-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("onboarding-brand-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("onboarding-registration-panel")).toHaveClass("lg:order-1");
+    expect(screen.getByTestId("onboarding-brand-panel")).toHaveClass("lg:order-2");
+  });
+
   it("describes the actual server and device storage boundaries", async () => {
     await renderOnboarding();
 
