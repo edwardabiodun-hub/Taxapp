@@ -87,7 +87,6 @@ const Onboarding = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const update = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
-    setIsDirty(true);
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -189,7 +188,7 @@ const Onboarding = () => {
               <Link to="/" aria-label="FileSmart home" className="inline-flex min-h-11 items-center">
                 <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-10 w-auto" />
               </Link>
-              <Link to="/" onClick={requestExit} className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Link to="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 Return to home
               </Link>
             </div>
@@ -462,6 +461,7 @@ const Onboarding = () => {
           </div>
         </aside>
       </div>
+    </div>
   );
 };
 
