@@ -10,6 +10,10 @@ import Disclaimer from "./Disclaimer";
 vi.mock("@/hooks/use-has-profile", () => ({
   useHasProfile: () => ({ loading: false, hasProfile: false }),
 }));
+vi.mock("@/contexts/AuthContext", () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({ loading: false, isUnlocked: false, isPasswordRecovery: false }),
+}));
 
 const legalPages = [
   { name: "privacy", heading: /privacy policy/i, Component: Privacy },
@@ -18,14 +22,14 @@ const legalPages = [
 ] as const;
 
 describe("public legal pages", () => {
-  it.each(legalPages)("renders the $name page with approval-safe placeholders", ({ Component, heading }) => {
+  it.each(legalPages)("renders the $name page with approval-safe placeholders", async ({ Component, heading }) => {
     render(
       <MemoryRouter>
         <Component />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
     expect(screen.getByText(/operator identity pending approval/i)).toBeInTheDocument();
     expect(screen.getAllByText(/privacy contact pending approval/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/requires operator approval before launch/i)).toBeInTheDocument();
@@ -68,13 +72,13 @@ describe("public legal pages", () => {
     ["/privacy", /privacy policy/i],
     ["/terms", /terms of use/i],
     ["/disclaimer", /disclaimer/i],
-  ] as const)("mounts %s in the public route table", (path, heading) => {
+  ] as const)("mounts %s in the public route table", async (path, heading) => {
     render(
       <MemoryRouter initialEntries={[path]}>
         <AppRoutes />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
   });
 });

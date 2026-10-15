@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -50,10 +50,14 @@ describe("support knowledge contract", () => {
   });
 
   it("seeds exactly the verified glossary upserts generated from the current source", () => {
-    const sql = readFileSync(migration, "utf8");
-    const seed = sql.match(/-- BEGIN GENERATED SUPPORT KNOWLEDGE\r?\n([\s\S]*?)-- END GENERATED SUPPORT KNOWLEDGE/)?.[1];
+    const migrationsDirectory = resolve(process.cwd(), "supabase/migrations");
+    const sql = readdirSync(migrationsDirectory).filter((file) => file.endsWith(".sql")).sort().reverse()
+      .map((file) => readFileSync(join(migrationsDirectory, file), "utf8"))
+      .find((content) => content.includes("-- BEGIN GENERATED SUPPORT KNOWLEDGE"));
+    expect(sql).toBeDefined();
+    const seed = sql?.match(/-- BEGIN GENERATED SUPPORT KNOWLEDGE\r?\n([\s\S]*?)-- END GENERATED SUPPORT KNOWLEDGE/)?.[1];
     expect(seed).toBeDefined();
-    expect(seed?.trim()).toBe(runGenerator().trim());
+    expect(seed?.replace(/\r\n/g, "\n").trim()).toBe(runGenerator().replace(/\r\n/g, "\n").trim());
     expect(seed).toContain("'https://nass.gov.ng/documents/download/11249'");
     expect(seed).toContain("'https://nass.gov.ng/documents/download/11250'");
   });

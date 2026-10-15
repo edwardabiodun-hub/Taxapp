@@ -133,6 +133,7 @@ async function defaultResolver(hostname: string): Promise<string[]> {
 function parseSafeUrl(raw: string): URL | null {
   if (
     typeof raw !== "string" || raw.length > 2_048 ||
+    // eslint-disable-next-line no-control-regex -- Reject C0/DEL bytes before URL parsing.
     /[\u0000-\u001f\u007f]/.test(raw)
   ) return null;
   let url: URL;

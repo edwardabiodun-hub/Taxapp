@@ -122,14 +122,14 @@ describe('support-chat adversarial boundary', () => {
       ]);
     }
     expect(fixture.knowledgeRpc).not.toHaveBeenCalled();
-    expect(fixture.generateAnswer.mock.calls[0][0].system).toContain('"status":"submitted"');
-    expect(fixture.generateAnswer.mock.calls[1][0].system).toContain('"status":"processing"');
+    expect(fixture.generateAnswer.mock.calls[0][0].approvedContext).toContain('"status":"submitted"');
+    expect(fixture.generateAnswer.mock.calls[1][0].approvedContext).toContain('"status":"processing"');
   });
 
   it('projects away sensitive RPC fields before model context and HTTP output', async () => {
     const fixture = securityFixture();
     const response = await fixture.handler(post({ message: 'What is my declaration status?', history: [] }));
-    const prompt = fixture.generateAnswer.mock.calls[0][0].system;
+    const prompt = fixture.generateAnswer.mock.calls[0][0].approvedContext ?? '';
     const output = await response.text();
 
     expect(response.status).toBe(200);

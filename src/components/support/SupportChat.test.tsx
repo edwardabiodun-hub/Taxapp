@@ -143,7 +143,7 @@ describe("SupportChat surface", () => {
   });
 
   it.each([
-    ["authentication", /session has expired/i],
+    ["authentication", /create a free account or sign in/i],
     ["rate_limit", /too many requests/i],
   ] as const)("shows the safe %s state", async (code, message) => {
     send.mockRejectedValue(new SupportChatError(code));
