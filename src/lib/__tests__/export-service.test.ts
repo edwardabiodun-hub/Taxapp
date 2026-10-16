@@ -32,6 +32,11 @@ const preparation: PreparationRecord = {
   formData: {
     annualSalary: "1000000",
     annualRentPaid: "120000",
+    nationalHousingFund: "20000",
+    nationalHealthInsurance: "30000",
+    mortgageInterest: "40000",
+    lifeInsurancePremium: "50000",
+    minimumWageEmployment: "no",
     "=unsafeFormula": "@do-not-execute",
     taxId: "do-not-export",
     documents: [
@@ -98,6 +103,11 @@ describe("universal export service", () => {
     expect(sanitized.formData).toEqual({
       annualSalary: "1000000",
       annualRentPaid: "120000",
+      nationalHousingFund: "20000",
+      nationalHealthInsurance: "30000",
+      mortgageInterest: "40000",
+      lifeInsurancePremium: "50000",
+      minimumWageEmployment: "no",
       documents: preparation.formData.documents,
     });
 
@@ -294,6 +304,11 @@ describe("universal export service", () => {
     expect(preparations[0].formData).toEqual({
       annualSalary: "1000000",
       annualRentPaid: "120000",
+      nationalHousingFund: "20000",
+      nationalHealthInsurance: "30000",
+      mortgageInterest: "40000",
+      lifeInsurancePremium: "50000",
+      minimumWageEmployment: "no",
       documents: preparation.formData.documents,
     });
     expect(preparations[0].confirmedReceiptInputs).toEqual({});

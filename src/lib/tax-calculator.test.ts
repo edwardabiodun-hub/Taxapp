@@ -1,82 +1,86 @@
-import { describe, it, expect } from "vitest";
-import { calculateNigeriaTax, formatNaira } from "./tax-calculator";
+import { describe, expect, it } from "vitest";
+import { calculateNigeriaTax, TaxEstimateUnavailableError, formatNaira } from "./tax-calculator";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 
-describe("formatNaira", () => {
-  it("formats a whole number with the ₦ symbol and thousands separators", () => {
-    expect(formatNaira(45200)).toBe("₦45,200");
+const form = (overrides: Partial<NigeriaDeclarationForm>): NigeriaDeclarationForm =>
+  ({ ...defaultNigeriaForm, taxYear: "2026", ...overrides });
+
+describe("2026 Nigeria Tax Act PIT estimate", () => {
+  it.each([
+    ["800000", 0], ["1000000", 30000], ["3000000", 330000],
+    ["12000000", 1950000], ["25000000", 4680000],
+    ["50000000", 10430000], ["51000000", 10680000],
+  ])("applies marginal bands to taxable income %s", (salary, expected) => {
+    expect(calculateNigeriaTax(form({ annualSalary: salary })).finalTax).toBe(expected);
   });
 
-  it("rounds to the nearest whole naira, dropping kobo from display", () => {
-    expect(formatNaira(1234.57)).toBe("₦1,235");
+  it("includes distinct commissions, bonuses and allowances exactly once", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "2000000", commissions: "100000", bonuses: "200000", allowances: "300000" }));
+    expect(result.grossIncome).toBe(2600000);
+    expect(result.finalTax).toBe(270000);
   });
 
-  it("formats zero", () => {
-    expect(formatNaira(0)).toBe("₦0");
+  it("deducts documented eligible amounts and caps rent relief rather than rent", () => {
+    const result = calculateNigeriaTax(form({
+      annualSalary: "5000000", annualRentPaid: "3000000", employeePension: "200000",
+      nationalHousingFund: "100000", nationalHealthInsurance: "100000",
+      mortgageInterest: "100000", lifeInsurancePremium: "100000",
+    }));
+    expect(result.totalDeductions).toBe(1100000);
+    expect(result.taxableIncome).toBe(3900000);
+    expect(result.finalTax).toBe(492000);
+  });
+
+  it("keeps net business and net rent income without double-subtracting recorded expenses", () => {
+    const result = calculateNigeriaTax(form({ businessIncome: "2000000", businessExpenses: "300000", rentIncome: "1000000", rentExpenses: "200000" }));
+    expect(result.grossIncome).toBe(3000000);
+    expect(result.finalTax).toBe(330000);
+  });
+
+  it("exempts confirmed full-year single minimum-wage employment only, not other income", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "840000", minimumWageEmployment: "yes", businessIncome: "1000000" }));
+    expect(result.grossIncome).toBe(1000000);
+    expect(result.finalTax).toBe(30000);
+  });
+
+  it.each(["2025", "2027"])("does not apply 2026 law to %s", (taxYear) => {
+    expect(() => calculateNigeriaTax(form({ taxYear, annualSalary: "1000000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it.each([
+    { companyVehicleCost: "1000000" }, { rentPaidByEmployer: "100000" },
+    { foreignIncome: "100000" }, { nigerianDividends: "100000" },
+    { pensionReceived: "100000" }, { otherInvestmentIncome: "100000" },
+    { gratuities: "100000" }, { annuityInsurance: "100000" },
+  ])("withholds estimates for unclassified income or benefit %o", (unsupported) => {
+    expect(() => calculateNigeriaTax(form({ annualSalary: "1000000", ...unsupported }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it.each(["1abc", "-1", "Infinity", "1.234", "1,00,000"])("rejects malformed amount %s", (amount) => {
+    expect(() => calculateNigeriaTax(form({ annualSalary: amount }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("withholds an estimate for contradictory net income and expense entries", () => {
+    expect(() => calculateNigeriaTax(form({ businessIncome: "0", businessExpenses: "20000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("does not silently choose between conflicting annual rent entries", () => {
+    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", annualRentPaid: "1000000", rentPaidBySelf: "1200000" }))).toThrow(TaxEstimateUnavailableError);
+    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", rentPaidBySelf: "1200000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("requires a confirmed minimum-wage classification in the narrow exemption interval", () => {
+    expect(() => calculateNigeriaTax(form({ annualSalary: "820000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("does not apply legacy CRA or minimum tax", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "100000" }));
+    expect(result.totalDeductions).toBe(0);
+    expect(result.finalTax).toBe(0);
+    expect(result).not.toHaveProperty("minimumTax");
   });
 });
 
-function form(overrides: Partial<NigeriaDeclarationForm>): NigeriaDeclarationForm {
-  return { ...defaultNigeriaForm, ...overrides };
-}
-
-describe("calculateNigeriaTax", () => {
-  it("computes tax for income spanning the first two PIT bands", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "900000" }));
-    // CRA = max(200000, 1% of 900000) + 20% of 900000 = 200000 + 180000 = 380000
-    // taxable = 900000 - 380000 = 520000
-    // band1: 300000 @ 7% = 21000; band2: 220000 @ 11% = 24200
-    expect(result.totalDeductions).toBe(380000);
-    expect(result.taxableIncome).toBe(520000);
-    expect(result.computedTax).toBe(45200);
-    expect(result.finalTax).toBe(45200);
-  });
-
-  it("applies the 1% minimum tax floor when banded tax is lower", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "100000" }));
-    expect(result.taxableIncome).toBe(0);
-    expect(result.computedTax).toBe(0);
-    expect(result.minimumTax).toBe(1000); // 1% of 100000
-    expect(result.finalTax).toBe(1000);
-  });
-
-  it("caps the relief at NGN 500,000 after applying the 20% rate", () => {
-    const withCap = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "3000000" }));
-    const atCap = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "2500000" }));
-    // Legacy CRA remains 1,200,000 in this branch; the rent relief is 500,000.
-    expect(withCap.totalDeductions).toBe(1700000);
-    expect(atCap.totalDeductions).toBe(1700000);
-  });
-
-  it("applies 20% relief to rent below the relief cap", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "250000" }));
-
-    expect(result.totalDeductions).toBe(1250000);
-  });
-
-  it("does not cap annual rent itself at NGN 500,000", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "5000000", annualRentPaid: "1000000" }));
-    expect(result.totalDeductions).toBe(1400000);
-  });
-
-  it("taxes 10% of company vehicle cost as a benefit in kind", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "0", companyVehicleCost: "1000000" }));
-    expect(result.grossIncome).toBe(100000);
-  });
-
-  it("treats a non-numeric amount field as zero rather than NaN", () => {
-    const result = calculateNigeriaTax(form({ annualSalary: "not a number" }));
-    expect(result.grossIncome).toBe(0);
-    expect(Number.isNaN(result.finalTax)).toBe(false);
-  });
-
-  it("rounds monetary results to 2 decimal places (kobo precision)", () => {
-    // Gross income with cents, entirely absorbed by CRA relief, leaves only the
-    // 1% minimum tax. Today that computes 123456.78 * 0.01 = 1234.5678 raw,
-    // a 4-decimal-place amount that cannot exist in Naira/kobo currency.
-    const result = calculateNigeriaTax(form({ annualSalary: "123456.78" }));
-    expect(result.minimumTax).toBe(1234.57);
-    expect(result.finalTax).toBe(1234.57);
-    expect(result.totalDeductions).toBe(224691.36);
-  });
+describe("formatNaira", () => {
+  it("formats the naira symbol", () => expect(formatNaira(1234.57)).toBe("₦1,235"));
 });

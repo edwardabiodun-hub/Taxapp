@@ -14,6 +14,8 @@ export const SAFE_PREPARATION_FIELDS = [
   "otherInvestmentIncome", "otherInvestmentDetails", "rentPaidBySelf", "rentPaidBySelfAddress",
   "rentPaidByEmployer", "rentPaidByEmployerName", "domesticStaffBySelf", "domesticStaffByEmployer",
   "companyVehicleCost", "companyVehicleDetails", "employeePension", "annualRentPaid",
+  "nationalHousingFund", "nationalHealthInsurance", "mortgageInterest", "lifeInsurancePremium",
+  "minimumWageEmployment",
 ] as const satisfies readonly (keyof DeclarationIncomeFields)[];
 
 const UNSAFE_TEXT = /(?:data:|blob:|base64|bearer|authorization|api[_ -]?key|credential|password|secret|token|raw(?:[-_\s](?:image|file|bytes|payload|receipt))?)/i;

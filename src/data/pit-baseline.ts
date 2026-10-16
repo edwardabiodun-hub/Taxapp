@@ -5,7 +5,7 @@ export interface PitTaxBand {
 
 export interface PitRuleInputs {
   readonly taxBands: readonly PitTaxBand[];
-  readonly minimumTaxRate: number;
+  readonly minimumWageAnnual: number;
   readonly assumptions: readonly string[];
 }
 
@@ -29,36 +29,34 @@ export class PitBaselineConfigurationError extends Error {
 
 const ruleInputs: PitRuleInputs = Object.freeze({
   taxBands: Object.freeze([
-    { limit: 300_000, rate: 0.07 },
-    { limit: 300_000, rate: 0.11 },
-    { limit: 500_000, rate: 0.15 },
-    { limit: 500_000, rate: 0.19 },
-    { limit: 1_600_000, rate: 0.21 },
-    { limit: Infinity, rate: 0.24 },
+    { limit: 800_000, rate: 0 },
+    { limit: 2_200_000, rate: 0.15 },
+    { limit: 9_000_000, rate: 0.18 },
+    { limit: 13_000_000, rate: 0.21 },
+    { limit: 25_000_000, rate: 0.23 },
+    { limit: Infinity, rate: 0.25 },
   ].map((band) => Object.freeze(band))),
-  minimumTaxRate: 0.01,
+  minimumWageAnnual: 840_000,
   assumptions: Object.freeze([
-    "The existing Nigerian PIT calculator formula is used without state-specific adjustments.",
-    "Dividends and interest are excluded from taxable investment income under the existing calculator behavior.",
-    "A company vehicle benefit is calculated at 10% of company vehicle cost.",
-    "Consolidated Relief Allowance uses the higher of ₦200,000 or 1% of gross income, plus 20% of gross income.",
-    "Minimum tax is 1% of gross income when it exceeds graduated tax.",
+    "2026 Nigeria Tax Act 2025 Fourth Schedule bands; no unverified state adjustment.",
+    "Business and rental income entered are net amounts; listed expenses are not deducted again.",
+    "Pension, NHF, NHIS, owner-occupied mortgage interest and qualifying insurance amounts require supporting evidence.",
+    "Estimated income tax precedes PAYE and withholding tax credits and is not a government assessment.",
   ]),
 });
 
 /**
- * The numeric rule inputs are retained for compatibility with the existing
- * calculator. The official source and effective tax-year metadata are
- * intentionally unconfigured until an approved source is added to the repo.
+ * Source: Nigeria Tax Act 2025 (National Assembly gazette), ss. 28-32, 58,
+ * 162 and Fourth Schedule. Reviewed for 2026 only; later years fail closed.
  */
 const PIT_BASELINE: PitBaseline = Object.freeze({
   profileId: "ng-pit-baseline",
-  status: "unconfigured",
-  version: "",
-  effectiveTaxYears: Object.freeze([]),
-  source: "",
-  verifiedAt: "",
-  confidence: null,
+  status: "configured",
+  version: "nta-2025-2026.1",
+  effectiveTaxYears: Object.freeze(["2026"]),
+  source: "https://nass.gov.ng/documents/download/11249",
+  verifiedAt: "2026-10-16",
+  confidence: "high",
   ruleInputs,
 });
 

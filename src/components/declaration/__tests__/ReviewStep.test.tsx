@@ -16,11 +16,11 @@ describe("ReviewStep", () => {
     render(<ReviewStep form={form} calculation={calculation} />);
 
     expect(screen.getByText("Annual Rent Paid")).toBeInTheDocument();
-    expect(screen.getByText("Rent Relief").parentElement?.parentElement).toHaveTextContent("200,000");
+    expect(screen.getByText("Potential rent relief (subject to validation)").parentElement?.parentElement).toHaveTextContent("200,000");
   });
 
-  it("does not show a numeric tax estimate when preparation calculation is not filing-ready", () => {
-    const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000" };
+  it("does not show a numeric tax estimate for an unclassified benefit", () => {
+    const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000", companyVehicleCost: "100000" };
     const calculation = calculatePreparation(
       { ...form, jurisdictionCode: "NG-LA" },
       getJurisdictionCapability("NG-LA"),
@@ -38,5 +38,31 @@ describe("ReviewStep", () => {
 
     expect(screen.queryByText("Tax Liability Estimate")).not.toBeInTheDocument();
     expect(screen.getAllByText("Not filing-ready").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Company vehicle ownership or hire details/)).toBeInTheDocument();
+  });
+
+  it("shows a 2026 sourced estimate without CRA or minimum tax", () => {
+    const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000" };
+    const calculation = calculatePreparation({ ...form, jurisdictionCode: "NG-LA" }, getJurisdictionCapability("NG-LA"));
+    render(<ReviewStep form={form} calculation={calculation} />);
+    expect(screen.getByText("Tax Liability Estimate")).toBeInTheDocument();
+    expect(screen.queryByText(/Minimum Tax/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/CRA/)).not.toBeInTheDocument();
+  });
+
+  it("does not render NaN as rent relief when a saved draft contains invalid rent", () => {
+    const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000", annualRentPaid: "not-an-amount" };
+    const calculation = calculatePreparation({ ...form, jurisdictionCode: "NG-LA" }, getJurisdictionCapability("NG-LA"));
+    render(<ReviewStep form={form} calculation={calculation} />);
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+    expect(screen.getByText("Potential rent relief (subject to validation)").parentElement?.parentElement).toHaveTextContent("Needs review");
+  });
+
+  it("shows commissions and bonuses as distinct amounts", () => {
+    const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000", commissions: "120000", bonuses: "80000" };
+    const calculation = calculatePreparation({ ...form, jurisdictionCode: "NG-LA" }, getJurisdictionCapability("NG-LA"));
+    render(<ReviewStep form={form} calculation={calculation} />);
+    expect(screen.getByText("Commissions").parentElement?.parentElement).toHaveTextContent("120000");
+    expect(screen.getByText("Bonuses").parentElement?.parentElement).toHaveTextContent("80000");
   });
 });

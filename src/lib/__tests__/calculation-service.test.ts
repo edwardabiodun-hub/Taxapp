@@ -47,16 +47,14 @@ const verifiedStateCapability: JurisdictionCapability = {
 };
 
 describe("calculation service", () => {
-  it("fails closed when the approved PIT baseline source is not configured", () => {
+  it("uses the reviewed 2026 statutory baseline without claiming filing readiness", () => {
     const result = calculatePreparation(minimumInput, notSupportedCapability);
 
-    expect(result.label).toBe("Not filing-ready");
+    expect(result.label).toBe("Generic Nigerian PIT estimate");
     expect(result.ruleProfile.kind).toBe("generic_nigerian_pit");
-    expect(result.ruleProfileVersion).toBe("");
-    expect(result.source).toBe("");
-    expect(result.missingInputWarnings).toContain(
-      "Approved official Nigerian PIT baseline source is not configured.",
-    );
+    expect(result.ruleProfileVersion).toBe("nta-2025-2026.1");
+    expect(result.source).toContain("nass.gov.ng");
+    expect(result.tax?.finalTax).toBe(30_000);
   });
 
   it("does not claim state-specific rules without verified evidence", () => {
@@ -82,32 +80,30 @@ describe("calculation service", () => {
   it("delegates numeric calculation while returning provenance warnings", () => {
     const result = calculatePreparation(minimumInput, notSupportedCapability);
 
-    expect(result.finalTax).toBe(54_000);
+    expect(result.tax?.finalTax).toBe(30_000);
     expect(result.assumptions.length).toBeGreaterThan(0);
     expect(result.ruleProfile.profileId).toBe("ng-pit-baseline");
   });
 
-  it("rejects an unconfigured baseline instead of returning fabricated metadata", () => {
-    expect(() => getPitBaseline()).toThrow(
-      "Nigerian PIT baseline source and effective tax-year metadata are required.",
-    );
+  it("returns verified baseline metadata", () => {
+    expect(getPitBaseline().source).toContain("nass.gov.ng");
   });
 
-  it("uses the applied verified-state profile for calculation provenance", () => {
+  it("does not claim a state-specific formula merely because a state profile has evidence", () => {
     const result = calculatePreparation(
       minimumInput,
       verifiedStateCapability,
       configuredBaseline,
     );
 
-    expect(result.label).toBe("State-specific estimate");
-    expect(result.ruleProfileVersion).toBe("state-2026.1");
-    expect(result.source).toBe("test-state-source");
+    expect(result.label).toBe("Generic Nigerian PIT estimate");
+    expect(result.ruleProfileVersion).toBe("test-2026.1");
+    expect(result.source).toBe("test-approved-source");
     expect(result.effectiveFrom).toBe("2026-01-01");
-    expect(result.effectiveTo).toBe("2026-12-31");
+    expect(result.effectiveTo).toBeUndefined();
     expect(result.verifiedAt).toBe("2026-10-02");
     expect(result.confidence).toBe("high");
-    expect(result.provenance?.source).toBe("test-state-source");
+    expect(result.provenance?.source).toBe("test-approved-source");
   });
 
   it("fails closed when the configured baseline does not cover the requested tax year", () => {
@@ -118,8 +114,28 @@ describe("calculation service", () => {
     );
 
     expect(result.label).toBe("Not filing-ready");
+    expect(result.tax).toBeNull();
     expect(result.missingInputWarnings).toContain(
       "Approved Nigerian PIT baseline does not cover tax year 2026.",
     );
+  });
+
+  it("withholds numbers for unsupported facts while preserving a savable preparation", () => {
+    const result = calculatePreparation({ ...minimumInput, companyVehicleCost: "1000000" }, notSupportedCapability);
+    expect(result.tax).toBeNull();
+    expect(result.missingInputWarnings.join(" ")).toContain("vehicle");
+    expect(result.ruleProfileVersion).toBe("nta-2025-2026.1");
+  });
+
+  it("explains dividend-only preparations instead of claiming no income was entered", () => {
+    const result = calculatePreparation({ taxYear: "2026", jurisdictionCode: "NG-LA", nigerianDividends: "100000" }, notSupportedCapability);
+    expect(result.tax).toBeNull();
+    expect(result.missingInputWarnings.join(" ")).toContain("Dividend treatment");
+  });
+
+  it("never applies the 2026 schedule to historical drafts", () => {
+    const result = calculatePreparation({ ...minimumInput, taxYear: "2025" }, notSupportedCapability);
+    expect(result.tax).toBeNull();
+    expect(result.label).toBe("Not filing-ready");
   });
 });

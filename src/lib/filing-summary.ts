@@ -1,6 +1,7 @@
 import { calculateStateTax, type StateTaxBreakdown } from "./tax/state-tax";
 import type { LocalDeclaration, LocalProfile } from "./local-db";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
+import { TaxEstimateUnavailableError } from "@/lib/tax-calculator";
 
 export interface FilingSummary {
   generatedAt: string;
@@ -15,7 +16,8 @@ export interface FilingSummary {
     status: LocalDeclaration["status"];
     state?: string;
   };
-  tax: StateTaxBreakdown;
+  tax: StateTaxBreakdown | null;
+  estimateWarnings: readonly string[];
   /** Where to actually take this summary — there is no direct government
    * API integration (NRS Rev360 / LIRS access is still unconfirmed), so
    * this is the filing path today, not a fallback for when one breaks. */
@@ -25,9 +27,8 @@ export interface FilingSummary {
 const GUIDANCE =
   "FileSmart does not yet have a direct filing integration with the Federal " +
   "Inland Revenue Service (FIRS) or your state's Internal Revenue Service " +
-  "(SIRS). Use the figures in this summary to file directly through the " +
-  "appropriate government portal, or take it to your local tax office. " +
-  "This is an estimate only and is not a substitute for the official filing.";
+  "(SIRS). Review the preparation with the relevant authority or a qualified " +
+  "adviser before filing; this summary is not proof of submission.";
 
 /**
  * Builds the data for a filing summary a user can export and take to the
@@ -37,10 +38,17 @@ const GUIDANCE =
  * logic currently in tax-calculator.ts for this declaration's inputs.
  */
 export function buildFilingSummary(declaration: LocalDeclaration, profile: LocalProfile): FilingSummary {
-  const tax = calculateStateTax(
-    declaration.formData as unknown as NigeriaDeclarationForm,
-    declaration.state ?? ""
-  );
+  let tax: StateTaxBreakdown | null = null;
+  let estimateWarnings: readonly string[] = [];
+  try {
+    tax = calculateStateTax(
+      { ...declaration.formData, taxYear: declaration.taxYear, country: declaration.country } as NigeriaDeclarationForm,
+      declaration.state ?? "",
+    );
+  } catch (error) {
+    if (!(error instanceof TaxEstimateUnavailableError)) throw error;
+    estimateWarnings = error.reasons;
+  }
 
   return {
     generatedAt: new Date().toISOString(),
@@ -56,6 +64,7 @@ export function buildFilingSummary(declaration: LocalDeclaration, profile: Local
       state: declaration.state,
     },
     tax,
+    estimateWarnings,
     guidance: GUIDANCE,
   };
 }

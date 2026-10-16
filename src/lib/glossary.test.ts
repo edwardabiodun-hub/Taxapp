@@ -40,14 +40,14 @@ describe("tax glossary", () => {
 
   it("recognizes calculator terminology and prefers the longest phrase", () => {
     const tokens = tokenizeGlossaryText(
-      "Annual Salary, Business Income (Net), Benefits in Kind, and Consolidated Relief Allowance.",
+      "Annual Salary, Business Income (Net), Benefits in Kind, and Eligible Deductions.",
     );
 
     expect(tokens.filter((token) => token.entryId).map((token) => token.entryId)).toEqual([
       "annual-salary",
       "business-income",
       "benefits-in-kind",
-      "consolidated-relief-allowance",
+      "eligible-deductions",
     ]);
   });
 

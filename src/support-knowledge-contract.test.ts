@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 const migration = resolve(process.cwd(), "supabase/migrations/20260929000000_support_chat_contract.sql");
 const generator = resolve(process.cwd(), "scripts/generate-support-knowledge.mts");
 const glossary = resolve(process.cwd(), "src/data/taxGlossary.json");
+const correction = resolve(process.cwd(), "supabase/migrations/20261016000000_retire_legacy_pit_knowledge.sql");
 
 const runGenerator = (input = glossary) => execFileSync(process.execPath, [generator, input], {
   cwd: process.cwd(), encoding: "utf8",
@@ -49,17 +50,18 @@ describe("support knowledge contract", () => {
     expect(declarationFunction).toMatch(/order by d\.created_at desc(?:, d\.id)? limit 20;/);
   });
 
-  it("seeds exactly the verified glossary upserts generated from the current source", () => {
-    const migrationsDirectory = resolve(process.cwd(), "supabase/migrations");
-    const sql = readdirSync(migrationsDirectory).filter((file) => file.endsWith(".sql")).sort().reverse()
-      .map((file) => readFileSync(join(migrationsDirectory, file), "utf8"))
-      .find((content) => content.includes("-- BEGIN GENERATED SUPPORT KNOWLEDGE"));
-    expect(sql).toBeDefined();
-    const seed = sql?.match(/-- BEGIN GENERATED SUPPORT KNOWLEDGE\r?\n([\s\S]*?)-- END GENERATED SUPPORT KNOWLEDGE/)?.[1];
+  it("retains the historical seed and retires obsolete PIT guidance in a new migration", () => {
+    const sql = readFileSync(migration, "utf8");
+    const seed = sql.match(/-- BEGIN GENERATED SUPPORT KNOWLEDGE\r?\n([\s\S]*?)-- END GENERATED SUPPORT KNOWLEDGE/)?.[1];
     expect(seed).toBeDefined();
-    expect(seed?.replace(/\r\n/g, "\n").trim()).toBe(runGenerator().replace(/\r\n/g, "\n").trim());
     expect(seed).toContain("'https://nass.gov.ng/documents/download/11249'");
     expect(seed).toContain("'https://nass.gov.ng/documents/download/11250'");
+    const correctionSql = readFileSync(correction, "utf8").toLowerCase();
+    expect(correctionSql).toContain("'consolidated-relief-allowance'");
+    expect(correctionSql).toContain("'minimum-tax'");
+    expect(correctionSql).toContain("review_status = 'needs_review'");
+    expect(runGenerator()).not.toContain("'consolidated-relief-allowance'");
+    expect(runGenerator()).not.toContain("'minimum-tax'");
   });
 
   it("generates repeatable upserts with source and review metadata", () => {
