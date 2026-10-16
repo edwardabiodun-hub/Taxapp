@@ -1,4 +1,5 @@
 import { getPitRuleInputs, type PitRuleInputs } from "@/data/pit-baseline";
+import { calculateRentRelief } from "@/lib/rent-relief";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 
 /**
@@ -60,7 +61,7 @@ export function calculateNigeriaTax(
   // Deductions
   const pensionDeduction = parseAmount(form.employeePension);
   const rentPaid = parseAmount(form.annualRentPaid);
-  const rentRelief = Math.min(rentPaid, 500_000) * 0.2;
+  const rentRelief = calculateRentRelief(rentPaid).relief;
   // Consolidated Relief Allowance (CRA): higher of ₦200,000 or 1% of gross + 20% of gross
   const craFixed = Math.max(200_000, grossIncome * 0.01);
   const craVariable = grossIncome * 0.20;

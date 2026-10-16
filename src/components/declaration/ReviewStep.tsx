@@ -3,6 +3,8 @@ import type { NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { CalculationResult } from "@/lib/calculation-service";
+import { NairaText } from "@/components/ui/NairaText";
+import { calculateRentRelief } from "@/lib/rent-relief";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
@@ -177,7 +179,11 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
 
         <Section title="Deductions">
           <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
-          <SummaryRow label="Rent Relief" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
+          <SummaryRow
+            label="Rent Relief"
+            value={fmt(calculateRentRelief(Number(form.annualRentPaid.replace(/,/g, ""))).relief.toLocaleString("en-NG"))}
+          />
         </Section>
 
         {documents && documents.length > 0 && (

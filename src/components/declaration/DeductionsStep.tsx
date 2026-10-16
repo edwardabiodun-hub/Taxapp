@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import type { NigeriaDeclarationForm } from "@/types/declaration";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
-import { calculateRentRelief, RENT_RELIEF_RECOGNITION_CAP } from "@/lib/rent-relief";
+import { calculateRentRelief, RENT_RELIEF_CAP } from "@/lib/rent-relief";
+import { NairaSymbol } from "@/components/ui/NairaText";
 
 interface DeductionsStepProps {
   form: NigeriaDeclarationForm;
@@ -64,12 +65,12 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            <GlossaryText>20% of recognized rent, with the rent base capped at ₦500,000. Attach documentation.</GlossaryText>
+            <GlossaryText>20% of qualifying annual rent paid, with relief capped at ₦500,000. Attach documentation.</GlossaryText>
           </p>
           {rentRelief && (
             <div className="flex items-center gap-2 bg-primary/5 rounded-lg px-3 py-2">
               <span className="text-[10px] text-primary font-semibold">
-                <GlossaryText>Relief</GlossaryText>: ₦{rentRelief} (20% of ₦{rentCalculation.recognizedRent.toLocaleString()} rent base, capped at ₦{RENT_RELIEF_RECOGNITION_CAP.toLocaleString()})
+                <GlossaryText>Relief</GlossaryText>: <NairaSymbol />{rentRelief} (20% of <NairaSymbol />{rentCalculation.annualRentPaid.toLocaleString()} annual rent, relief capped at <NairaSymbol />{RENT_RELIEF_CAP.toLocaleString()})
               </span>
             </div>
           )}

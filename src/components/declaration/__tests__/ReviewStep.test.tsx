@@ -6,6 +6,19 @@ import { calculatePreparation } from "@/lib/calculation-service";
 import ReviewStep from "@/components/declaration/ReviewStep";
 
 describe("ReviewStep", () => {
+  it("distinguishes annual rent paid from the calculated relief", () => {
+    const form = { ...defaultNigeriaForm, taxYear: "2026", annualRentPaid: "1,000,000" };
+    const calculation = calculatePreparation(
+      { ...form, jurisdictionCode: "NG-LA" },
+      getJurisdictionCapability("NG-LA"),
+    );
+
+    render(<ReviewStep form={form} calculation={calculation} />);
+
+    expect(screen.getByText("Annual Rent Paid")).toBeInTheDocument();
+    expect(screen.getByText("Rent Relief").parentElement?.parentElement).toHaveTextContent("200,000");
+  });
+
   it("does not show a numeric tax estimate when preparation calculation is not filing-ready", () => {
     const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000" };
     const calculation = calculatePreparation(
