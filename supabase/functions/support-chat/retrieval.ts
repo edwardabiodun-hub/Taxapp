@@ -1,5 +1,9 @@
 import { type EvidenceItem, isEvidenceSafe } from "./policy.ts";
 
+declare const Deno: {
+  resolveDns(hostname: string, recordType: "A" | "AAAA"): Promise<string[]>;
+};
+
 export interface SearchResult {
   url: string;
   title: string;
@@ -366,13 +370,12 @@ function parseResult(
   const content = value.content ?? value.snippet ??
     (Array.isArray(value.snippets) ? value.snippets.join(" ") : undefined);
   if (typeof content === "string" && content.length > MAX_EXCERPT) return null;
+  const publishedAt = value.publishedAt;
   return {
     url: url.href,
     title: value.title.trim(),
     domain: url.hostname.toLowerCase(),
-    ...(value.publishedAt === undefined
-      ? {}
-      : { publishedAt: value.publishedAt }),
+    ...(typeof publishedAt === "string" ? { publishedAt } : {}),
     ...(content === undefined ? {} : { content: content as string }),
   };
 }
@@ -397,7 +400,7 @@ export function createTaxSearchProvider(
     resolver: config.resolver,
     searchPinned: config.searchTransport.searchPinned.bind(
       config.searchTransport,
-    ),
+    ) as (request: PinnedSearchRequest) => Promise<Response>,
   });
   return {
     async search(query) {

@@ -43,9 +43,9 @@ describe("TaxCalculator glossary integration", () => {
     render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
     fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "1000000" } });
     fireEvent.click(screen.getByRole("button", { name: /Calculate 2026 estimate/ }));
-    expect(screen.getAllByText("30,000").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₦30,000").length).toBeGreaterThan(0);
     fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "2000000" } });
-    expect(screen.queryAllByText("30,000")).toHaveLength(0);
+    expect(screen.queryAllByText("₦30,000")).toHaveLength(0);
   });
 
   it("explains why an employer vehicle cannot be estimated instead of showing a number", () => {
@@ -54,6 +54,6 @@ describe("TaxCalculator glossary integration", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Company Vehicle Cost" }), { target: { value: "100000" } });
     fireEvent.click(screen.getByRole("button", { name: /Calculate 2026 estimate/ }));
     expect(screen.getByRole("alert")).toHaveTextContent("Cannot estimate yet");
-    expect(screen.queryAllByText("30,000")).toHaveLength(0);
+    expect(screen.queryAllByText("₦30,000")).toHaveLength(0);
   });
 });

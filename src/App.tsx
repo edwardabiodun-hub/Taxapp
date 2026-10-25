@@ -17,6 +17,7 @@ import CheckEmailPage from "./pages/CheckEmail";
 import ForgotPasswordPage from "./pages/ForgotPassword";
 import ResetPasswordPage from "./pages/ResetPassword";
 import OnboardingPage from "./pages/Onboarding";
+import { isFilingLaunchPhase } from "@/lib/launch-phase";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NewDeclaration = lazy(() => import("./pages/NewDeclaration"));
@@ -32,6 +33,11 @@ const Guide = lazy(() => import("./pages/Guide"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const FilingWaitlist = lazy(() => import("./pages/FilingWaitlist"));
 
 const queryClient = new QueryClient();
 
@@ -57,6 +63,7 @@ export const AppRoutes = () => {
     if (restoringProfile) return <LoadingScreen message="Restoring your profile…" />;
     return <Routes>
       <Route path="/onboarding" element={<RouteBoundary><OnboardingPage /></RouteBoundary>} />
+      <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
       <Route path="*" element={<Navigate to="/onboarding" replace />} />
     </Routes>;
   }
@@ -65,12 +72,19 @@ export const AppRoutes = () => {
     <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
     <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
     <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+    <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
+    <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
+    <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />
     <Route path="/privacy" element={<RouteBoundary><Privacy /></RouteBoundary>} />
     <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
     <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
     <Route path="/welcome" element={<RouteBoundary><WelcomePage /></RouteBoundary>} />
     <Route path="/login" element={<RouteBoundary><LoginPage /></RouteBoundary>} />
     <Route path="/onboarding" element={<RouteBoundary><OnboardingPage /></RouteBoundary>} />
+    <Route path="/declare" element={isFilingLaunchPhase ? <RouteBoundary><FilingWaitlist /></RouteBoundary> : <Navigate to="/onboarding" replace />} />
+    <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
+    <Route path="/calculator" element={<Navigate to="/onboarding" replace />} />
+    <Route path="/pricing" element={<Navigate to="/onboarding" replace />} />
     <Route path="/check-email" element={<RouteBoundary><CheckEmailPage /></RouteBoundary>} />
     <Route path="/forgot-password" element={<RouteBoundary><ForgotPasswordPage /></RouteBoundary>} />
     <Route path="/reset-password" element={<RouteBoundary><ResetPasswordPage /></RouteBoundary>} />
@@ -80,6 +94,12 @@ export const AppRoutes = () => {
   return <Routes>
       <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
       <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+      <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
+      <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
+      <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />
+      <Route path="/pricing" element={<RouteBoundary><Pricing /></RouteBoundary>} />
+      <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
+      {isFilingLaunchPhase && <Route path="/declare" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />}
       <Route path="/privacy" element={<RouteBoundary><Privacy /></RouteBoundary>} />
       <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
       <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
@@ -91,7 +111,7 @@ export const AppRoutes = () => {
       <Route path="/reset-password" element={<Navigate to="/" replace />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<RouteBoundary><Dashboard /></RouteBoundary>} />
-        <Route path="/declare" element={<RouteBoundary><NewDeclaration /></RouteBoundary>} />
+        {!isFilingLaunchPhase && <Route path="/declare" element={<RouteBoundary><NewDeclaration /></RouteBoundary>} />}
         <Route path="/submissions" element={<RouteBoundary><Submissions /></RouteBoundary>} />
         <Route path="/submissions/:id" element={<RouteBoundary><SubmissionDetail /></RouteBoundary>} />
         <Route path="/messages" element={<RouteBoundary><Messages /></RouteBoundary>} />

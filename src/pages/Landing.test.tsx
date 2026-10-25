@@ -4,10 +4,19 @@ import { describe, expect, it } from "vitest";
 import Landing from "./Landing";
 
 describe("Landing", () => {
-  it("routes users into the existing browser onboarding flow", () => {
+  it("makes free filing the primary launch CTA while preserving onboarding", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
 
-    expect(screen.getAllByRole("link", { name: /start (filing )?online/i })[0]).toHaveAttribute("href", "/onboarding");
+    expect(screen.getAllByRole("link", { name: /file for free/i })[0]).toHaveAttribute("href", "/onboarding");
+    expect(screen.getAllByRole("img", { name: "Naira" }).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("keeps visible copy natural while retaining the Nigerian tax search context in metadata", () => {
+    render(<MemoryRouter><Landing /></MemoryRouter>);
+
+    expect(screen.getByText(/clear, guided support as you prepare your personal income tax/i)).toBeInTheDocument();
+    expect(screen.queryByText(/your Nigerian personal income tax preparation/i)).not.toBeInTheDocument();
+    expect(document.title).toBe("FileSmart | Simple Nigerian tax preparation");
   });
 
   it("uses the canonical FileSmart lockup asset", () => {
@@ -53,7 +62,7 @@ describe("Landing", () => {
   it("keeps the primary public actions at least 44px tall", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
 
-    expect(screen.getAllByRole("link", { name: /start filing online/i })[0].className).toContain("min-h-11");
+    expect(screen.getAllByRole("link", { name: /file for free/i })[0].className).toContain("min-h-11");
     expect(screen.getByRole("link", { name: /see how it works/i }).className).toContain("min-h-11");
   });
 
@@ -61,10 +70,10 @@ describe("Landing", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
 
     const navigation = screen.getByRole("navigation", { name: /main navigation/i });
-    expect(screen.getByRole("link", { name: /learn more/i }).className).toContain("min-h-11");
-    expect(navigation.querySelector("a[href='#how-it-works']")?.className).toContain("min-h-11");
-    expect(navigation.querySelector("a[href='#why-filesmart']")?.className).toContain("min-h-11");
-    expect(navigation.querySelector("a[href='#questions']")?.className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: /questions/i }).className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='/how-it-works']")?.className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='/learn']")?.className).toContain("min-h-11");
+    expect(navigation.querySelector("a[href='/about']")?.className).toContain("min-h-11");
   });
 
   it("keeps a single page heading and a focusable public control", () => {
@@ -80,8 +89,8 @@ describe("Landing", () => {
     render(<MemoryRouter><Landing /></MemoryRouter>);
 
     expect(screen.getByRole("link", { name: /view all guides/i })).toHaveAttribute("href", "/learn");
-    expect(screen.getByRole("link", { name: /nigerian personal income tax basics/i })).toHaveAttribute("href", "/learn/nigerian-pit-basics");
-    expect(screen.getByRole("link", { name: /paye in nigeria/i })).toHaveAttribute("href", "/learn/paye-explained");
-    expect(screen.getByRole("link", { name: /finding your nigerian tax filing deadline/i })).toHaveAttribute("href", "/learn/filing-deadlines");
+    expect(screen.getByRole("link", { name: /nigeria tax law 2026/i })).toHaveAttribute("href", "/learn/nigeria-tax-law-2026-personal-income-tax");
+    expect(screen.getByRole("link", { name: /who is exempt from income tax/i })).toHaveAttribute("href", "/learn/personal-income-tax-exemptions-nigeria-2026");
+    expect(screen.getByRole("link", { name: /do freelancers pay tax/i })).toHaveAttribute("href", "/learn/freelancer-side-hustle-tax-nigeria-2026");
   });
 });

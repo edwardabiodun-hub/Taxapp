@@ -9,16 +9,17 @@ import {
   ChevronDown,
   FileCheck2,
   HelpCircle,
-  Menu,
   ShieldCheck,
   Sparkles,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setPageMetadata } from "@/lib/seo";
+import { NairaText } from "@/components/ui/NairaText";
 import { taxGuides } from "@/content/tax-guides";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import PublicFooter from "@/components/public/PublicFooter";
+import PublicNav from "@/components/public/PublicNav";
 
 const benefits = [
   {
@@ -41,7 +42,7 @@ const benefits = [
 const faqs = [
   {
     question: "Can I start my tax preparation in a browser?",
-    answer: "Yes. FileSmart is designed to let you begin your preparation online. Select Start Filing Online to create your profile and enter the guided workflow.",
+    answer: "Yes. FileSmart is designed to let you begin your preparation online. Select File for Free to create your profile or join the launch waitlist while filing is being prepared.",
   },
   {
     question: "Does FileSmart submit my return to the tax authority?",
@@ -58,7 +59,6 @@ const faqs = [
 ];
 
 const Landing = () => {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(
@@ -73,72 +73,30 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
-      <header className="sticky top-0 z-50 border-b border-[#dce6df]/80 bg-[#f8f7f3]/95 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <a href="#top" className="flex items-center gap-3" aria-label="FileSmart home">
-            <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-14 w-14 max-w-full object-contain sm:h-16 sm:w-16" />
-          </a>
-
-          <nav className="hidden items-center gap-8 text-sm font-medium text-[#55736c] md:flex" aria-label="Main navigation">
-            <a href="#how-it-works" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">How it works</a>
-            <a href="#why-filesmart" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">Why FileSmart</a>
-            <a href="#questions" className="inline-flex min-h-11 items-center transition-colors hover:text-[#12352f]">Questions</a>
-          </nav>
-
-          <div className="hidden items-center gap-3 md:flex">
-            <a href="#questions" className="inline-flex min-h-11 items-center px-3 py-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]">Learn more</a>
-            <Button asChild className="min-h-11 rounded-full bg-[#12352f] px-5 text-[#fbfaf5] shadow-none hover:bg-[#1c4e44]">
-              <Link to="/onboarding">Start online <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
-          </div>
-
-          <button
-            type="button"
-            className="h-11 w-11 rounded-full p-2 text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2 md:hidden"
-            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-        {menuOpen && (
-          <nav id="mobile-navigation" className="border-t border-[#dce6df] px-5 py-4 md:hidden" aria-label="Mobile navigation">
-            <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm font-semibold">
-              <a className="inline-flex min-h-11 items-center" href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-              <a className="inline-flex min-h-11 items-center" href="#why-filesmart" onClick={() => setMenuOpen(false)}>Why FileSmart</a>
-              <a className="inline-flex min-h-11 items-center" href="#questions" onClick={() => setMenuOpen(false)}>Questions</a>
-              <Button asChild className="min-h-11 w-full rounded-full bg-[#12352f] text-[#fbfaf5]">
-                <Link to="/onboarding">Start filing online <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-            </div>
-          </nav>
-        )}
-      </header>
+      <PublicNav />
 
       <main id="top">
         <section className="relative mx-auto grid max-w-6xl gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20 lg:pb-28">
           <div className="relative z-10">
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#cdded6] bg-[#eef5ef] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-[#236052]">
-              <Sparkles className="h-3.5 w-3.5 text-[#d48a18]" /> Tax preparation for Nigeria
+              <Sparkles className="h-3.5 w-3.5 text-[#d48a18]" /> Personal tax preparation, made clear
             </p>
             <h1 className="max-w-2xl font-display text-5xl font-bold leading-[0.98] tracking-[-0.045em] text-[#12352f] sm:text-6xl lg:text-[4.7rem]">
-              Tax should feel <span className="text-[#d48a18]">clear,</span> not confusing.
+              File for free with <span className="text-[#d48a18]">FileSmart.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#55736c] sm:text-xl">
-              FileSmart helps Nigerian individuals prepare their personal income tax information with a guided online experience built for real life.
+              <NairaText> If your annual gross income is below ₦2 million, your FileSmart filing plan is ₦0. Get clear, guided support as you prepare your personal income tax return.</NairaText>
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="min-h-11 h-13 rounded-full bg-[#12352f] px-7 text-[#fbfaf5] shadow-[0_12px_24px_rgba(18,53,47,0.16)] hover:bg-[#1c4e44]">
-                <Link to="/onboarding">Start filing online <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <a href="#how-it-works" className="inline-flex min-h-11 h-13 items-center justify-center gap-2 rounded-full border border-[#b8cec4] px-7 text-sm font-bold text-[#12352f] transition-colors hover:bg-white">
                 See how it works
               </a>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#55736c]">
-              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> Guided step by step</span>
+              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> <NairaText>₦0 for eligible taxpayers</NairaText></span>
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> Start in your browser</span>
             </div>
           </div>
@@ -146,6 +104,7 @@ const Landing = () => {
           <div className="relative mx-auto w-full max-w-[30rem] lg:mx-0 lg:justify-self-end">
             <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#f2b84b]/25 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-[#b9cec3] bg-[#fffdf8] p-5 shadow-[0_24px_60px_rgba(18,53,47,0.13)] sm:p-7">
+              <img src="/images/filesmart-hero-tax-preparation.png" alt="Woman reviewing tax preparation information at a laptop" className="mb-5 aspect-[4/3] w-full rounded-[1.35rem] object-cover" />
               <div className="flex items-start justify-between border-b border-[#e5ece6] pb-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7a968d]">Your preparation</p>
@@ -180,6 +139,17 @@ const Landing = () => {
           </div>
         </section>
 
+        <section aria-label="Free filing eligibility" className="border-y border-[#d8e8da] bg-[#e8f4e9]">
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#b06b12]">File for free with FileSmart</p>
+              <p className="mt-2 max-w-2xl text-lg font-semibold leading-7 text-[#12352f]"><NairaText>Eligible taxpayers with annual gross income below ₦2 million can use the Basic filing plan for ₦0.</NairaText></p>
+              <p className="mt-1 text-sm leading-6 text-[#55736c]">Eligibility and filing availability will be confirmed during onboarding.</p>
+            </div>
+            <Button asChild className="min-h-11 shrink-0 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">Start free <ArrowRight className="h-4 w-4" /></Link></Button>
+          </div>
+        </section>
+
         <section id="why-filesmart" className="border-y border-[#e0e9e1] bg-[#edf4ee]">
           <div className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:py-20">
             <div>
@@ -205,7 +175,7 @@ const Landing = () => {
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#d48a18]">How it works</p>
               <h2 className="mt-3 max-w-sm font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">A guided path, from first question to ready review.</h2>
               <p className="mt-5 max-w-sm leading-7 text-[#55736c]">Start online, work at your own pace, and keep your information organized as you go.</p>
-              <Button asChild className="mt-8 min-h-11 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">Begin your preparation <ArrowRight className="h-4 w-4" /></Link></Button>
+              <Button asChild className="mt-8 min-h-11 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>
             <div className="space-y-5">
               {[
@@ -261,13 +231,7 @@ const Landing = () => {
         </section>
       </main>
 
-      <footer className="bg-[#0d2924] text-[#b9d2c5]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-8 text-sm sm:px-8 md:flex-row md:items-center md:justify-between">
-          <div><img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-14 w-14 max-w-full object-contain" /><p className="mt-1">Simple Nigerian tax preparation.</p></div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2"><a href="#questions" className="hover:text-white">Support</a><Link to="/privacy" className="hover:text-white">Privacy notice</Link><Link to="/terms" className="hover:text-white">Terms and conditions</Link><Link to="/disclaimer" className="hover:text-white">Disclaimer</Link></div>
-          <p className="max-w-xs text-xs leading-5 md:text-right">General information only. FileSmart is not a substitute for professional tax advice.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 };

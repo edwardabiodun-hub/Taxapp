@@ -8,7 +8,7 @@ describe("setPageMetadata", () => {
   });
 
   it("uses the configured public site origin for canonical and Open Graph URLs", () => {
-    expect(PUBLIC_SITE_ORIGIN).toBe("https://filesmart-demo.netlify.app");
+    expect(PUBLIC_SITE_ORIGIN).toBe("https://www.filesmartnaija.com");
 
     setPageMetadata({
       title: "Article title",
@@ -18,11 +18,11 @@ describe("setPageMetadata", () => {
 
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://filesmart-demo.netlify.app/learn/example",
+      "https://www.filesmartnaija.com/learn/example",
     );
     expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
       "content",
-      "https://filesmart-demo.netlify.app/learn/example",
+      "https://www.filesmartnaija.com/learn/example",
     );
   });
 
@@ -40,7 +40,7 @@ describe("setPageMetadata", () => {
     );
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://filesmart-demo.netlify.app/",
+      "https://www.filesmartnaija.com/",
     );
     expect(document.head.querySelector('meta[property="og:title"]')).toHaveAttribute(
       "content",
@@ -53,7 +53,7 @@ describe("setPageMetadata", () => {
     expect(document.head.querySelector('meta[property="og:type"]')).toHaveAttribute("content", "website");
     expect(document.head.querySelector('meta[property="og:url"]')).toHaveAttribute(
       "content",
-      "https://filesmart-demo.netlify.app/",
+      "https://www.filesmartnaija.com/",
     );
   });
 

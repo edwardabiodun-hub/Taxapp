@@ -1,6 +1,16 @@
 import "fake-indexeddb/auto";
 import "@testing-library/jest-dom";
 import "fake-indexeddb/auto";
+import { vi } from "vitest";
+
+// Tests may import the real Supabase client; provide inert public placeholders
+// when a developer has not configured a local .env file.
+if (!import.meta.env.VITE_SUPABASE_URL) {
+  vi.stubEnv("VITE_SUPABASE_URL", "https://example.supabase.co");
+}
+if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");
+}
 
 // jsdom 20's Blob/File implementation doesn't have arrayBuffer() (added to
 // the real spec in 2020; every actual browser and Capacitor's WebView have
