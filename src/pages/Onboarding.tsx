@@ -187,7 +187,7 @@ const Onboarding = () => {
             <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-4">
               <Link to="/" aria-label="FileSmart home" className="inline-flex min-h-11 min-w-0 flex-col items-start justify-center gap-2 py-1">
                 <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-20 w-auto" />
-                <span className="max-w-[190px] text-[10px] leading-4 text-muted-foreground">Your connection to smarter, easier tax filing.</span>
+                <span className="max-w-[190px] text-[13px] leading-5 text-muted-foreground">Your connect for smarter, easier tax filing.</span>
               </Link>
               <Link to="/" className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 Return to home

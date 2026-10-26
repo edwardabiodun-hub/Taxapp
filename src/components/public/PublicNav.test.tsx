@@ -8,7 +8,7 @@ describe("PublicNav", () => {
     render(<MemoryRouter><PublicNav /></MemoryRouter>);
 
     expect(screen.getByRole("img", { name: /filesmart brand lockup/i })).toHaveAttribute("src", "/brand/filesmart-lockup.png");
-    expect(screen.getByText("Your connection to smarter, easier tax filing.")).toBeInTheDocument();
+    expect(screen.getByText("Your connect for smarter, easier tax filing.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /file for free/i })).toHaveAttribute("href", "/onboarding");
     expect(screen.getByRole("link", { name: /tax estimator/i })).toHaveAttribute("href", "/calculator");
     expect(screen.getByRole("link", { name: /file taxes/i })).toHaveAttribute("href", "/declare");
