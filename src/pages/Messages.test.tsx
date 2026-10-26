@@ -91,6 +91,42 @@ describe("Messages", () => {
     expect(screen.queryByText(/^re:/i)).not.toBeInTheDocument();
   });
 
+  it("renders only same-origin preparation resume links", async () => {
+    const { db } = await import("@/lib/local-db");
+    const { default: Messages } = await import("./Messages");
+
+    await db.messages.bulkPut([
+      {
+        id: "msg-safe-link",
+        category: "return_reminder",
+        subject: "Your tax preparation is waiting",
+        body: "Your saved preparation is ready to resume.",
+        actionUrl: `${window.location.origin}/declare?preparation=prep-1`,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        pendingSync: 0,
+      },
+      {
+        id: "msg-unsafe-link",
+        category: "return_reminder",
+        subject: "Unsafe link is ignored",
+        body: "b",
+        actionUrl: "https://attacker.example/declare?preparation=prep-2",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        pendingSync: 0,
+      },
+    ]);
+
+    render(<Messages />);
+    await waitFor(() => expect(screen.getByText("Your tax preparation is waiting")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("Your tax preparation is waiting"));
+    expect(screen.getByRole("link", { name: /resume preparation/i })).toHaveAttribute(
+      "href",
+      `${window.location.origin}/declare?preparation=prep-1`,
+    );
+    fireEvent.click(screen.getByText("Unsafe link is ignored"));
+    expect(screen.queryByRole("link", { name: /resume preparation/i })).not.toBeInTheDocument();
+  });
+
   it("falls back to a default rendering for an unrecognized category instead of crashing", async () => {
     const { db } = await import("@/lib/local-db");
     const { default: Messages } = await import("./Messages");

@@ -18,6 +18,10 @@ export interface DeadlineEvidenceMetadata extends EvidenceMetadata {
   readonly taxYear: string;
   readonly timezone: string;
   readonly recurrence?: string;
+  readonly filingBasis?: string;
+  readonly eligibilityNote?: string;
+  readonly penaltyNote?: string;
+  readonly authorityNote?: string;
 }
 
 /** Review metadata for the generic national baseline, not state verification. */

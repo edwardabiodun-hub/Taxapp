@@ -16,6 +16,10 @@ export interface ResolvedDeadline {
   readonly effectiveTo?: string;
   readonly timezone?: string;
   readonly recurrence?: string;
+  readonly filingBasis?: string;
+  readonly eligibilityNote?: string;
+  readonly penaltyNote?: string;
+  readonly authorityNote?: string;
   readonly confidence: DeadlineConfidence;
   readonly isStale: boolean;
   readonly isAvailable?: boolean;

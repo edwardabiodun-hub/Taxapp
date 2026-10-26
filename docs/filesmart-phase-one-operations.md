@@ -9,6 +9,18 @@ Phase One is a Nigeria-wide, local-first preparation experience. Users may selec
 - Review each jurisdiction capability before changing its readiness, submission mode, rule profile, deadline, or API status.
 - Record the authority source, effective date, verification date, confidence, and reviewer for every verified rule or deadline.
 - Recheck verified rule and deadline evidence at least quarterly and immediately after a Finance Act, tax authority notice, or portal-template change. Mark entries stale when the review date exceeds that cadence.
+
+## Abandoned preparation reminders
+
+- `preparation_reminder_states` stores only owner-scoped lifecycle and deadline metadata. It must never be populated with tax amounts, form data, receipt contents, document names, or tax IDs.
+- Apply `supabase/migrations/20261026000000_preparation_reminders.sql` before deploying the reminder function.
+- Deploy `supabase/functions/abandoned-preparation-reminders` with `ABANDONED_PREPARATION_CRON_SECRET` and the app's actual `APP_URL` secrets.
+- Configure a trusted scheduler to POST to the function at least daily with the `x-cron-secret` header. The repository does not provision a production scheduler; do not invoke the function from the browser.
+- `email_reminders_enabled` defaults to false. Email requires a verified address, explicit reminder consent, and a configured transactional email provider.
+- The application currently delivers in-app reminder messages. Keep email reminders disabled until a user-facing consent control and the email webhook/provider configuration are verified.
+- Reminder message keys are unique per user, preparation, and reminder count, preventing duplicate messages from concurrent scheduler runs. Cooldown and reminder-count checks limit further reminders.
+- If a user resumes, submits, or dismisses a preparation, the scheduler must not create another reminder. If preparation deletion is added, it must mark the server-side reminder state deleted or dismissed.
+- Reminder emails and browser notifications must not contain tax amounts, document names, tax IDs, or document contents.
 - Keep unverified entries conservative. Do not promote a state to portal-ready or direct filing without current evidence, validated templates, and an approved integration test.
 - Refreshes may update cached registry entries only when the incoming version is newer; equal-version cached evidence is preserved.
 

@@ -35,7 +35,7 @@ function formatDate(value: string | undefined, timezone?: string): string | unde
   }).format(timestamp);
 }
 
-const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: DeadlineCardProps) => {
+const DeadlineCard = ({ deadline, now, offline, title = "Personal Income Tax deadline" }: DeadlineCardProps) => {
   const [isOffline, setIsOffline] = useState(
     offline ?? (typeof navigator !== "undefined" && !navigator.onLine),
   );
@@ -110,6 +110,15 @@ const DeadlineCard = ({ deadline, now, offline, title = "Tax deadline" }: Deadli
 
         {deadline?.label && (
           <p className="break-words text-sm font-medium text-foreground">{deadline.label}</p>
+        )}
+
+        {(deadline?.filingBasis || deadline?.eligibilityNote || deadline?.penaltyNote || deadline?.authorityNote) && (
+          <div className="space-y-2 rounded-md bg-muted/60 p-3 text-xs leading-relaxed text-muted-foreground">
+            {deadline.filingBasis && <p>{deadline.filingBasis}</p>}
+            {deadline.eligibilityNote && <p>{deadline.eligibilityNote}</p>}
+            {deadline.penaltyNote && <p>{deadline.penaltyNote}</p>}
+            {deadline.authorityNote && <p>{deadline.authorityNote}</p>}
+          </div>
         )}
 
         {!deadline?.dueAt && (

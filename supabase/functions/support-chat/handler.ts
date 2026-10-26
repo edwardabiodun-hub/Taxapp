@@ -28,7 +28,7 @@ export interface SupportChatDependencies {
 
 type SupportChatRequest = { message: string; history: ChatTurn[] };
 const allowedCorsHeaders = new Set(['authorization', 'apikey', 'content-type', 'x-client-info']);
-const allowedCategories = new Set(['refund_status', 'document_request', 'general']);
+const allowedCategories = new Set(['refund_status', 'document_request', 'return_reminder', 'general']);
 const allowedStatuses = new Set(['draft', 'submitted', 'processing', 'audit_request', 'approved']);
 const refusal = 'I cannot help with that request. I can provide general Nigerian tax information or high-level account status; please contact human support for other needs.';
 

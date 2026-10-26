@@ -1,5 +1,6 @@
 import { db } from "./local-db";
-import { fetchProfileFromServer, pushProfileToServer, fetchDeclarationsFromServer, pushDeclarationsToServer, fetchActivitiesFromServer, pushActivitiesToServer, fetchMessagesFromServer, pushMessageReadStatus } from "./api";
+import { fetchProfileFromServer, pushProfileToServer, fetchDeclarationsFromServer, pushDeclarationsToServer, fetchActivitiesFromServer, pushActivitiesToServer, fetchMessagesFromServer, pushMessageReadStatus, pushPreparationReminderStates } from "./api";
+import { listPreparations } from "./preparation-repository";
 
 export interface SyncResult {
   success: boolean;
@@ -33,6 +34,10 @@ export async function syncAll(): Promise<SyncResult> {
       if (message.readAt) await pushMessageReadStatus(message.id, message.readAt);
       await db.messages.update(message.id, { pendingSync: 0 });
     }
+
+    // Sync only privacy-minimized lifecycle metadata for reminder eligibility.
+    // Tax form data, receipts, and document contents remain local-first.
+    await pushPreparationReminderStates(await listPreparations());
 
     const [serverProfile, serverDeclarations, serverActivities, serverMessages] = await Promise.all([fetchProfileFromServer(), fetchDeclarationsFromServer(), fetchActivitiesFromServer(), fetchMessagesFromServer()]);
     if (localProfile && serverProfile) await db.profiles.put({ ...localProfile, ...serverProfile, id: localProfile.id, lastSynced: new Date().toISOString() });
