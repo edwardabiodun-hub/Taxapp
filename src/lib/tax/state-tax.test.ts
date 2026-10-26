@@ -5,7 +5,7 @@ import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declara
 import type { StateJurisdiction } from "./jurisdictions";
 
 function form(overrides: Partial<NigeriaDeclarationForm>): NigeriaDeclarationForm {
-  return { ...defaultNigeriaForm, ...overrides };
+  return { ...defaultNigeriaForm, taxYear: "2026", ...overrides };
 }
 
 describe("calculateStateTax", () => {
@@ -54,9 +54,8 @@ describe("calculateStateTax", () => {
 
     const result = calculateStateTax(form({ annualSalary: "900000" }), "test-state", testJurisdictions);
 
-    // federal finalTax for this input is 45200 (tax-calculator.test.ts's worked example)
-    // 45200 + 1000.555 + 500.111 = 46700.666 -> rounds to 46700.67
-    expect(result.finalTax).toBe(46700.67);
+    // 900,000 taxable: 100,000 at 15% = 15,000; plus 1,500.666 levies.
+    expect(result.finalTax).toBe(16500.67);
     expect(result.stateLevies).toEqual([
       { label: "Development Levy", amount: 1000.555 },
       { label: "Infrastructure Levy", amount: 500.111 },

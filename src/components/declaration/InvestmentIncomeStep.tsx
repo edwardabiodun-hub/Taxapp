@@ -37,13 +37,13 @@ const InvestmentIncomeStep = ({ form, update }: InvestmentIncomeStepProps) => (
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Dividends</GlossaryText></p>
-      <Field label="Nigerian Company Dividends" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.nigerianDividends} onChange={(v) => update("nigerianDividends", v)} />
-      <Field label="Other Dividends" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.otherDividends} onChange={(v) => update("otherDividends", v)} />
+      <Field label="Nigerian Company Dividends" hint="Requires classification and withholding-tax evidence before estimating" value={form.nigerianDividends} onChange={(v) => update("nigerianDividends", v)} />
+      <Field label="Other Dividends" hint="Requires classification before estimating" value={form.otherDividends} onChange={(v) => update("otherDividends", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Interest & Rent</GlossaryText></p>
-      <Field label="Interest Income" hint="Final tax via withholding tax deductions" badge="Exempt" value={form.interestIncome} onChange={(v) => update("interestIncome", v)} />
+      <Field label="Interest Income" hint="Requires classification before estimating" value={form.interestIncome} onChange={(v) => update("interestIncome", v)} />
       <div className="space-y-1.5">
         <div className="text-xs font-semibold"><GlossaryText>Interest Sources</GlossaryText></div>
         <Textarea aria-label="Interest Sources" placeholder="List each source and gross income received" className="min-h-[60px] text-sm" value={form.interestSources} onChange={(e) => update("interestSources", e.target.value)} />

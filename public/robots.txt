@@ -10,4 +10,4 @@ Disallow: /calculator
 Disallow: /submissions
 Disallow: /profile
 
-Sitemap: https://filesmart-demo.netlify.app/sitemap.xml
+Sitemap: https://www.filesmartnaija.com/sitemap.xml

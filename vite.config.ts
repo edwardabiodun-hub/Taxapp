@@ -21,6 +21,11 @@ export default defineConfig(({ mode }) => {
         },
         writeBundle(options: { dir?: string; file?: string }) {
           const outputDir = options.dir ?? (options.file ? path.dirname(options.file) : path.resolve("dist"));
+          if (mode === "public") {
+            const publicEntry = path.resolve(outputDir, "public.html");
+            const indexEntry = path.resolve(outputDir, "index.html");
+            if (fs.existsSync(publicEntry)) fs.renameSync(publicEntry, indexEntry);
+          }
           for (const fileName of ["robots.txt", "sitemap.xml"]) {
             const filePath = path.resolve(outputDir, fileName);
             if (!fs.existsSync(filePath)) continue;
@@ -44,5 +49,12 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    ...(mode === "public" ? {
+      build: {
+        rollupOptions: {
+          input: { index: path.resolve(__dirname, "public.html") },
+        },
+      },
+    } : {}),
   };
 });

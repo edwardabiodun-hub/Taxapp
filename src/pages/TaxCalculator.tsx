@@ -4,7 +4,7 @@ import { Calculator, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { calculateNigeriaTax, type TaxBreakdown } from "@/lib/tax-calculator";
+import { calculateNigeriaTax, TaxEstimateUnavailableError, type TaxBreakdown } from "@/lib/tax-calculator";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
 
@@ -25,13 +25,25 @@ const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionD
 
 const TaxCalculator = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
+  const [form, setForm] = useState<NigeriaDeclarationForm>({ ...defaultNigeriaForm, taxYear: "2026" });
   const [result, setResult] = useState<TaxBreakdown | null>(null);
+  const [estimateWarnings, setEstimateWarnings] = useState<readonly string[]>([]);
 
-  const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+  const update = (key: string, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setResult(null);
+    setEstimateWarnings([]);
+  };
 
   const compute = () => {
-    setResult(calculateNigeriaTax(form));
+    try {
+      setResult(calculateNigeriaTax(form));
+      setEstimateWarnings([]);
+    } catch (error) {
+      if (!(error instanceof TaxEstimateUnavailableError)) throw error;
+      setResult(null);
+      setEstimateWarnings(error.reasons);
+    }
   };
 
   return (
@@ -46,7 +58,7 @@ const TaxCalculator = () => {
           <h2 className="font-display font-bold text-lg text-foreground">Tax Estimator</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          <GlossaryText>Quickly estimate your Nigerian personal income tax before filing</GlossaryText>
+          <GlossaryText>Estimate 2026 personal income tax under the Nigeria Tax Act 2025</GlossaryText>
         </p>
         <p className="text-[11px] text-muted-foreground">
           <GlossaryText>Use eligible deductions to estimate chargeable income before filing.</GlossaryText>
@@ -57,8 +69,13 @@ const TaxCalculator = () => {
       <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Employment Income</GlossaryText></p>
         <Field label="Annual Salary" hint="Gross value" value={form.annualSalary} onChange={(v) => update("annualSalary", v)} />
-        <Field label="Commissions & Bonuses" value={form.commissions} onChange={(v) => update("commissions", v)} />
+        <Field label="Commissions" value={form.commissions} onChange={(v) => update("commissions", v)} />
+        <Field label="Bonuses" value={form.bonuses} onChange={(v) => update("bonuses", v)} />
         <Field label="Allowances" hint="Leave, 13th month, etc." value={form.allowances} onChange={(v) => update("allowances", v)} />
+        <label htmlFor="estimator-minimum-wage" className="block text-xs font-semibold">Single full-year employment at or below national minimum wage?</label>
+        <select id="estimator-minimum-wage" aria-label="Minimum-wage employment status" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.minimumWageEmployment} onChange={(event) => update("minimumWageEmployment", event.target.value)}>
+          <option value="">Not confirmed</option><option value="yes">Yes, I confirm</option><option value="no">No</option>
+        </select>
       </div>
 
       <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
@@ -71,18 +88,27 @@ const TaxCalculator = () => {
       <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Benefits in Kind</GlossaryText></p>
         <Field label="Rent Paid by Employer" value={form.rentPaidByEmployer} onChange={(v) => update("rentPaidByEmployer", v)} />
-        <Field label="Company Vehicle Cost" hint="Taxed at 10% per annum" value={form.companyVehicleCost} onChange={(v) => update("companyVehicleCost", v)} />
+        <Field label="Company Vehicle Cost" hint="Requires ownership or hire details; an estimate will be withheld" value={form.companyVehicleCost} onChange={(v) => update("companyVehicleCost", v)} />
       </div>
 
       <div className="bg-card rounded-xl p-4 shadow-card space-y-3">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Deductions</GlossaryText></p>
-        <Field label="Employee Pension" hint="8% of employment income" value={form.employeePension} onChange={(v) => update("employeePension", v)} />
-        <Field label="Annual Rent Paid" hint="20% of rent, with the rent base capped at ₦500,000" value={form.annualRentPaid} onChange={(v) => update("annualRentPaid", v)} />
+        <Field label="Employee Pension" hint="Enter documented actual eligible contributions only" value={form.employeePension} onChange={(v) => update("employeePension", v)} />
+        <Field label="National Housing Fund" value={form.nationalHousingFund} onChange={(v) => update("nationalHousingFund", v)} />
+        <Field label="National Health Insurance" value={form.nationalHealthInsurance} onChange={(v) => update("nationalHealthInsurance", v)} />
+        <Field label="Owner-occupied mortgage interest" value={form.mortgageInterest} onChange={(v) => update("mortgageInterest", v)} />
+        <Field label="Qualifying life-insurance or deferred-annuity premiums" hint="The Act refers to premiums paid in the year preceding assessment; confirm the applicable period and retain evidence" value={form.lifeInsurancePremium} onChange={(v) => update("lifeInsurancePremium", v)} />
+        <Field label="Annual Rent Paid" hint="20% of qualifying annual rent paid, with relief capped at ₦500,000" value={form.annualRentPaid} onChange={(v) => update("annualRentPaid", v)} />
       </div>
 
       <Button onClick={compute} className="w-full gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
-        <Calculator className="w-4 h-4" /> Calculate Tax
+        <Calculator className="w-4 h-4" /> Calculate 2026 estimate
       </Button>
+
+      {estimateWarnings.length > 0 && <div role="alert" className="rounded-xl border border-warning bg-warning/10 p-4 text-sm">
+        <p className="font-semibold">Cannot estimate yet</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">{estimateWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+      </div>}
 
       {/* Results */}
       {result && result.grossIncome > 0 && (
@@ -101,7 +127,7 @@ const TaxCalculator = () => {
               <p className="font-display font-bold text-lg">{fmtN(result.grossIncome)}</p>
             </div>
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70"><GlossaryText>Deductions (incl. CRA)</GlossaryText></p>
+              <p className="text-[10px] opacity-70"><GlossaryText>Eligible deductions and reliefs</GlossaryText></p>
               <p className="font-display font-bold text-lg">{fmtN(result.totalDeductions)}</p>
             </div>
           </div>
@@ -128,20 +154,16 @@ const TaxCalculator = () => {
               <span className="opacity-70"><GlossaryText>Computed Tax</GlossaryText></span>
               <span className="font-semibold">{fmtN(result.computedTax)}</span>
             </div>
-            <div className="flex justify-between text-[11px]">
-              <span className="opacity-70"><GlossaryText>Minimum Tax (1%)</GlossaryText></span>
-              <span className="font-semibold">{fmtN(result.minimumTax)}</span>
-            </div>
           </div>
 
           <div className="bg-background/20 rounded-xl p-4 text-center">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Estimated Tax Payable</GlossaryText></p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold"><GlossaryText>Estimated tax before credits</GlossaryText></p>
             <p className="font-display font-bold text-2xl mt-1">{fmtN(result.finalTax)}</p>
             <p className="text-[10px] opacity-70 mt-0.5"><GlossaryText>Effective rate</GlossaryText>: {result.effectiveRate.toFixed(1)}%</p>
           </div>
 
           <p className="text-[9px] opacity-60 text-center">
-            * Includes <GlossaryText>Consolidated Relief Allowance (CRA)</GlossaryText>. Estimate only — final assessment by FIRS may differ.
+            Estimate before PAYE and withholding-tax credits. Confirm deductible amounts and supporting records. This is not a government assessment or filing.
           </p>
         </motion.div>
       )}
@@ -152,7 +174,7 @@ const TaxCalculator = () => {
           variant="outline"
           className="w-full gap-2"
         >
-          Ready to file? Start Declaration <ArrowRight className="w-4 h-4" />
+          Continue tax preparation <ArrowRight className="w-4 h-4" />
         </Button>
       )}
     </motion.div>

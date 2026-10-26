@@ -46,6 +46,12 @@ export interface DeclarationIncomeFields {
   // Allowable Deductions
   employeePension: string;
   annualRentPaid: string;
+  nationalHousingFund: string;
+  nationalHealthInsurance: string;
+  mortgageInterest: string;
+  lifeInsurancePremium: string;
+  /** yes only for one full-year employment at or below annual minimum wage */
+  minimumWageEmployment: string;
 }
 
 /** Canonical declaration shape for the jurisdiction-aware flow. */
@@ -103,6 +109,11 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   companyVehicleDetails: "",
   employeePension: "",
   annualRentPaid: "",
+  nationalHousingFund: "",
+  nationalHealthInsurance: "",
+  mortgageInterest: "",
+  lifeInsurancePremium: "",
+  minimumWageEmployment: "",
 };
 
 /**

@@ -6,7 +6,7 @@ describe("resolvePublicSiteOrigin", () => {
     expect(resolvePublicSiteOrigin("https://example.test///")).toBe("https://example.test");
   });
 
-  it("falls back to the approved demo origin when configuration is absent", () => {
-    expect(resolvePublicSiteOrigin()).toBe("https://filesmart-demo.netlify.app");
+  it("uses the primary site origin when configuration is absent", () => {
+    expect(resolvePublicSiteOrigin()).toBe("https://www.filesmartnaija.com");
   });
 });

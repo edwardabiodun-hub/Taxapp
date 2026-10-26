@@ -9,6 +9,7 @@ The waitlist migration is already applied to the linked Supabase project. This E
    - `LAUNCH_RESEND_API_KEY` — Resend sending-only API key scoped to the verified launch sender domain; keep it server-side. This is intentionally separate from any project-wide `RESEND_API_KEY` used by other services.
    - `LAUNCH_EMAIL_FROM` — verified sender, for example `FileSmart <launch@your-verified-domain.ng>`.
    - `APP_ORIGIN` — the production HTTPS origin only, with no path (for example `https://your-domain.ng`).
+   - `AUTH_APP_ORIGINS` — comma-separated exact additional HTTPS origins allowed by `auth-gateway`; include `https://www.filesmartnaija.com` for the Cloudflare website while retaining the app origin in `APP_ORIGIN`.
    - `LAUNCH_NOTIFICATION_SECRET` — a unique random secret of at least 32 characters. Do not reuse an API key or expose it in the frontend.
    - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are supplied by Supabase Edge Functions at runtime; never copy the service-role key into frontend or local Vite variables.
 3. Deploy this function from the repository root:
@@ -16,6 +17,15 @@ The waitlist migration is already applied to the linked Supabase project. This E
    ```powershell
    npx supabase functions deploy notify-launch-waitlist --project-ref YOUR_PROJECT_REF
    ```
+
+4. For the launch website account and pricing gate, set `AUTH_APP_ORIGINS` to include `https://www.filesmartnaija.com`, then deploy the auth and pricing functions:
+
+   ```powershell
+   npx supabase functions deploy auth-gateway --project-ref YOUR_PROJECT_REF
+   npx supabase functions deploy pricing-catalog --project-ref YOUR_PROJECT_REF
+   ```
+
+   Add `https://www.filesmartnaija.com/` and `https://www.filesmartnaija.com/reset-password` to Supabase Auth's redirect URL allowlist. The pricing function returns its catalog only to a verified signed-in user.
 
    The function disables platform JWT verification because it uses its own bearer secret. Never invoke it from browser code; `LAUNCH_NOTIFICATION_SECRET` must remain private.
 

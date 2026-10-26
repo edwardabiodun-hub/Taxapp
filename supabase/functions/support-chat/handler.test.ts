@@ -341,7 +341,7 @@ describe('support-chat security boundary', () => {
 
   it('keeps private amounts out of the provider wire request while allowing public tax amounts', async () => {
     const f = fixture();
-    const fetcher = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ choices: [{ message: { content: 'General tax information.' } }] }), { status: 200 }));
+    const fetcher = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'General tax information.' } }] }), { status: 200 }));
     const provider = createOpenAiAnswerProvider({
       apiUrl: 'https://provider.example/chat/completions', apiKey: 'provider-key',
       model: 'model-1', allowedHosts: 'provider.example', fetcher,
@@ -392,9 +392,10 @@ describe('support-chat security boundary', () => {
     expect(f.knowledgeRpc).toHaveBeenCalledWith('search_support_knowledge', { p_query: 'What is personal income tax?', p_as_of: '2026-09-29', p_limit: 5 });
     expect(f.userRpc).not.toHaveBeenCalled();
     const input = f.generateAnswer.mock.calls[0][0];
-    expect(input.system).toContain('Tax on income.');
-    expect(input.system).not.toContain('Foreign tax');
-    expect(input.system).not.toContain('secret-note');
+    expect(input.approvedContext).toContain('Tax on income.');
+    expect(input.system).not.toContain('Tax on income.');
+    expect(input.approvedContext).not.toContain('Foreign tax');
+    expect(input.approvedContext).not.toContain('secret-note');
     expect((await response.json()).citations).toEqual([{ title: 'PIT', url: 'https://example.gov.ng/tax', statutoryReference: 'NTA 2025' }]);
   });
 
@@ -406,9 +407,13 @@ describe('support-chat security boundary', () => {
     expect(f.userRpc.mock.calls.map((call) => call[0])).toEqual(['get_my_declaration_status', 'get_my_support_message_summary', 'get_my_profile_completion']);
     expect(f.knowledgeRpc).not.toHaveBeenCalled();
     const input = f.generateAnswer.mock.calls[0][0];
-    expect(input.system).toContain('"declarations":[{"taxYear":"2025","type":"personal","status":"submitted","documentCount":2}]');
-    expect(input.system).toContain('"messageCategories":["general","refund_status"]');
-    for (const secret of ['secret-id', 'secret-date', 'secret-body', 'secret-subject', 'secret-phone', '9000', 'missing_fields']) expect(input.system).not.toContain(secret);
+    expect(input.approvedContext).toContain('"declarations":[{"taxYear":"2025","type":"personal","status":"submitted","documentCount":2}]');
+    expect(input.approvedContext).toContain('"messageCategories":["general","refund_status"]');
+    expect(input.system).not.toContain('"declarations"');
+    for (const secret of ['secret-id', 'secret-date', 'secret-body', 'secret-subject', 'secret-phone', '9000', 'missing_fields']) {
+      expect(input.system).not.toContain(secret);
+      expect(input.approvedContext).not.toContain(secret);
+    }
     expect((await response.json()).citations).toEqual([]);
   });
 
@@ -430,7 +435,7 @@ describe('OpenAI-compatible provider adapter', () => {
       expect(init.headers).toEqual({ authorization: 'Bearer provider-key', 'content-type': 'application/json' });
       expect(init.redirect).toBe('error');
       expect(JSON.parse(init.body as string)).toMatchObject({ model: 'model-1', temperature: 0.1, max_tokens: 500 });
-      return new Response(JSON.stringify({ choices: [{ message: { content: 'Answer' } }], extra: 'secret' }), { status: 200 });
+      return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Answer' } }], extra: 'secret' }), { status: 200 });
     });
     const provider = createOpenAiAnswerProvider({ apiUrl: 'https://provider.example/chat/completions', apiKey: 'provider-key', model: 'model-1', allowedHosts: 'backup.example, provider.example', fetcher });
     expect(await provider.generateAnswer({ system: 'System', history: [], userMessage: 'Question' })).toBe('Answer');

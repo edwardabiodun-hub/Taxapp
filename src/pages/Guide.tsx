@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getTaxGuide } from "@/content/tax-guides";
 import { setPageMetadata } from "@/lib/seo";
+import PublicFooter from "@/components/public/PublicFooter";
+import PublicNav from "@/components/public/PublicNav";
+import { NairaText } from "@/components/ui/NairaText";
 
 const categoryLabel = (category: string) => category.replace(/-/g, " ");
 
@@ -27,7 +30,7 @@ const Guide = () => {
             }
           : {
               title: "Guide not found | FileSmart",
-              description: "Return to the FileSmart education guides to find another Nigerian tax topic.",
+              description: "Return to FileSmart's education guides to find another tax topic.",
               path: `/learn/${slug ?? ""}`,
             },
       ),
@@ -49,34 +52,57 @@ const Guide = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
-      <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link to="/learn" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]"><ArrowLeft className="h-4 w-4" /> All guides</Link>
-          <Link to="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
-        </div>
-      </header>
+      <PublicNav />
 
       <main className="mx-auto max-w-3xl overflow-x-hidden px-5 py-12 sm:px-8 sm:py-16">
         <Badge variant="secondary" className="capitalize">{categoryLabel(guide.category)}</Badge>
-        <h1 className="mt-5 break-words font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{guide.title}</h1>
-        <p className="mt-5 text-lg leading-8 text-[#55736c]">{guide.summary}</p>
-        <p className="mt-4 text-sm text-[#55736c]">{guide.readTimeMinutes} min read · Updated {guide.updatedAt}</p>
+        <h1 className="mt-5 break-words font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl"><NairaText>{guide.title}</NairaText></h1>
+        <p className="mt-5 text-lg leading-8 text-[#55736c]"><NairaText>{guide.summary}</NairaText></p>
+        <p className="mt-4 text-sm text-[#55736c]">{guide.readTimeMinutes} min read · Last reviewed {guide.updatedAt}</p>
 
         <article className="mt-10 break-words space-y-6">
           {guide.blocks.map((block, index) => {
+            if (block.type === "heading") {
+              const Heading = block.level === 3 ? "h3" : "h2";
+              return <Heading key={`${block.type}-${index}`} className="font-display text-2xl font-bold leading-tight text-[#12352f]"><NairaText>{block.text}</NairaText></Heading>;
+            }
             if (block.type === "list") {
-              return <ul key={`${block.type}-${index}`} className="list-disc space-y-3 pl-6 leading-7 text-[#23483f]">{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;
+              return <ul key={`${block.type}-${index}`} className="list-disc space-y-3 pl-6 leading-7 text-[#23483f]">{block.items.map((item) => <li key={item}><NairaText>{item}</NairaText></li>)}</ul>;
+            }
+            if (block.type === "table") {
+              return (
+                <div key={`${block.type}-${index}`} className="overflow-x-auto rounded-2xl border border-[#dce6df] bg-white/70">
+                  <table className="w-full min-w-[28rem] text-left text-sm">
+                    <thead className="bg-[#edf4ee] text-[#12352f]"><tr>{block.headers.map((header) => <th key={header} scope="col" className="px-4 py-3 font-semibold"><NairaText>{header}</NairaText></th>)}</tr></thead>
+                    <tbody>{block.rows.map((row, rowIndex) => <tr key={`${row.join("-")}-${rowIndex}`} className="border-t border-[#dce6df]">{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-4 py-3 text-[#23483f]"><NairaText>{cell}</NairaText></td>)}</tr>)}</tbody>
+                  </table>
+                </div>
+              );
             }
             if (block.type === "callout") {
-              return <Card key={`${block.type}-${index}`} className="border-[#e7c981] bg-[#fff8e9] shadow-none"><CardContent className="p-5 leading-7 text-[#5c461e]"><p className="font-semibold">{block.tone === "caution" ? "Please note" : "Helpful context"}</p><p className="mt-2">{block.text}</p></CardContent></Card>;
+              return <Card key={`${block.type}-${index}`} className="border-[#e7c981] bg-[#fff8e9] shadow-none"><CardContent className="p-5 leading-7 text-[#5c461e]"><p className="font-semibold">{block.tone === "caution" ? "Please note" : "Helpful context"}</p><p className="mt-2"><NairaText>{block.text}</NairaText></p></CardContent></Card>;
             }
-            return <p key={`${block.type}-${index}`} className="leading-8 text-[#23483f]">{block.text}</p>;
+            if (block.type === "faq") {
+              return <div key={`${block.type}-${index}`} className="rounded-2xl border border-[#dce6df] bg-white/70 p-5"><h3 className="font-semibold text-[#12352f]"><NairaText>{block.question}</NairaText></h3><p className="mt-2 leading-7 text-[#23483f]"><NairaText>{block.answer}</NairaText></p></div>;
+            }
+            return <p key={`${block.type}-${index}`} className="leading-8 text-[#23483f]"><NairaText>{block.text}</NairaText></p>;
           })}
         </article>
 
-        <aside className="mt-10 border-t border-[#dce6df] pt-6 text-sm leading-6 text-[#55736c]"><p>{guide.sourceNote}</p></aside>
+        <aside className="mt-10 border-t border-[#dce6df] pt-6 text-sm leading-6 text-[#55736c]">
+          <p><NairaText>{guide.sourceNote}</NairaText></p>
+          {guide.sources && guide.sources.length > 0 && (
+            <div className="mt-4">
+              <p className="font-semibold text-[#12352f]">Official references</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {guide.sources.map((source) => <li key={source.url}><a className="underline decoration-[#b06b12] underline-offset-2 hover:text-[#12352f]" href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}
+              </ul>
+            </div>
+          )}
+        </aside>
         <Button asChild variant="link" className="mt-8 min-h-11 h-auto px-0 text-[#12352f]"><Link className="inline-flex min-h-11 items-center" to="/learn"><ArrowLeft className="h-4 w-4" /> Read another guide</Link></Button>
       </main>
+      <PublicFooter />
     </div>
   );
 };

@@ -1,16 +1,16 @@
-export const RENT_RELIEF_RECOGNITION_CAP = 500_000;
+export const RENT_RELIEF_CAP = 500_000;
 export const RENT_RELIEF_RATE = 0.2;
 
 export interface RentReliefCalculation {
-  recognizedRent: number;
+  annualRentPaid: number;
   relief: number;
 }
 
 export function calculateRentRelief(annualRentPaid: number): RentReliefCalculation {
-  const recognizedRent = Math.min(Math.max(annualRentPaid, 0), RENT_RELIEF_RECOGNITION_CAP);
+  const qualifyingRent = Number.isFinite(annualRentPaid) ? Math.max(annualRentPaid, 0) : 0;
 
   return {
-    recognizedRent,
-    relief: recognizedRent * RENT_RELIEF_RATE,
+    annualRentPaid: qualifyingRent,
+    relief: Math.min(qualifyingRent * RENT_RELIEF_RATE, RENT_RELIEF_CAP),
   };
 }

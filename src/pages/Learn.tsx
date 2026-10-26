@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTaxGuidesByCategory, taxGuides } from "@/content/tax-guides";
 import { setPageMetadata } from "@/lib/seo";
+import PublicFooter from "@/components/public/PublicFooter";
+import PublicNav from "@/components/public/PublicNav";
+import { NairaText } from "@/components/ui/NairaText";
 
 const categoryLabel = (category: string) => category.replace(/-/g, " ");
 
@@ -26,14 +29,7 @@ const Learn = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f8f7f3] text-[#12352f]">
-      <header className="border-b border-[#dce6df] bg-[#f8f7f3]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-          <Link to="/" className="inline-flex min-h-11 items-center font-display text-xl font-bold tracking-tight" aria-label="FileSmart home">FileSmart</Link>
-          <Button asChild variant="outline" className="min-h-11 rounded-full border-[#12352f] text-[#12352f]">
-            <Link to="/onboarding">Start online <ArrowRight className="h-4 w-4" /></Link>
-          </Button>
-        </div>
-      </header>
+      <PublicNav />
 
       <main className="mx-auto max-w-6xl overflow-x-hidden px-5 py-12 sm:px-8 sm:py-16">
         <div className="max-w-3xl">
@@ -58,15 +54,16 @@ const Learn = () => {
             <Card key={guide.slug} className="min-w-0 flex h-full flex-col border-[#dce6df] bg-white/70 shadow-none">
               <CardHeader>
                 <Badge variant="secondary" className="w-fit capitalize">{categoryLabel(guide.category)}</Badge>
-                <CardTitle className="min-w-0 break-words pt-3 text-xl leading-snug"><Link className="inline-flex min-h-11 items-center break-words hover:underline" to={`/learn/${guide.slug}`}>{guide.title}</Link></CardTitle>
-                <CardDescription className="leading-6">{guide.summary}</CardDescription>
+                <CardTitle className="min-w-0 break-words pt-3 text-xl leading-snug"><Link className="block min-h-11 break-words hover:underline" to={`/learn/${guide.slug}`}><NairaText>{guide.title}</NairaText></Link></CardTitle>
+                <CardDescription className="leading-6"><NairaText>{guide.summary}</NairaText></CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 text-sm text-[#55736c]">{guide.readTimeMinutes} min read</CardContent>
-              <CardFooter><Button asChild variant="link" className="min-h-11 h-auto p-0 text-[#12352f]"><Link className="inline-flex min-h-11 items-center" to={`/learn/${guide.slug}`}>Read {guide.title} <ArrowRight className="h-4 w-4" /></Link></Button></CardFooter>
+              <CardContent className="flex flex-1 items-end text-sm text-[#55736c]">{guide.readTimeMinutes} min read</CardContent>
+              <CardFooter><Button asChild variant="link" className="h-auto min-h-11 max-w-full justify-start p-0 text-[#12352f]"><Link className="inline-flex min-h-11 items-center gap-2" to={`/learn/${guide.slug}`} aria-label={`Read ${guide.title}`}>Read guide <ArrowRight className="h-4 w-4 shrink-0" /></Link></Button></CardFooter>
             </Card>
           ))}
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 };

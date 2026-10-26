@@ -46,12 +46,15 @@ describe("buildFilingSummary", () => {
     expect(summary.declaration.type).toBe("VAT Return");
   });
 
-  it("recomputes the tax breakdown from the declaration's stored form data", () => {
-    // 900,000 salary matches the tax-calculator.test.ts worked example:
-    // CRA = 380,000; taxable = 520,000; computed tax = 45,200.
-    const summary = buildFilingSummary(declaration(), profile());
+  it("uses the reviewed 2026 bands for supported stored form data", () => {
+    const summary = buildFilingSummary(declaration({ taxYear: "2026", formData: { ...defaultNigeriaForm, annualSalary: "1000000" } }), profile());
+    expect(summary.tax?.finalTax).toBe(30000);
+  });
 
-    expect(summary.tax.finalTax).toBe(45200);
+  it("withholds a numeric result for historical and unsupported returns", () => {
+    expect(buildFilingSummary(declaration(), profile()).tax).toBeNull();
+    const unsupported = declaration({ taxYear: "2026", formData: { ...defaultNigeriaForm, annualSalary: "1000000", foreignIncome: "500000" } });
+    expect(buildFilingSummary(unsupported, profile()).tax).toBeNull();
   });
 
   it("includes guidance naming where to actually file, since there is no direct government API integration", () => {
@@ -78,13 +81,13 @@ describe("buildFilingSummary", () => {
   it("computes tax via the state-aware engine, exposing a stateLevies breakdown", () => {
     const summary = buildFilingSummary(declaration({ state: "lagos" }), profile());
 
-    expect(summary.tax.stateLevies).toEqual([]);
+    expect(summary.tax).toBeNull();
   });
 
   it("falls through cleanly for a declaration with no state selected (e.g. created before this feature existed)", () => {
     const summary = buildFilingSummary(declaration(), profile());
 
     expect(summary.declaration.state).toBeUndefined();
-    expect(summary.tax.finalTax).toBe(45200);
+    expect(summary.tax).toBeNull();
   });
 });

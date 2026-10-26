@@ -10,6 +10,7 @@ import { signIn } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 import { useHasProfile } from "@/hooks/use-has-profile";
 import filesmartLockup from "@/assets/filesmart-lockup.png";
+import { isFilingLaunchPhase } from "@/lib/launch-phase";
 
 const Login = () => {
   const { hasProfile } = useHasProfile();
@@ -41,7 +42,7 @@ const Login = () => {
         <div className="text-center space-y-1.5">
           <img src={filesmartLockup} alt="FileSmart" className="mx-auto h-20 w-auto mb-2" />
           <h1 className="font-display font-bold text-xl text-foreground">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Sign in to access your tax records</p>
+          <p className="text-sm text-muted-foreground">{isFilingLaunchPhase ? "Sign in to view your account and pricing. Filing opens at launch." : "Sign in to access your tax records"}</p>
         </div>
 
         <div className="space-y-1.5">
@@ -81,7 +82,7 @@ const Login = () => {
           disabled={checking}
           className="w-full gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90"
         >
-          {checking ? "Checking…" : "Unlock"}
+          {checking ? "Checking…" : isFilingLaunchPhase ? "Sign in" : "Unlock"}
         </Button>
 
         <div className={cn("flex items-center text-sm", hasProfile ? "justify-end" : "justify-between")}>

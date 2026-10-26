@@ -36,9 +36,7 @@ const CountryStep = ({ form, update, errors = [] }: CountryStepProps) => {
             <SelectValue placeholder="Select tax year" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="2025">2025</SelectItem>
-            <SelectItem value="2024">2024</SelectItem>
-            <SelectItem value="2023">2023</SelectItem>
+            <SelectItem value="2026">2026</SelectItem>
           </SelectContent>
         </Select>
         {hasTaxYearError && <p className="text-[10px] text-destructive font-medium">Please select a tax year</p>}

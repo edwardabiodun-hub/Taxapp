@@ -3,6 +3,8 @@ import type { NigeriaDeclarationForm } from "@/types/declaration";
 import type { UploadedDoc } from "./DocumentsStep";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { CalculationResult } from "@/lib/calculation-service";
+import { NairaText } from "@/components/ui/NairaText";
+import { calculateRentRelief } from "@/lib/rent-relief";
 
 interface ReviewStepProps {
   form: NigeriaDeclarationForm;
@@ -38,9 +40,13 @@ const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProps) => {
-  const tax = calculation;
-  const showTaxEstimate =
-    tax.label !== "Not filing-ready" && tax.missingInputWarnings.length === 0;
+  const tax = calculation.tax;
+  const annualRent = form.annualRentPaid ?? "";
+  const rentReliefDisplay = !annualRent.trim()
+    ? "—"
+    : /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(annualRent.trim())
+      ? fmt(calculateRentRelief(Number(annualRent.replace(/,/g, ""))).relief.toLocaleString("en-NG"))
+      : "Needs review";
 
   return (
     <div className="space-y-4">
@@ -50,7 +56,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
       </div>
 
       {/* Tax Calculation Card */}
-      {showTaxEstimate && tax.grossIncome > 0 && (
+      {tax && (
         <div className="gradient-hero rounded-2xl p-5 text-primary-foreground shadow-elevated space-y-4">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />
@@ -63,7 +69,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
               <p className="font-display font-bold text-lg">{fmtN(tax.grossIncome)}</p>
             </div>
             <div className="bg-background/10 rounded-xl p-3">
-              <p className="text-[10px] opacity-70">Deductions (incl. CRA)</p>
+              <p className="text-[10px] opacity-70">Eligible deductions and reliefs</p>
               <p className="font-display font-bold text-lg">{fmtN(tax.totalDeductions)}</p>
             </div>
           </div>
@@ -91,14 +97,10 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
               <span className="opacity-70">Computed Tax</span>
               <span className="font-semibold">{fmtN(tax.computedTax)}</span>
             </div>
-            <div className="flex justify-between text-[11px]">
-              <span className="opacity-70">Minimum Tax (1%)</span>
-              <span className="font-semibold">{fmtN(tax.minimumTax)}</span>
-            </div>
           </div>
 
           <div className="bg-background/20 rounded-xl p-4 text-center">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated Tax Payable</p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated tax before credits</p>
             <p className="font-display font-bold text-2xl mt-1">{fmtN(tax.finalTax)}</p>
             <p className="text-[10px] opacity-70 mt-0.5">Effective rate: {tax.effectiveRate.toFixed(1)}%</p>
           </div>
@@ -109,9 +111,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
             </p>
             <p className="text-[10px] opacity-80 leading-relaxed">
               This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. 
-              The final tax liability is subject to assessment, verification, and approval by the Federal Inland Revenue Service (FIRS) 
-              or the relevant State Internal Revenue Service (SIRS). Actual amounts may vary based on additional reviews, 
-              audits, or adjustments by the tax authorities. This does not constitute professional tax advice.
+              Based on the Nigeria Tax Act 2025 for tax year 2026. PAYE and withholding-tax credits are not included. Actual liability depends on your documents and the relevant tax authority. This is not professional tax advice.
             </p>
           </div>
         </div>
@@ -127,6 +127,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="Rule profile" value={calculation?.ruleProfile.profileId || "Not configured"} />
           <SummaryRow label="Rule version" value={calculation?.ruleProfileVersion || "Not configured"} />
           <SummaryRow label="Rule source" value={calculation?.source || "Not configured"} />
+          <SummaryRow label="Rule reviewed" value={calculation?.verifiedAt || "Not reviewed"} />
         </Section>
 
         {calculation && calculation.missingInputWarnings.length > 0 && (
@@ -144,21 +145,22 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
 
         <Section title="Earned Income">
           <SummaryRow label="Annual Salary" value={fmt(form.annualSalary)} />
-          <SummaryRow label="Commissions & Bonuses" value={fmt(form.commissions)} />
+          <SummaryRow label="Commissions" value={fmt(form.commissions)} />
+          <SummaryRow label="Bonuses" value={fmt(form.bonuses)} />
           <SummaryRow label="Allowances" value={fmt(form.allowances)} />
           <SummaryRow label="Business Income (Net)" value={fmt(form.businessIncome)} />
-          <SummaryRow label="Pension Received" value={fmt(form.pensionReceived)} badge="Exempt" />
+          <SummaryRow label="Pension Received" value={fmt(form.pensionReceived)} />
           <SummaryRow label="Annuity Insurance" value={fmt(form.annuityInsurance)} />
-          <SummaryRow label="Gratuities" value={fmt(form.gratuities)} badge="Exempt" />
+          <SummaryRow label="Gratuities" value={fmt(form.gratuities)} />
           <SummaryRow label="Foreign Income" value={fmt(form.foreignIncome)} />
         </Section>
 
         <div className="border-t border-border" />
 
         <Section title="Investment Income">
-          <SummaryRow label="Nigerian Dividends" value={fmt(form.nigerianDividends)} badge="Exempt" />
-          <SummaryRow label="Other Dividends" value={fmt(form.otherDividends)} badge="Exempt" />
-          <SummaryRow label="Interest Income" value={fmt(form.interestIncome)} badge="Exempt" />
+          <SummaryRow label="Nigerian Dividends" value={fmt(form.nigerianDividends)} />
+          <SummaryRow label="Other Dividends" value={fmt(form.otherDividends)} />
+          <SummaryRow label="Interest Income" value={fmt(form.interestIncome)} />
           <SummaryRow label="Rent Income (Net)" value={fmt(form.rentIncome)} />
           <SummaryRow label="Other Profits" value={fmt(form.otherInvestmentIncome)} />
         </Section>
@@ -166,9 +168,9 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
         <div className="border-t border-border" />
 
         <Section title="Benefits in Kind">
-          <SummaryRow label="Rent (Self)" value={fmt(form.rentPaidBySelf)} badge="Exempt" />
+          <SummaryRow label="Rent (Self)" value={fmt(form.rentPaidBySelf)} />
           <SummaryRow label="Rent (Employer)" value={fmt(form.rentPaidByEmployer)} />
-          <SummaryRow label="Domestic Staff (Self)" value={fmt(form.domesticStaffBySelf)} badge="Exempt" />
+          <SummaryRow label="Domestic Staff (Self)" value={fmt(form.domesticStaffBySelf)} />
           <SummaryRow label="Domestic Staff (Employer)" value={fmt(form.domesticStaffByEmployer)} />
           <SummaryRow label="Company Vehicle" value={fmt(form.companyVehicleCost)} />
         </Section>
@@ -177,7 +179,12 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
 
         <Section title="Deductions">
           <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
-          <SummaryRow label="Rent Relief" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="National Housing Fund" value={fmt(form.nationalHousingFund)} />
+          <SummaryRow label="National Health Insurance" value={fmt(form.nationalHealthInsurance)} />
+          <SummaryRow label="Owner-occupied mortgage interest" value={fmt(form.mortgageInterest)} />
+          <SummaryRow label="Qualifying life-insurance / deferred-annuity premiums" value={fmt(form.lifeInsurancePremium)} />
+          <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="Potential rent relief (subject to validation)" value={rentReliefDisplay} />
         </Section>
 
         {documents && documents.length > 0 && (

@@ -1,6 +1,5 @@
 import {
   getPitBaseline,
-  getPitRuleInputs,
   isPitBaselineConfigured,
   PitBaselineConfigurationError,
   type PitBaseline,
@@ -14,12 +13,9 @@ import type {
   JurisdictionCapability,
   RuleProfile,
 } from "@/domain/jurisdictions";
-import {
-  getCalculationLabel,
-  type CalculationLabel,
-} from "@/domain/tax-readiness";
+import type { CalculationLabel } from "@/domain/tax-readiness";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
-import { calculateNigeriaTax, type TaxBreakdown } from "@/lib/tax-calculator";
+import { calculateNigeriaTax, TaxEstimateUnavailableError, type TaxBreakdown } from "@/lib/tax-calculator";
 
 export { getPitBaseline } from "@/data/pit-baseline";
 
@@ -27,7 +23,8 @@ export type PreparationCalculationInput = Partial<NigeriaDeclarationForm> & {
   readonly jurisdictionCode?: string;
 };
 
-export interface CalculationResult extends TaxBreakdown {
+export interface CalculationResult {
+  readonly tax: TaxBreakdown | null;
   readonly label: CalculationLabel;
   readonly filingReadiness: PreparationFilingReadiness;
   readonly ruleProfile: RuleProfile;
@@ -50,8 +47,17 @@ function hasIncomeSource(form: NigeriaDeclarationForm): boolean {
   return [
     form.annualSalary,
     form.commissions,
+    form.bonuses,
     form.allowances,
     form.businessIncome,
+    form.rentIncome,
+    form.nigerianDividends,
+    form.otherDividends,
+    form.interestIncome,
+    form.otherInvestmentIncome,
+    form.rentPaidByEmployer,
+    form.domesticStaffByEmployer,
+    form.companyVehicleCost,
     form.pensionReceived,
     form.annuityInsurance,
     form.gratuities,
@@ -124,9 +130,7 @@ const unconfiguredRuleProfile = (): RuleProfile => ({
 });
 
 function getAppliedProfileMetadata(
-  capability: JurisdictionCapability,
   baseline: PitBaseline | undefined,
-  label: CalculationLabel,
   taxYear: string,
 ): {
   ruleProfile: RuleProfile;
@@ -138,19 +142,6 @@ function getAppliedProfileMetadata(
   verifiedAt: string;
   confidence: EvidenceConfidence | null;
 } {
-  if (label === "State-specific estimate" && capability.ruleProfile.kind === "verified_state") {
-    return {
-      ruleProfile: capability.ruleProfile,
-      ruleProfileVersion: capability.ruleProfile.version,
-      source: capability.ruleProfile.evidence.source,
-      effectiveTaxYears: [taxYear],
-      effectiveFrom: capability.ruleProfile.evidence.effectiveFrom,
-      effectiveTo: capability.ruleProfile.evidence.effectiveTo,
-      verifiedAt: capability.ruleProfile.evidence.verifiedAt,
-      confidence: capability.ruleProfile.evidence.confidence,
-    };
-  }
-
   if (!baseline) {
     return {
       ruleProfile: unconfiguredRuleProfile(),
@@ -210,25 +201,26 @@ export function calculatePreparation(
     missingInputWarnings.unshift(baselineResolution.warning);
   }
 
-  const label =
-    missingInputWarnings.length > 0
-      ? "Not filing-ready"
-      : getCalculationLabel(capability, jurisdictionCode);
+  let numericResult: TaxBreakdown | null = null;
+  if (baseline && missingInputWarnings.length === 0) {
+    try {
+      numericResult = calculateNigeriaTax(form, baseline.ruleInputs);
+    } catch (error) {
+      if (!(error instanceof TaxEstimateUnavailableError)) throw error;
+      missingInputWarnings.push(...error.reasons);
+    }
+  }
+  const label = numericResult
+    ? "Generic Nigerian PIT estimate"
+    : "Not filing-ready";
   const appliedProfile = getAppliedProfileMetadata(
-    capability,
     baseline,
-    label,
     input.taxYear?.trim() ?? "",
   );
   const filingReadiness: PreparationFilingReadiness =
     label === "Not filing-ready" ? "Not filing-ready" : capability.primaryReadiness;
-  const numericResult = calculateNigeriaTax(
-    form,
-    baseline?.ruleInputs ?? getPitRuleInputs(),
-  );
-
   return {
-    ...numericResult,
+    tax: numericResult,
     label,
     filingReadiness,
     ruleProfile: appliedProfile.ruleProfile,
@@ -239,7 +231,7 @@ export function calculatePreparation(
     effectiveTo: appliedProfile.effectiveTo,
     verifiedAt: appliedProfile.verifiedAt,
     confidence: appliedProfile.confidence,
-    assumptions: baseline?.ruleInputs.assumptions ?? getPitRuleInputs().assumptions,
+    assumptions: baseline?.ruleInputs.assumptions ?? [],
     missingInputWarnings,
     provenance: {
       label,
@@ -251,7 +243,7 @@ export function calculatePreparation(
       effectiveTo: appliedProfile.effectiveTo,
       verifiedAt: appliedProfile.verifiedAt,
       confidence: appliedProfile.confidence,
-      assumptions: baseline?.ruleInputs.assumptions ?? getPitRuleInputs().assumptions,
+      assumptions: baseline?.ruleInputs.assumptions ?? [],
       missingInputWarnings,
     },
   };

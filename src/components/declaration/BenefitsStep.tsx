@@ -47,21 +47,21 @@ const BenefitsStep = ({ form, update }: BenefitsStepProps) => (
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Housing</GlossaryText></p>
-      <Field label="Rent Paid by You" badge="Exempt" hint="Name and address of premises owner" value={form.rentPaidBySelf} onChange={(v) => update("rentPaidBySelf", v)} />
+      <Field label="Rent Paid by You" hint="Record only; qualifying relief is entered on the deductions step" value={form.rentPaidBySelf} onChange={(v) => update("rentPaidBySelf", v)} />
       <TextField label="Premises Owner Address" hint="Address of premises owner" value={form.rentPaidBySelfAddress} onChange={(v) => update("rentPaidBySelfAddress", v)} />
-      <Field label="Rent Paid by Employer" badge="Taxable" hint="Employer-provided housing" value={form.rentPaidByEmployer} onChange={(v) => update("rentPaidByEmployer", v)} />
+      <Field label="Rent Paid by Employer" hint="Employer-provided housing requires valuation before an estimate can be shown" value={form.rentPaidByEmployer} onChange={(v) => update("rentPaidByEmployer", v)} />
       <TextField label="Employer Name & Address" hint="Name and address of employer" value={form.rentPaidByEmployerName} onChange={(v) => update("rentPaidByEmployerName", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Domestic Staff</GlossaryText></p>
-      <Field label="Paid by You" badge="Exempt" hint="Names, addresses and amounts" value={form.domesticStaffBySelf} onChange={(v) => update("domesticStaffBySelf", v)} />
-      <Field label="Paid by Employer" badge="Taxable" hint="Names, addresses and amounts" value={form.domesticStaffByEmployer} onChange={(v) => update("domesticStaffByEmployer", v)} />
+      <Field label="Paid by You" hint="Record only; this is not an automatic deduction" value={form.domesticStaffBySelf} onChange={(v) => update("domesticStaffBySelf", v)} />
+      <Field label="Paid by Employer" hint="Employer-provided benefit requires review before estimating" value={form.domesticStaffByEmployer} onChange={(v) => update("domesticStaffByEmployer", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Company Vehicle</GlossaryText></p>
-      <Field label="Vehicle Cost" badge="Taxable" hint="Taxable at percentage cost per annum (e.g. 10%)" value={form.companyVehicleCost} onChange={(v) => update("companyVehicleCost", v)} />
+      <Field label="Vehicle Cost" hint="Ownership, hire and valuation details are needed before estimating" value={form.companyVehicleCost} onChange={(v) => update("companyVehicleCost", v)} />
       <TextField label="Vehicle Details" hint="Date of purchase, brand, model, year" value={form.companyVehicleDetails} onChange={(v) => update("companyVehicleDetails", v)} />
     </div>
   </div>

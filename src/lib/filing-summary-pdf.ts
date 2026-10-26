@@ -72,6 +72,13 @@ export function renderFilingSummaryPdf(summary: FilingSummary): Blob {
 
   heading("Tax Computation");
   y += 2;
+  if (!summary.tax) {
+    row("Tax estimate", "Unavailable - review required");
+    doc.setFontSize(9);
+    const lines = doc.splitTextToSize(summary.estimateWarnings.join(" "), PAGE_WIDTH - MARGIN * 2);
+    doc.text(lines, MARGIN, y);
+    y += lines.length * 5 + 8;
+  } else {
   row("Gross Income", formatNgn(summary.tax.grossIncome));
   row("Total Deductions", formatNgn(summary.tax.totalDeductions));
   row("Taxable Income", formatNgn(summary.tax.taxableIncome));
@@ -88,18 +95,18 @@ export function renderFilingSummaryPdf(summary: FilingSummary): Blob {
   y += 2;
 
   row("Computed Tax", formatNgn(summary.tax.computedTax));
-  row("Minimum Tax (1%)", formatNgn(summary.tax.minimumTax));
   y += 2;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("Estimated Tax Payable", MARGIN, y);
+  doc.text("Estimated tax before credits", MARGIN, y);
   doc.text(formatNgn(summary.tax.finalTax), PAGE_WIDTH - MARGIN, y, { align: "right" });
   y += 6;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(`Effective rate: ${summary.tax.effectiveRate.toFixed(1)}%`, MARGIN, y);
   y += 10;
+  }
   rule();
 
   doc.setFont("helvetica", "italic");

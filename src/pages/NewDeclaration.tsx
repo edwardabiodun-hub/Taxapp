@@ -248,9 +248,6 @@ const NewDeclaration = () => {
               >
                 <option value="">Select tax year</option>
                 <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
               </select>
               {errors.some((error) => error.toLowerCase().includes("tax year")) && (
                 <p className="text-[10px] font-medium text-destructive">Please select a tax year.</p>

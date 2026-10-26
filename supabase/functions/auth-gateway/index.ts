@@ -14,6 +14,10 @@ if (runtime) {
   const serviceRoleKey = runtime.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const rateLimitSalt = runtime.env.get("RATE_LIMIT_SALT");
   const configuredAppOrigin = runtime.env.get("APP_ORIGIN");
+  const additionalAppOrigins = (runtime.env.get("AUTH_APP_ORIGINS") ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
   const environment = runtime.env.get("ENVIRONMENT") ?? "production";
   const allowLocalDevelopment =
     environment !== "production" && runtime.env.get("ALLOW_LOCAL_ORIGIN") === "true";
@@ -29,6 +33,7 @@ if (runtime) {
   const rateLimitClient = createClient(supabaseUrl, serviceRoleKey);
   const handler = createAuthGatewayHandler({
     appOrigin,
+    additionalAppOrigins,
     supabaseUrl,
     supabaseAnonKey,
     rateLimitSalt,

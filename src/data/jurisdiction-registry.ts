@@ -84,7 +84,7 @@ const createConservativeCapability = (
   exportFormats: ["pdf", "csv", "xlsx"],
   evidence: {},
   notes:
-    "Generic Nigerian PIT preparation is not filing-ready until an approved national baseline source is configured; state-specific rules and filing workflows require verified evidence.",
+    "The generic PIT estimate uses a reviewed 2026 national baseline; state-specific rules and filing workflows still require verified evidence. A numeric estimate is not proof of filing readiness.",
   registryVersion: REGISTRY_VERSION,
 });
 

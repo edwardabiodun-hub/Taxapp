@@ -64,6 +64,12 @@ function fillRequiredFields() {
 }
 
 describe("Onboarding consent gate", () => {
+  it("separates the FileSmart lockup from its motto in the registration header", async () => {
+    await renderOnboarding();
+    const brandLink = screen.getByRole("link", { name: "FileSmart home" });
+    expect(brandLink).toHaveClass("gap-2");
+    expect(brandLink).toHaveTextContent("Your connection to smarter, easier tax filing.");
+  });
   it("uses a balanced split layout with registration left and reassurance content right", async () => {
     await renderOnboarding();
 
