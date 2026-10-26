@@ -7,6 +7,6 @@ describe("PublicFooter", () => {
   it("shows the FileSmart motto beneath its brand lockup", () => {
     render(<MemoryRouter><PublicFooter /></MemoryRouter>);
 
-    expect(screen.getByText("Your connection to smarter, easier tax filing.")).toBeInTheDocument();
+    expect(screen.getByText("Your connect for smarter, easier tax filing.")).toBeInTheDocument();
   });
 });

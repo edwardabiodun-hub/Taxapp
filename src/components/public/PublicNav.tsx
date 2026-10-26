@@ -29,8 +29,8 @@ const PublicNav = () => {
       <header className="sticky top-0 z-50 border-b border-[#dce6df]/80 bg-[#f8f7f3]/95 backdrop-blur">
         <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
           <Link to="/" className="inline-flex min-h-11 shrink-0 flex-col items-start justify-center gap-2 py-2" aria-label="FileSmart home">
-            <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-12 w-auto object-contain sm:h-14" />
-            <span className="max-w-[190px] text-[10px] leading-4 text-[#55736c]">Your connection to smarter, easier tax filing.</span>
+            <img src="/brand/filesmart-lockup.png" alt="FileSmart brand lockup" className="h-24 w-auto object-contain sm:h-28" />
+            <span className="max-w-[190px] text-[13px] leading-5 text-[#55736c]">Your connect for smarter, easier tax filing.</span>
           </Link>
 
           <nav className="hidden items-center gap-4 text-sm font-medium text-[#55736c] lg:flex" aria-label="Main navigation">
