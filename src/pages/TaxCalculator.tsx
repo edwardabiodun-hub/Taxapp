@@ -127,7 +127,7 @@ const TaxCalculator = () => {
       </div>}
 
       {/* Results */}
-      {result && result.grossIncome > 0 && !isFilingLaunchPhase && (
+      {result && result.grossIncome > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
