@@ -4,22 +4,22 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Landing from "./pages/Landing";
-import Learn from "./pages/Learn";
-import Guide from "./pages/Guide";
-import HowItWorks from "./pages/HowItWorks";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Disclaimer from "./pages/Disclaimer";
-import FilingWaitlist from "./pages/FilingWaitlist";
-import CreateAccount from "./pages/CreateAccount";
-import PublicLogin from "./pages/PublicLogin";
-import CheckEmail from "./pages/CheckEmail";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Pricing from "./pages/Pricing";
+const Landing = lazy(() => import("./pages/Landing"));
+const Learn = lazy(() => import("./pages/Learn"));
+const Guide = lazy(() => import("./pages/Guide"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Disclaimer = lazy(() => import("./pages/Disclaimer"));
+const FilingWaitlist = lazy(() => import("./pages/FilingWaitlist"));
+const CreateAccount = lazy(() => import("./pages/CreateAccount"));
+const PublicLogin = lazy(() => import("./pages/PublicLogin"));
+const CheckEmail = lazy(() => import("./pages/CheckEmail"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
 
 const Waiting = () => <main className="flex min-h-screen items-center justify-center bg-[#f8f7f3] px-5 text-[#12352f]" role="status">Loading FileSmart…</main>;
@@ -27,12 +27,12 @@ const Waiting = () => <main className="flex min-h-screen items-center justify-ce
 export const PublicRoutes = () => {
   const { loading, isUnlocked, isPasswordRecovery } = useAuth();
   if (loading) return <Waiting />;
-  if (isPasswordRecovery) return <Routes>
+  if (isPasswordRecovery) return <Suspense fallback={<Waiting />}><Routes>
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="*" element={<Navigate to="/reset-password" replace />} />
-  </Routes>;
+  </Routes></Suspense>;
 
-  return <Routes>
+  return <Suspense fallback={<Waiting />}><Routes>
     <Route path="/" element={<Landing />} />
     <Route path="/learn" element={<Learn />} />
     <Route path="/learn/:slug" element={<Guide />} />
@@ -43,7 +43,7 @@ export const PublicRoutes = () => {
     <Route path="/terms" element={<Terms />} />
     <Route path="/disclaimer" element={<Disclaimer />} />
     <Route path="/filing-waitlist" element={<FilingWaitlist />} />
-    <Route path="/calculator" element={<Suspense fallback={<Waiting />}><TaxCalculator /></Suspense>} />
+    <Route path="/calculator" element={<TaxCalculator />} />
     <Route path="/create-account" element={<CreateAccount />} />
     <Route path="/onboarding" element={<Navigate to={isUnlocked ? "/filing-waitlist" : "/create-account"} replace />} />
     <Route path="/pricing" element={isUnlocked ? <Pricing /> : <Navigate to="/create-account" replace state={{ from: "/pricing" }} />} />
@@ -54,7 +54,7 @@ export const PublicRoutes = () => {
     {["/welcome", "/declare", "/submissions", "/submissions/:id", "/messages", "/profile", "/receipt-scanner", "/tax-calendar", "/invoices"].map((path) =>
       <Route key={path} path={path} element={<Navigate to="/filing-waitlist" replace />} />)}
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>;
+  </Routes></Suspense>;
 };
 
 const PublicApp = () => <AuthProvider><TooltipProvider><Toaster /><Sonner /><BrowserRouter><PublicRoutes /></BrowserRouter></TooltipProvider></AuthProvider>;

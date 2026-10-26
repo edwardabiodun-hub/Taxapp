@@ -53,6 +53,21 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           input: { index: path.resolve(__dirname, "public.html") },
+          output: {
+            manualChunks(id: string) {
+              if (!id.includes("node_modules")) return;
+
+              if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/.test(id)) {
+                return "vendor-react";
+              }
+              if (id.includes("/node_modules/@supabase/")) return "vendor-supabase";
+              if (id.includes("/node_modules/@radix-ui/")) return "vendor-radix";
+              if (id.includes("/node_modules/lucide-react/")) return "vendor-icons";
+              if (/[\\/]node_modules[\\/](react-router|react-router-dom|@remix-run)[\\/]/.test(id)) {
+                return "vendor-router";
+              }
+            },
+          },
         },
       },
     } : {}),
