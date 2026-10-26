@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, BrowserRouter } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -19,6 +20,7 @@ import CheckEmail from "./pages/CheckEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Pricing from "./pages/Pricing";
+const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
 
 const Waiting = () => <main className="flex min-h-screen items-center justify-center bg-[#f8f7f3] px-5 text-[#12352f]" role="status">Loading FileSmart…</main>;
 
@@ -41,6 +43,7 @@ export const PublicRoutes = () => {
     <Route path="/terms" element={<Terms />} />
     <Route path="/disclaimer" element={<Disclaimer />} />
     <Route path="/filing-waitlist" element={<FilingWaitlist />} />
+    <Route path="/calculator" element={<Suspense fallback={<Waiting />}><TaxCalculator /></Suspense>} />
     <Route path="/create-account" element={<CreateAccount />} />
     <Route path="/onboarding" element={<Navigate to={isUnlocked ? "/filing-waitlist" : "/create-account"} replace />} />
     <Route path="/pricing" element={isUnlocked ? <Pricing /> : <Navigate to="/create-account" replace state={{ from: "/pricing" }} />} />
@@ -48,7 +51,7 @@ export const PublicRoutes = () => {
     <Route path="/check-email" element={<CheckEmail />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<Navigate to="/forgot-password" replace />} />
-    {["/welcome", "/declare", "/calculator", "/submissions", "/submissions/:id", "/messages", "/profile", "/receipt-scanner", "/tax-calendar", "/invoices"].map((path) =>
+    {["/welcome", "/declare", "/submissions", "/submissions/:id", "/messages", "/profile", "/receipt-scanner", "/tax-calendar", "/invoices"].map((path) =>
       <Route key={path} path={path} element={<Navigate to="/filing-waitlist" replace />} />)}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>;
