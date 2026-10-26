@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calculator, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { calculateNigeriaTax, TaxEstimateUnavailableError, type TaxBreakdown } from "@/lib/tax-calculator";
 import { defaultNigeriaForm, type NigeriaDeclarationForm } from "@/types/declaration";
 import { GlossaryText } from "@/components/glossary/GlossaryText";
+import { isFilingLaunchPhase, publicFilingPath } from "@/lib/launch-phase";
+import { setPageMetadata } from "@/lib/seo";
+import PublicNav from "@/components/public/PublicNav";
+import PublicFooter from "@/components/public/PublicFooter";
 
 const Field = ({ label, hint, value, onChange }: {
   label: string; hint?: string; value: string; onChange: (v: string) => void;
@@ -29,6 +33,16 @@ const TaxCalculator = () => {
   const [result, setResult] = useState<TaxBreakdown | null>(null);
   const [estimateWarnings, setEstimateWarnings] = useState<readonly string[]>([]);
 
+  useEffect(() => {
+    if (isFilingLaunchPhase) {
+      setPageMetadata({
+        title: "Personal income tax estimator | FileSmart",
+        description: "Estimate your 2026 personal income tax using the Nigeria Tax Act 2025. The estimator does not submit a tax return.",
+        path: "/calculator",
+      });
+    }
+  }, []);
+
   const update = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setResult(null);
@@ -47,6 +61,8 @@ const TaxCalculator = () => {
   };
 
   return (
+    <div className={isFilingLaunchPhase ? "min-h-screen bg-[#f8f7f3] text-[#12352f]" : undefined}>
+    {isFilingLaunchPhase && <PublicNav />}
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -61,7 +77,7 @@ const TaxCalculator = () => {
           <GlossaryText>Estimate 2026 personal income tax under the Nigeria Tax Act 2025</GlossaryText>
         </p>
         <p className="text-[11px] text-muted-foreground">
-          <GlossaryText>Use eligible deductions to estimate chargeable income before filing.</GlossaryText>
+          <GlossaryText>{isFilingLaunchPhase ? "Use eligible deductions to estimate your tax. Calculations stay in this page; nothing is filed or sent to a tax authority." : "Use eligible deductions to estimate chargeable income before filing."}</GlossaryText>
         </p>
       </div>
 
@@ -111,7 +127,7 @@ const TaxCalculator = () => {
       </div>}
 
       {/* Results */}
-      {result && result.grossIncome > 0 && (
+      {result && result.grossIncome > 0 && !isFilingLaunchPhase && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,7 +193,14 @@ const TaxCalculator = () => {
           Continue tax preparation <ArrowRight className="w-4 h-4" />
         </Button>
       )}
+      {result && result.grossIncome > 0 && isFilingLaunchPhase && (
+        <Button asChild variant="outline" className="w-full gap-2">
+          <Link to={publicFilingPath}>Join the filing waitlist <ArrowRight className="w-4 h-4" /></Link>
+        </Button>
+      )}
     </motion.div>
+    {isFilingLaunchPhase && <PublicFooter />}
+    </div>
   );
 };
 

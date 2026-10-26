@@ -12,7 +12,7 @@ const links = [
 ];
 
 const productLinks = [
-  { to: isFilingLaunchPhase ? publicFilingPath : "/calculator", label: "Tax estimator" },
+  { to: "/calculator", label: "Tax estimator" },
   { to: isFilingLaunchPhase ? publicFilingPath : "/declare", label: "File taxes" },
   { to: isFilingLaunchPhase ? publicFilingPath : "/pricing", label: "Pricing" },
   { to: "/contact", label: "Contact" },
