@@ -16,7 +16,7 @@ export interface SupportPromptContext {
   externalEvidence?: EvidenceItem[];
 }
 
-const MESSAGE_CATEGORIES = new Set(['refund_status', 'document_request', 'general']);
+const MESSAGE_CATEGORIES = new Set(['refund_status', 'document_request', 'return_reminder', 'general']);
 const DECLARATION_STATUSES = new Set(['draft', 'submitted', 'processing', 'audit_request', 'approved']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

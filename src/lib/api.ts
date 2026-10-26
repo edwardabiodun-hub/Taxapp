@@ -1,5 +1,15 @@
 import { supabase } from "./supabase-client";
-import type { LocalActivity, LocalDeclaration, LocalMessage, LocalProfile } from "./local-db";
+import type {
+  LocalActivity,
+  LocalDeclaration,
+  LocalMessage,
+  LocalNotificationPreferences,
+  LocalPreparationReminderState,
+  LocalProfile,
+} from "./local-db";
+import type { PreparationRecord } from "@/domain/preparations";
+import { getJurisdictionCapability } from "@/data/jurisdiction-registry";
+import { resolveDeadline } from "@/lib/deadline-service";
 
 /**
  * Real backend calls, replacing mock-api.ts. Every function here requires
@@ -239,6 +249,7 @@ export interface MessageRow {
   category: LocalMessage["category"];
   subject: string;
   body: string;
+  action_url: string | null;
   read_at: string | null;
   created_at: string;
 }
@@ -247,7 +258,7 @@ export async function fetchMessagesFromServer(): Promise<LocalMessage[]> {
   const userId = await getCurrentUserId();
   const { data, error } = await supabase
     .from("messages")
-    .select("id,declaration_id,category,subject,body,read_at,created_at")
+    .select("id,declaration_id,category,subject,body,action_url,read_at,created_at")
     .eq("recipient_user_id", userId)
     .returns<MessageRow[]>();
   if (error) throw error;
@@ -261,6 +272,7 @@ export function rowToMessage(row: MessageRow): LocalMessage {
     category: row.category,
     subject: row.subject,
     body: row.body,
+    actionUrl: row.action_url ?? undefined,
     readAt: row.read_at ?? undefined,
     createdAt: row.created_at,
     pendingSync: 0,
@@ -273,5 +285,122 @@ export function rowToMessage(row: MessageRow): LocalMessage {
  * id here, since RLS already restricts which row this can touch. */
 export async function pushMessageReadStatus(id: string, readAt: string): Promise<void> {
   const { error } = await supabase.from("messages").update({ read_at: readAt }).eq("id", id);
+  if (error) throw error;
+}
+
+// ── Preparation reminder state ──────────────────────────
+
+export interface PreparationReminderStateRow {
+  preparation_id: string;
+  user_id: string;
+  tax_year: string;
+  jurisdiction_code: string;
+  status: LocalPreparationReminderState["status"];
+  last_meaningful_activity_at: string;
+  last_resumed_at: string | null;
+  submitted_at: string | null;
+  deleted_at: string | null;
+  reminder_count: number;
+  last_reminded_at: string | null;
+  reminder_dismissed_at: string | null;
+  snoozed_until: string | null;
+  deadline_due_at: string | null;
+  deadline_source: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function reminderStateFromPreparation(
+  preparation: PreparationRecord,
+): Omit<PreparationReminderStateRow, "user_id"> {
+  const deadline = resolveDeadline(
+    getJurisdictionCapability(preparation.jurisdictionCode),
+    preparation.taxYear,
+    new Date(preparation.updatedAt),
+  );
+
+  return {
+    preparation_id: preparation.id,
+    tax_year: preparation.taxYear,
+    jurisdiction_code: preparation.jurisdictionCode,
+    status: preparation.status,
+    last_meaningful_activity_at: preparation.updatedAt,
+    last_resumed_at: null,
+    submitted_at: preparation.status === "user_submitted" || preparation.status === "authority_confirmed"
+      ? preparation.updatedAt
+      : null,
+    deleted_at: null,
+    reminder_count: 0,
+    last_reminded_at: null,
+    reminder_dismissed_at: null,
+    snoozed_until: null,
+    deadline_due_at: deadline.dueAt ?? null,
+    deadline_source: deadline.source ?? null,
+    created_at: preparation.createdAt,
+    updated_at: preparation.updatedAt,
+  };
+}
+
+export async function pushPreparationReminderStates(
+  preparations: readonly PreparationRecord[],
+): Promise<void> {
+  if (preparations.length === 0) return;
+  await getCurrentUserId();
+  for (const preparation of preparations) {
+    const row = reminderStateFromPreparation(preparation);
+    const { error } = await supabase.rpc("sync_my_preparation_reminder_state", {
+      p_preparation_id: row.preparation_id,
+      p_tax_year: row.tax_year,
+      p_jurisdiction_code: row.jurisdiction_code,
+      p_status: row.status,
+      p_last_meaningful_activity_at: row.last_meaningful_activity_at,
+      p_submitted_at: row.submitted_at,
+      p_deadline_due_at: row.deadline_due_at,
+      p_deadline_source: row.deadline_source,
+      p_created_at: row.created_at,
+      p_updated_at: row.updated_at,
+    });
+    if (error) throw error;
+  }
+}
+
+export async function fetchNotificationPreferences(): Promise<LocalNotificationPreferences | null> {
+  const userId = await getCurrentUserId();
+  const { data, error } = await supabase
+    .from("user_notification_preferences")
+    .select("user_id,in_app_reminders_enabled,email_reminders_enabled,reminder_consent_at,unsubscribed_at,updated_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    userId: data.user_id,
+    inAppRemindersEnabled: data.in_app_reminders_enabled,
+    emailRemindersEnabled: data.email_reminders_enabled,
+    reminderConsentAt: data.reminder_consent_at ?? undefined,
+    unsubscribedAt: data.unsubscribed_at ?? undefined,
+    updatedAt: data.updated_at,
+  };
+}
+
+export async function saveNotificationPreferences(
+  preferences: Pick<LocalNotificationPreferences, "inAppRemindersEnabled" | "emailRemindersEnabled" | "reminderConsentAt" | "unsubscribedAt">,
+): Promise<void> {
+  const userId = await getCurrentUserId();
+  const { error } = await supabase.from("user_notification_preferences").upsert({
+    user_id: userId,
+    in_app_reminders_enabled: preferences.inAppRemindersEnabled,
+    email_reminders_enabled: preferences.emailRemindersEnabled,
+    reminder_consent_at: preferences.reminderConsentAt ?? null,
+    unsubscribed_at: preferences.unsubscribedAt ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function dismissPreparationReminders(preparationId: string): Promise<void> {
+  await getCurrentUserId();
+  const { error } = await supabase.rpc("dismiss_my_preparation_reminders", {
+    p_preparation_id: preparationId,
+  });
   if (error) throw error;
 }

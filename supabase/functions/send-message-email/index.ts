@@ -101,13 +101,28 @@ Deno.serve(async (req) => {
   // The user reads the actual content only inside the app.
   const { data: messageRow, error: fetchError } = await supabaseAdmin
     .from("messages")
-    .select("recipient_user_id")
+    .select("recipient_user_id,category")
     .eq("id", messageId)
     .single();
 
   if (fetchError || !messageRow) {
     console.error("[send-message-email] Could not find message row:", fetchError);
     return new Response("Message not found", { status: 404 });
+  }
+
+  if (messageRow.category === "return_reminder") {
+    const { data: preferences, error: preferencesError } = await supabaseAdmin
+      .from("user_notification_preferences")
+      .select("email_reminders_enabled,reminder_consent_at,unsubscribed_at")
+      .eq("user_id", messageRow.recipient_user_id)
+      .maybeSingle();
+    if (preferencesError) {
+      console.error("[send-message-email] Could not resolve reminder preferences:", preferencesError);
+      return new Response("Reminder preferences unavailable", { status: 503 });
+    }
+    if (!preferences?.email_reminders_enabled || !preferences.reminder_consent_at || preferences.unsubscribed_at) {
+      return new Response("Email reminder not enabled", { status: 200 });
+    }
   }
 
   // recipient_user_id comes from a trusted `uuid not null references

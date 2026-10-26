@@ -381,7 +381,7 @@ describe("api", () => {
       const messages = await fetchMessagesFromServer();
 
       expect(builder.select).toHaveBeenCalledWith(
-        "id,declaration_id,category,subject,body,read_at,created_at",
+        "id,declaration_id,category,subject,body,action_url,read_at,created_at",
       );
 
       expect(messages).toEqual([

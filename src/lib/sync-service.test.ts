@@ -21,6 +21,7 @@ vi.mock("./api", () => ({
   pushActivitiesToServer: vi.fn(async () => {}),
   fetchMessagesFromServer: vi.fn(async () => []),
   pushMessageReadStatus: vi.fn(async () => {}),
+  pushPreparationReminderStates: vi.fn(async () => {}),
 }));
 
 describe("syncAll", () => {

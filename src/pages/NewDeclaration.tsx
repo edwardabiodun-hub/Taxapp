@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Save } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -18,7 +19,7 @@ import {
   type PreparationRecord,
 } from "@/domain/preparations";
 import type { PreparationStatus } from "@/domain/tax-readiness";
-import { savePreparation } from "@/lib/preparation-repository";
+import { getPreparation, savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
 import { getCalculationReceiptInputs } from "@/domain/receipts";
 import { listReceiptRecords } from "@/lib/receipt-repository";
@@ -43,13 +44,19 @@ const preparationSteps = declarationSteps.map((step, index) =>
 );
 
 const NewDeclaration = () => {
+  const requestedPreparationId = new URLSearchParams(window.location.search).get("preparation")?.trim();
+  const isResumeRequest = Boolean(requestedPreparationId);
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<NigeriaDeclarationForm>(defaultNigeriaForm);
   const [jurisdictionCode, setJurisdictionCode] = useState("");
   const [documents, setDocuments] = useState<UploadedDoc[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [preparationId] = useState<string>(() => `prep-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const [preparationId] = useState<string>(() =>
+    new URLSearchParams(window.location.search).get("preparation") ??
+      `prep-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   const [hasSavedPreparation, setHasSavedPreparation] = useState(false);
+  const [resumeUnavailable, setResumeUnavailable] = useState(false);
   const [savedStatus, setSavedStatus] = useState<PreparationStatus>();
   const [lastSavedAt, setLastSavedAt] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
@@ -58,6 +65,31 @@ const NewDeclaration = () => {
   const [exportPackage, setExportPackage] = useState<ExportPackage>();
   const [exportError, setExportError] = useState<string>();
   const isExported = savedStatus === "exported";
+
+  useEffect(() => {
+    if (!isResumeRequest) return undefined;
+    let cancelled = false;
+    void getPreparation(preparationId).then((saved) => {
+      if (cancelled) return;
+      if (!saved) {
+        setResumeUnavailable(true);
+        return;
+      }
+      const restored = Object.fromEntries(
+        Object.entries(saved.formData).filter(([key, value]) => key !== "documents" && typeof value === "string"),
+      ) as Partial<NigeriaDeclarationForm>;
+      setForm((current) => ({ ...current, ...restored }));
+      setJurisdictionCode(saved.jurisdictionCode);
+      setHasSavedPreparation(true);
+      setSavedStatus(saved.status);
+      setLastSavedAt(saved.updatedAt);
+    }).catch(() => {
+      if (!cancelled) setResumeUnavailable(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isResumeRequest, preparationId]);
 
   const capabilities = listNigeriaJurisdictions();
   const capability = useMemo(
@@ -197,6 +229,18 @@ const NewDeclaration = () => {
     }
   };
 
+  useEffect(() => {
+    const hasMeaningfulInput =
+      Boolean(jurisdictionCode || form.taxYear || documents.length) ||
+      Object.entries(form).some(([key, value]) => key !== "country" && typeof value === "string" && value.trim().length > 0);
+    if (!hasMeaningfulInput || isExported || isSaving) return undefined;
+
+    const timer = setTimeout(() => {
+      void handleSave("draft");
+    }, 1_000);
+    return () => clearTimeout(timer);
+  }, [documents, form, isExported, isSaving, jurisdictionCode]);
+
   const handleExport = async () => {
     const exportCapability = capability;
     if (!exportCapability || !requiredDataComplete()) {
@@ -289,6 +333,22 @@ const NewDeclaration = () => {
         return null;
     }
   };
+
+  if (resumeUnavailable) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-6 pb-28">
+        <section role="alert" className="rounded-xl border border-border bg-card p-6 shadow-card">
+          <h1 className="font-display text-xl font-bold text-foreground">Saved preparation unavailable</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            This saved preparation isn&apos;t available on this device. Open it on the device and browser where you started it.
+          </p>
+          <Button asChild className="mt-5">
+            <Link to="/">Return to dashboard</Link>
+          </Button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 pb-28">

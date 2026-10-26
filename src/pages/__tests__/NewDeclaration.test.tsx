@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import NewDeclaration from "@/pages/NewDeclaration";
-import { savePreparation } from "@/lib/preparation-repository";
+import { getPreparation, savePreparation } from "@/lib/preparation-repository";
 import { getDocumentMetadata } from "@/lib/preparation-documents";
 import { listReceiptRecords } from "@/lib/receipt-repository";
 import type { ExportPackage } from "@/domain/exports";
@@ -63,6 +63,22 @@ const generatedExportPackage: ExportPackage = {
 };
 
 describe("NewDeclaration", () => {
+  it("does not turn an unavailable reminder link into a blank new preparation", async () => {
+    window.history.pushState({}, "", "/declare?preparation=missing-prep");
+    vi.mocked(getPreparation).mockResolvedValueOnce(undefined);
+
+    render(
+      <MemoryRouter>
+        <NewDeclaration />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/isn't available on this device/i);
+    expect(screen.queryByRole("button", { name: /save as draft/i })).not.toBeInTheDocument();
+    expect(savePreparation).not.toHaveBeenCalled();
+    window.history.replaceState({}, "", "/");
+  });
+
   it("starts with a national jurisdiction selector and local-first preparation language", () => {
     render(
       <MemoryRouter>

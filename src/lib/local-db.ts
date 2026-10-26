@@ -147,12 +147,41 @@ export interface LocalDocumentFile {
 export interface LocalMessage {
   id: string;
   declarationId?: string;
-  category: "refund_status" | "document_request" | "general";
+  category: "refund_status" | "document_request" | "return_reminder" | "general";
   subject: string;
   body: string;
+  actionUrl?: string;
   readAt?: string;
   createdAt: string;
   pendingSync: 0 | 1;
+}
+
+export interface LocalPreparationReminderState {
+  preparationId: string;
+  taxYear: string;
+  jurisdictionCode: string;
+  status: PreparationRecord["status"] | "deleted";
+  lastMeaningfulActivityAt: string;
+  lastResumedAt?: string;
+  submittedAt?: string;
+  deletedAt?: string;
+  reminderCount: number;
+  lastRemindedAt?: string;
+  reminderDismissedAt?: string;
+  snoozedUntil?: string;
+  deadlineDueAt?: string;
+  deadlineSource?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocalNotificationPreferences {
+  userId: string;
+  inAppRemindersEnabled: boolean;
+  emailRemindersEnabled: boolean;
+  reminderConsentAt?: string;
+  unsubscribedAt?: string;
+  updatedAt: string;
 }
 
 export type ActivityType = "status_change" | "document_upload" | "created" | "note";
@@ -181,6 +210,8 @@ class TaxEaseDB extends Dexie {
   activities!: Table<LocalActivity, string>;
   documentFiles!: Table<LocalDocumentFile, string>;
   messages!: Table<LocalMessage, string>;
+  preparationReminderStates!: Table<LocalPreparationReminderState, string>;
+  notificationPreferences!: Table<LocalNotificationPreferences, string>;
 
   constructor() {
     super("TaxEaseAfrica");
@@ -246,6 +277,8 @@ class TaxEaseDB extends Dexie {
       referenceData: "key",
       activities: "id, declarationId, timestamp, pendingSync",
       messages: "id, declarationId, pendingSync, createdAt",
+      preparationReminderStates: "preparationId, status, lastMeaningfulActivityAt, reminderCount, updatedAt",
+      notificationPreferences: "userId, updatedAt",
     });
     this.version(10).stores({
       profiles: "id, country",
@@ -261,6 +294,8 @@ class TaxEaseDB extends Dexie {
       referenceData: "key",
       activities: "id, declarationId, timestamp, pendingSync",
       messages: "id, declarationId, pendingSync, createdAt",
+      preparationReminderStates: "preparationId, status, lastMeaningfulActivityAt, reminderCount, updatedAt",
+      notificationPreferences: "userId, updatedAt",
     });
   }
 }
