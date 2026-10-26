@@ -88,7 +88,7 @@ const Dashboard = () => {
           <div>
             <p className="font-display font-bold text-sm text-card-foreground">Preparation overview</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Choose any Nigerian jurisdiction, prepare locally, and export a package for your own review.
+              Choose your tax jurisdiction, prepare locally, and export a package for your review.
             </p>
           </div>
           <span className="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
@@ -112,7 +112,7 @@ const Dashboard = () => {
         <p className="text-[11px] leading-relaxed text-muted-foreground">
           {latestPreparation && latestCapability
             ? `${latestCapability.name}: ${latestPreparation.calculationLabel} · ${latestCapability.primaryReadiness}.`
-            : `${listNigeriaJurisdictions().length} Nigerian jurisdictions are available for generic preparation.`}
+            : `${listNigeriaJurisdictions().length} tax jurisdictions are available for generic preparation.`}
         </p>
       </motion.div>
 
@@ -174,7 +174,7 @@ const Dashboard = () => {
         </div>
         <div className="flex-1 text-left">
           <p className="font-display font-bold">Tax Estimator</p>
-          <p className="text-xs opacity-80">Explore a generic Nigerian PIT estimate</p>
+          <p className="text-xs opacity-80">Explore a general personal income tax estimate</p>
         </div>
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </motion.button>
