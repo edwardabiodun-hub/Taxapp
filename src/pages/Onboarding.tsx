@@ -451,7 +451,7 @@ const Onboarding = () => {
         <aside data-testid="onboarding-brand-panel" className="order-1 flex min-h-[28rem] flex-col justify-center bg-gradient-to-br from-[#eff7f0] via-[#f8f7f3] to-[#f7ead2] px-6 py-12 sm:px-10 lg:order-2 lg:min-h-screen lg:px-14">
           <div className="mx-auto w-full max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Your preparation, made clearer</p>
-            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-foreground sm:text-5xl">Prepare your Nigerian tax information with confidence.</h2>
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-foreground sm:text-5xl">Prepare your tax information with confidence.</h2>
             <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">Answer a few focused questions, keep your information organized, and review your preparation before deciding your next filing step.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <TrustPoint icon={ListChecks} title="Step by step" text="Plain-language questions, one stage at a time." />
