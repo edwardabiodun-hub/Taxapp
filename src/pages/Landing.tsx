@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import PublicFooter from "@/components/public/PublicFooter";
 import PublicNav from "@/components/public/PublicNav";
+import { isFilingLaunchPhase, publicFilingPath } from "@/lib/launch-phase";
 
 const benefits = [
   {
@@ -42,7 +43,7 @@ const benefits = [
 const faqs = [
   {
     question: "Can I start my tax preparation in a browser?",
-    answer: "Yes. FileSmart is designed to let you begin your preparation online. Select File for Free to create your profile or join the launch waitlist while filing is being prepared.",
+    answer: isFilingLaunchPhase ? "Filing tools are being prepared for launch. Create a free account to review pricing, or join the waitlist to get a launch notification." : "Yes. FileSmart is designed to let you begin your preparation online. Select File for Free to create your profile or join the launch waitlist while filing is being prepared.",
   },
   {
     question: "Does FileSmart submit my return to the tax authority?",
@@ -85,11 +86,11 @@ const Landing = () => {
               File for free with <span className="text-[#d48a18]">FileSmart.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#55736c] sm:text-xl">
-              <NairaText> If your annual gross income is below ₦2 million, your FileSmart filing plan is ₦0. Get clear, guided support as you prepare your personal income tax return.</NairaText>
+              <NairaText> If your annual gross income is below ₦2 million, your FileSmart filing plan is ₦0. {isFilingLaunchPhase ? "Create a free account and join the waitlist to hear when filing opens." : "Get clear, guided support as you prepare your personal income tax return."}</NairaText>
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="min-h-11 h-13 rounded-full bg-[#12352f] px-7 text-[#fbfaf5] shadow-[0_12px_24px_rgba(18,53,47,0.16)] hover:bg-[#1c4e44]">
-                <Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link>
+                <Link to={isFilingLaunchPhase ? publicFilingPath : "/onboarding"}>{isFilingLaunchPhase ? "Join waitlist" : "File for free"} <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <a href="#how-it-works" className="inline-flex min-h-11 h-13 items-center justify-center gap-2 rounded-full border border-[#b8cec4] px-7 text-sm font-bold text-[#12352f] transition-colors hover:bg-white">
                 See how it works
@@ -97,7 +98,7 @@ const Landing = () => {
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#55736c]">
               <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> <NairaText>₦0 for eligible taxpayers</NairaText></span>
-              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> Start in your browser</span>
+              <span className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-[#3c8d6d]" /> {isFilingLaunchPhase ? "Filing opens at launch" : "Start in your browser"}</span>
             </div>
           </div>
 
@@ -144,9 +145,9 @@ const Landing = () => {
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#b06b12]">File for free with FileSmart</p>
               <p className="mt-2 max-w-2xl text-lg font-semibold leading-7 text-[#12352f]"><NairaText>Eligible taxpayers with annual gross income below ₦2 million can use the Basic filing plan for ₦0.</NairaText></p>
-              <p className="mt-1 text-sm leading-6 text-[#55736c]">Eligibility and filing availability will be confirmed during onboarding.</p>
+              <p className="mt-1 text-sm leading-6 text-[#55736c]">{isFilingLaunchPhase ? "Create a free account to view planned pricing, or join the waitlist for a launch notification." : "Eligibility and filing availability will be confirmed during onboarding."}</p>
             </div>
-            <Button asChild className="min-h-11 shrink-0 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">Start free <ArrowRight className="h-4 w-4" /></Link></Button>
+            <Button asChild className="min-h-11 shrink-0 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to={isFilingLaunchPhase ? publicFilingPath : "/onboarding"}>{isFilingLaunchPhase ? "Join waitlist" : "Start free"} <ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
         </section>
 
@@ -175,7 +176,7 @@ const Landing = () => {
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#d48a18]">How it works</p>
               <h2 className="mt-3 max-w-sm font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">A guided path, from first question to ready review.</h2>
               <p className="mt-5 max-w-sm leading-7 text-[#55736c]">Start online, work at your own pace, and keep your information organized as you go.</p>
-              <Button asChild className="mt-8 min-h-11 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link></Button>
+              <Button asChild className="mt-8 min-h-11 rounded-full bg-[#12352f] px-6 text-[#fbfaf5] hover:bg-[#1c4e44]"><Link to={isFilingLaunchPhase ? publicFilingPath : "/onboarding"}>{isFilingLaunchPhase ? "Join waitlist" : "File for free"} <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>
             <div className="space-y-5">
               {[

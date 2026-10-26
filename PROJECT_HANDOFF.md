@@ -35,9 +35,10 @@ Use Node.js and npm compatible with `package-lock.json`; the verified local work
 | Variable | Where | Purpose |
 | --- | --- | --- |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Frontend build | Public Supabase project connection; values come from Supabase Project Settings → API. |
-| `VITE_FILING_LAUNCH_PHASE` | Frontend build | Set `true` for the public launch website; use `false` for the app demo. |
+| `VITE_FILING_LAUNCH_PHASE` | Combined app build | Optional frontend gate for the Netlify app demo. The public website build forces launch gating. |
 | `VITE_PUBLIC_SITE_URL` | Frontend build | Canonical public URL; use `https://www.filesmartnaija.com`. |
 | `APP_ORIGIN` | Supabase Edge Functions | Exact HTTPS origin allowed by existing CORS handlers. Verify this matches the caller before release. |
+| `AUTH_APP_ORIGINS` | Auth Gateway Edge Function | Comma-separated exact HTTPS origins additionally allowed for account creation, sign-in, and password reset; include `https://www.filesmartnaija.com` for the public website. |
 | `CONTACT_APP_ORIGIN` | Contact Edge Function | Optional exact HTTPS public-site origin, independently of the app's `APP_ORIGIN`; set to `https://www.filesmartnaija.com` for the website. |
 | `LAUNCH_RESEND_API_KEY`, `LAUNCH_EMAIL_FROM` | Supabase Edge Functions | Restricted Resend sender for contact and launch email. |
 | `RATE_LIMIT_SALT`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase Edge Functions | Private rate limits and server-only database access. Never expose as `VITE_*`. |
@@ -58,13 +59,13 @@ npm run build
 
 The local test environment requires public placeholder `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values even for some mocked UI tests. Never substitute a service-role key. Edge Function tests using `Deno.test` require the Deno runner; Vitest is for `src/` tests and Vitest-authored function tests.
 
-Before release, verify on the intended target: public navigation and article links, mobile layout, Supabase account creation/login, authenticated pricing, launch waitlist consent and persistence, contact email delivery, 2026 tax examples and withheld-estimate states, exports, and no private data exposed in browser logs. Apply only reviewed migrations. Set and verify `CONTACT_APP_ORIGIN` for the public site's contact function. The support and auth Edge handlers still use exact `APP_ORIGIN`; verify their intended host independently before shipping both surfaces.
+Before release, verify on the intended target: public navigation and article links, mobile layout, Supabase account creation/login, authenticated pricing, launch waitlist consent and persistence, contact email delivery, 2026 tax examples and withheld-estimate states, exports, and no private data exposed in browser logs. Apply only reviewed migrations. Set and verify `CONTACT_APP_ORIGIN` for the public site's contact function. Support Edge handlers use exact `APP_ORIGIN`; auth gateway accepts exact `APP_ORIGIN` plus configured `AUTH_APP_ORIGINS`.
 
-The public website lives at `https://www.filesmartnaija.com/` (Cloudflare). The app demo lives at `https://filesmart-demo.netlify.app/` (Netlify). Keep the app demo on the canonical app code. Do not deploy this integration branch to either target until route, test, and function checks pass and the site-specific environment is reviewed.
+The public website lives at `https://www.filesmartnaija.com/` (Cloudflare). Build it with `npm run build:public`; this uses `src/public-main.tsx` and `src/PublicApp.tsx`, exposes public information pages, allows account creation and authenticated pricing, and sends app routes to the launch waitlist. Preview it locally with `npm run dev:public`. The app demo lives at `https://filesmart-demo.netlify.app/` (Netlify) and uses `npm run build` with the full `src/App.tsx` route graph. Before account creation and pricing can work on the public site, set `AUTH_APP_ORIGINS=https://www.filesmartnaija.com` as a Supabase Edge Function secret, deploy `auth-gateway` and `pricing-catalog`, and add the public site's confirmation and reset-password URLs to Supabase Auth's redirect allowlist. Do not deploy until route, function, and site-specific environment settings are reviewed.
 
-The pricing route currently requires an account in the UI, but its plan data is compiled into a public JavaScript chunk. This is a discovery gate, not confidential storage. If pricing must be inaccessible before authentication even to a technical visitor, move plan data behind an authenticated server endpoint before release.
+The pricing route requires an account and fetches plan details from the authenticated `pricing-catalog` Edge Function. Deploy that function before enabling pricing on the public site. Its catalog data is not compiled into the frontend bundle.
 
-The current Vite build also emits app route chunks alongside the public website. A visitor can inspect those assets even while the launch waitlist hides filing controls. Because FileSmart's filing workflow is intended to stay private until tax season, do not publish this combined build to Cloudflare as the final website artifact. Create a separate public-only build that excludes filing components and private pricing data, and independently verify its output before a website release. The Netlify app demo may continue using the combined app build for its authorized audience.
+The public build uses a separate entry and route graph, so declaration, dashboard, calculator, and submission components are not part of its bundle. Pricing is guarded by the account session in the public UI and the plan catalog is returned only by the authenticated `pricing-catalog` Edge Function.
 
 ## Dependencies and maintenance
 

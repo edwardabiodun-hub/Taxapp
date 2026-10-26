@@ -84,9 +84,13 @@ async function callAuthGateway<T extends AuthGatewayData | Record<string, unknow
 }
 
 export async function signUp(email: string, password: string): Promise<AuthResult> {
+  const redirectTo = typeof window !== "undefined" && window.location.protocol === "https:"
+    ? `${window.location.origin}/`
+    : undefined;
   const result = await callAuthGateway<AuthGatewayData>("signup", {
     email: normalizeEmail(email),
     password,
+    ...(redirectTo ? { redirectTo } : {}),
   });
   if (result.error) return { success: false, error: result.error };
   return {

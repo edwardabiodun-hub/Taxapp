@@ -3,6 +3,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import SupportAssistant from "./SupportAssistant";
+import { isFilingLaunchPhase, publicFilingPath } from "@/lib/launch-phase";
 
 const links = [
   { to: "/how-it-works", label: "How it works" },
@@ -11,9 +12,9 @@ const links = [
 ];
 
 const productLinks = [
-  { to: "/calculator", label: "Tax estimator" },
-  { to: "/declare", label: "File taxes" },
-  { to: "/pricing", label: "Pricing" },
+  { to: isFilingLaunchPhase ? publicFilingPath : "/calculator", label: "Tax estimator" },
+  { to: isFilingLaunchPhase ? publicFilingPath : "/declare", label: "File taxes" },
+  { to: isFilingLaunchPhase ? publicFilingPath : "/pricing", label: "Pricing" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -39,7 +40,8 @@ const PublicNav = () => {
 
           <div className="hidden items-center gap-3 lg:flex">
             <Link to="/#questions" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]">Questions</Link>
-            <Button asChild className="min-h-11 rounded-full bg-[#12352f] px-5 text-[#fbfaf5] shadow-none hover:bg-[#1c4e44]"><Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link></Button>
+            {isFilingLaunchPhase && <Link to="/create-account" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-[#55736c] hover:text-[#12352f]">Create free account</Link>}
+            <Button asChild className="min-h-11 rounded-full bg-[#12352f] px-5 text-[#fbfaf5] shadow-none hover:bg-[#1c4e44]"><Link to={publicFilingPath}>{isFilingLaunchPhase ? "Join waitlist" : "File for free"} <ArrowRight className="h-4 w-4" /></Link></Button>
           </div>
 
           <button type="button" className="inline-flex h-11 w-11 items-center justify-center rounded-full p-2 text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2 lg:hidden" aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>
@@ -54,7 +56,8 @@ const PublicNav = () => {
               {links.map((link) => <NavLink key={link.to} to={link.to} className="inline-flex min-h-11 items-center">{link.label}</NavLink>)}
               {productLinks.map((link) => <NavLink key={link.to} to={link.to} className="inline-flex min-h-11 items-center">{link.label}</NavLink>)}
               <Link to="/#questions" className="inline-flex min-h-11 items-center">Questions</Link>
-              <Button asChild className="mt-2 min-h-11 w-full rounded-full bg-[#12352f] text-[#fbfaf5]"><Link to="/onboarding">File for free <ArrowRight className="h-4 w-4" /></Link></Button>
+              {isFilingLaunchPhase && <Link to="/create-account" className="inline-flex min-h-11 items-center">Create free account</Link>}
+              <Button asChild className="mt-2 min-h-11 w-full rounded-full bg-[#12352f] text-[#fbfaf5]"><Link to={publicFilingPath}>{isFilingLaunchPhase ? "Join waitlist" : "File for free"} <ArrowRight className="h-4 w-4" /></Link></Button>
             </div>
           </nav>
         )}

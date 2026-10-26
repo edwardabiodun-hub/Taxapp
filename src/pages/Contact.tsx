@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitContactMessage, type ContactMessage } from "@/lib/contact";
 import { setPageMetadata } from "@/lib/seo";
+import { isFilingLaunchPhase } from "@/lib/launch-phase";
 
 const initialMessage: ContactMessage = { name: "", email: "", subject: "", message: "" };
 
@@ -65,7 +66,7 @@ const Contact = () => {
               <p className="mt-3 leading-7 text-[#55736c]">Prefer email? Write to us directly at</p>
               <a className="mt-2 inline-flex min-h-11 items-center font-semibold text-[#11664c] underline underline-offset-4" href="mailto:hello@filesmartnaija.com">hello@filesmartnaija.com</a>
               <Button asChild variant="link" className="mt-2 h-auto min-h-11 px-0 text-[#12352f]">
-                <Link to="/onboarding">Create a free account <ArrowRight className="h-4 w-4" /></Link>
+                <Link to={isFilingLaunchPhase ? "/create-account" : "/onboarding"}>Create a free account <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </article>
           </div>
