@@ -6,6 +6,24 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { resolvePublicSiteOrigin } from "./src/lib/public-site-origin";
 
+function manualChunks(id: string) {
+  const normalizedId = id.replace(/\\/g, "/");
+  if (!normalizedId.includes("/node_modules/")) return;
+
+  if (/\/node_modules\/(react|react-dom|scheduler|use-sync-external-store)\//.test(normalizedId)) {
+    return "vendor-react";
+  }
+  if (/\/node_modules\/@supabase\//.test(normalizedId)) return "vendor-supabase";
+  if (/\/node_modules\/@radix-ui\//.test(normalizedId)) return "vendor-radix";
+  if (/\/node_modules\/lucide-react\//.test(normalizedId)) return "vendor-icons";
+  if (/\/node_modules\/(react-router|react-router-dom|@remix-run)\//.test(normalizedId)) {
+    return "vendor-router";
+  }
+  if (/\/node_modules\/(framer-motion|motion-dom|motion-utils)\//.test(normalizedId)) {
+    return "vendor-motion";
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -49,27 +67,11 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    ...(mode === "public" ? {
-      build: {
-        rollupOptions: {
-          input: { index: path.resolve(__dirname, "public.html") },
-          output: {
-            manualChunks(id: string) {
-              if (!id.includes("node_modules")) return;
-
-              if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/.test(id)) {
-                return "vendor-react";
-              }
-              if (id.includes("/node_modules/@supabase/")) return "vendor-supabase";
-              if (id.includes("/node_modules/@radix-ui/")) return "vendor-radix";
-              if (id.includes("/node_modules/lucide-react/")) return "vendor-icons";
-              if (/[\\/]node_modules[\\/](react-router|react-router-dom|@remix-run)[\\/]/.test(id)) {
-                return "vendor-router";
-              }
-            },
-          },
-        },
+    build: {
+      rollupOptions: {
+        ...(mode === "public" ? { input: { index: path.resolve(__dirname, "public.html") } } : {}),
+        output: { manualChunks },
       },
-    } : {}),
+    },
   };
 });
