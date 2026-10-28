@@ -79,3 +79,16 @@ This follow-up pass captured additional official evidence for Bayelsa, Borno, an
 | Cross River | [CRIRS](https://crirs.crossriverstate.gov.ng/) exposes Direct Assessment and PAYE modules. The official [Cross River Pay portal](https://www.crossriverpay.com/) also lists annual filing and individual taxpayer services. | Candidate for individual self-assessment, but the end-to-end annual individual PIT/Form A submission sequence and current service period remain unconfirmed. Keep unverified. |
 
 This pass strengthens the research queue, particularly for Bayelsa, but does not satisfy the second-review and current-period requirements for publishing a verified status.
+
+## Additional official-source research pass — 2026-10-28
+
+This pass revisited four jurisdictions that still require workflow-level confirmation. The sources below are official revenue-service or state-government materials. They are recorded as discovery evidence only; no row in `docs/filing-directory-evidence-register.csv` was promoted and no public filing claim was changed.
+
+| Jurisdiction | Official evidence refreshed | Conservative interpretation |
+|---|---|---|
+| Jigawa | [Jigawa Internal Revenue Service / JIGTAS](https://www.jirs.org.ng/) advertises electronic annual-tax-return filing, taxpayer registration, and a taxpayer portal. A separate [state procedure document](https://www.jigawastate.gov.ng/uploads/Procedure%20for%20eTCC.pdf) describes self-assessment and payment steps but does not replace workflow confirmation. | Strong candidate for online annual filing; confirm the live individual PIT/Form A route, whether submission is completed online, and the current service period. Keep unverified. |
+| Katsina | The [Katsina Tax Management System](https://tms.irs.kt.gov.ng/) describes taxpayer registration, returns filing, and online filing of PIT and annual returns, including Excel upload. | Strong candidate; confirm individual PIT/Form A scope, the authenticated submission sequence, and current-period availability. Keep unverified. |
+| Rivers | [Rivers TaMiS](https://riversbirs.gov.ng/) describes individual registration, Direct Assessment, annual returns, supporting-document upload, and Form H1 upload steps. | Strong candidate for an individual self-assessment workflow; confirm whether the captured annual-return path is the relevant PIT route for individuals and record the service period. Keep unverified. |
+| Osun | The official [Osun Form A document](https://irs.os.gov.ng/wp-content/uploads/Direct-Assessment-Form-A-Tax-Computation-Table.pdf) confirms an individual income-tax return form, but the document itself does not prove that filing can be submitted online. | Keep unverified until an official online submission workflow is captured. Do not treat a downloadable form as e-filing evidence. |
+
+The queue is now better prioritized for direct workflow validation, but the evidence standard remains unchanged: a dated official workflow check, named second reviewer, service-period evidence, scope limitations, and confirmation that the path is individual PIT/Form A rather than registration, payment, PAYE, TCC, or a general business-return service.
