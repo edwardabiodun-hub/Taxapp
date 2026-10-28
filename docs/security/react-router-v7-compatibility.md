@@ -4,6 +4,8 @@
 **Current dependency:** `react-router-dom@6.30.6`
 **Candidate checked:** `react-router-dom@7.18.5`
 
+**Metadata rechecked:** October 28, 2026 — npm reports Node `>=20.0.0` and React/React DOM `>=18` peer requirements. The active repository remains on `react-router-dom@6.30.6`.
+
 ## Findings
 
 - The candidate supports the current React 18 and React DOM 18 peer dependencies.

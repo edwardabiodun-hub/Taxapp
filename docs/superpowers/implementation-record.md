@@ -28,6 +28,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Public output verification: `READY_FOR_REVIEW` — a reusable verifier checks prerendered page count, H1/canonical coverage, sitemap parity, and the 404 fallback in both local and CI builds.
 - Filing evidence register: `READY_FOR_REVIEW` — all 37 jurisdiction rows are represented with conservative unverified status and blank evidence fields until reviewed sources are attached.
 - Filing evidence discovery: `READY_FOR_REVIEW` — official-source candidates for the remaining jurisdictions were expanded on October 28, 2026 without changing the public registry; no credentials, forms, or authority APIs were accessed.
+- Filing evidence recheck: `READY_FOR_REVIEW` — the October 28 recheck captured direct FCT-IRS online filing instructions, an Oyo portal/guidance conflict, and access limitations for Ogun and Anambra; no jurisdiction status was promoted without second review.
 - Evidence-register guard: `READY_FOR_REVIEW` — CI can validate row count, status discipline, source format, review metadata, and prevention of partial evidence.
 - CSV escaping support: `READY_FOR_REVIEW` — evidence-register validation now accepts quoted fields containing commas and doubled quotes while rejecting malformed quoted fields.
 - Route/accessibility smoke coverage: `READY_FOR_REVIEW` — public route tests cover H1 rendering and navigation/home affordances across 13 public routes; calculator behavior remains covered by dedicated tests.
