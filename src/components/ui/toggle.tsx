@@ -34,4 +34,7 @@ const Toggle = React.forwardRef<
 
 Toggle.displayName = TogglePrimitive.Root.displayName;
 
+// The variant contract is intentionally exported with the component for the
+// paired ToggleGroup primitive.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Toggle, toggleVariants };

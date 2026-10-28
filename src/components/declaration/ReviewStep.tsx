@@ -38,6 +38,16 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const fmt = (v: string) => v ? `₦${v}` : "—";
 const fmtN = (n: number) => `₦${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const reviewValue = (value: string | undefined) => {
+  const normalized = value?.trim() ?? "";
+  return ({
+    yes: "Yes",
+    no: "No",
+    full_year: "One full year",
+    part_year: "Part year",
+    multiple_employers: "Multiple employers",
+  }[normalized] ?? normalized) || "Not confirmed";
+};
 
 const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProps) => {
   const tax = calculation.tax;
@@ -148,6 +158,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="Commissions" value={fmt(form.commissions)} />
           <SummaryRow label="Bonuses" value={fmt(form.bonuses)} />
           <SummaryRow label="Allowances" value={fmt(form.allowances)} />
+          <SummaryRow label="Employment period" value={reviewValue(form.employmentPeriod)} />
           <SummaryRow label="Business Income (Net)" value={fmt(form.businessIncome)} />
           <SummaryRow label="Pension Received" value={fmt(form.pensionReceived)} />
           <SummaryRow label="Annuity Insurance" value={fmt(form.annuityInsurance)} />
@@ -182,8 +193,12 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="National Housing Fund" value={fmt(form.nationalHousingFund)} />
           <SummaryRow label="National Health Insurance" value={fmt(form.nationalHealthInsurance)} />
           <SummaryRow label="Owner-occupied mortgage interest" value={fmt(form.mortgageInterest)} />
+          <SummaryRow label="Mortgage principal residence" value={reviewValue(form.mortgagePrincipalResidence)} />
           <SummaryRow label="Qualifying life-insurance / deferred-annuity premiums" value={fmt(form.lifeInsurancePremium)} />
+          <SummaryRow label="Life-insurance premium paid year" value={reviewValue(form.lifeInsurancePremiumPaidYear)} />
           <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
+          <SummaryRow label="Rent period" value={form.rentPeriodStart || form.rentPeriodEnd ? `${reviewValue(form.rentPeriodStart)} to ${reviewValue(form.rentPeriodEnd)}` : "Not confirmed"} />
+          <SummaryRow label="Rent shared with others" value={reviewValue(form.rentSharedWithOthers)} />
           <SummaryRow label="Potential rent relief (subject to validation)" value={rentReliefDisplay} />
         </Section>
 

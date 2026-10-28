@@ -1,0 +1,38 @@
+jurisdiction_code,jurisdiction,online_tax_submission,individual_pit_submission,official_source_url,checked_at,reviewer,evidence_title,service_period,confidence,limitations,status
+NG-AB,Abia,not_verified,not_verified,,,,,,,,unverified
+NG-AD,Adamawa,not_verified,not_verified,,,,,,,,unverified
+NG-AK,Akwa Ibom,not_verified,not_verified,,,,,,,,unverified
+NG-AN,Anambra,not_verified,not_verified,,,,,,,,unverified
+NG-BA,Bauchi,not_verified,not_verified,,,,,,,,unverified
+NG-BY,Bayelsa,not_verified,not_verified,,,,,,,,unverified
+NG-BE,Benue,not_verified,not_verified,,,,,,,,unverified
+NG-BO,Borno,not_verified,not_verified,,,,,,,,unverified
+NG-CR,Cross River,not_verified,not_verified,,,,,,,,unverified
+NG-DE,Delta,not_verified,not_verified,,,,,,,,unverified
+NG-EB,Ebonyi,not_verified,not_verified,,,,,,,,unverified
+NG-ED,Edo,not_verified,not_verified,,,,,,,,unverified
+NG-EK,Ekiti,not_verified,not_verified,,,,,,,,unverified
+NG-EN,Enugu,not_verified,not_verified,,,,,,,,unverified
+NG-GO,Gombe,not_verified,not_verified,,,,,,,,unverified
+NG-IM,Imo,not_verified,not_verified,,,,,,,,unverified
+NG-JI,Jigawa,not_verified,not_verified,,,,,,,,unverified
+NG-KD,Kaduna,not_verified,not_verified,,,,,,,,unverified
+NG-KN,Kano,not_verified,not_verified,,,,,,,,unverified
+NG-KT,Katsina,not_verified,not_verified,,,,,,,,unverified
+NG-KE,Kebbi,not_verified,not_verified,,,,,,,,unverified
+NG-KO,Kogi,not_verified,not_verified,,,,,,,,unverified
+NG-KW,Kwara,not_verified,not_verified,,,,,,,,unverified
+NG-LA,Lagos,not_verified,not_verified,,,,,,,,unverified
+NG-NA,Nasarawa,not_verified,not_verified,,,,,,,,unverified
+NG-NI,Niger,not_verified,not_verified,,,,,,,,unverified
+NG-OG,Ogun,not_verified,not_verified,,,,,,,,unverified
+NG-ON,Ondo,not_verified,not_verified,,,,,,,,unverified
+NG-OS,Osun,not_verified,not_verified,,,,,,,,unverified
+NG-OY,Oyo,not_verified,not_verified,,,,,,,,unverified
+NG-PL,Plateau,not_verified,not_verified,,,,,,,,unverified
+NG-RI,Rivers,not_verified,not_verified,,,,,,,,unverified
+NG-SO,Sokoto,not_verified,not_verified,,,,,,,,unverified
+NG-TA,Taraba,not_verified,not_verified,,,,,,,,unverified
+NG-YO,Yobe,not_verified,not_verified,,,,,,,,unverified
+NG-ZA,Zamfara,not_verified,not_verified,,,,,,,,unverified
+NG-FCT,Federal Capital Territory,not_verified,not_verified,,,,,,,,unverified

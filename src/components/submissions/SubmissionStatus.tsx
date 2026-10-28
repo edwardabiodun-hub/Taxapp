@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import type { JurisdictionCapability } from "@/domain/jurisdictions";
 import type { PreparationStatus } from "@/domain/tax-readiness";
 
+// This label map is intentionally exported with the status component so list
+// and detail views use the same user-facing vocabulary.
+// eslint-disable-next-line react-refresh/only-export-components
 export const PREPARATION_STATUS_LABELS: Record<PreparationStatus, string> = {
   draft: "Draft",
   ready_for_review: "Ready for review",

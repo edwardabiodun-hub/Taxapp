@@ -228,6 +228,47 @@ describe("universal export service", () => {
     }
   });
 
+  it("preserves review facts and explicit non-submission guidance in exports", () => {
+    const rows = buildExportRows({
+      preparation: {
+        ...preparation,
+        formData: {
+          ...preparation.formData,
+          rentPeriodStart: "2026-01-01",
+          rentPeriodEnd: "2026-12-31",
+          rentSharedWithOthers: "no",
+          lifeInsurancePremiumPaidYear: "2025",
+          mortgagePrincipalResidence: "yes",
+          employmentPeriod: "full_year",
+        },
+      },
+      receipts: [],
+      capability,
+      metadata: {
+        schemaVersion: "1.0.0",
+        preparationId: preparation.id,
+        jurisdiction: capability.name,
+        jurisdictionCode: capability.jurisdictionCode,
+        taxYear: preparation.taxYear,
+        registryVersion: capability.registryVersion,
+        ruleProfileId: "ng-pit-baseline",
+        ruleProfileVersion: "2026.1",
+        calculationLabel: preparation.calculationLabel,
+        readiness: preparation.filingReadiness,
+        source: "Nigerian PIT baseline",
+        sourceVerifiedAt: "2026-10-01",
+        deadlineSource: "NRS",
+        deadlineVerifiedAt: "2026-10-01",
+        generatedAt: "2026-10-02T00:00:00.000Z",
+        notSubmitted: true,
+      },
+    });
+
+    expect(rows.some((row) => row.field === "rentPeriodStart" && row.value === "2026-01-01")).toBe(true);
+    expect(rows.some((row) => row.field === "lifeInsurancePremiumPaidYear" && row.value === "2025")).toBe(true);
+    expect(rows.some((row) => row.field === "submission_guidance" && row.value)).toBe(true);
+  });
+
   it.each([
     "data:image/png;base64,PRIVATE_BYTES",
     "blob:http://localhost/private-image",
@@ -338,10 +379,40 @@ describe("universal export service", () => {
   it("includes required workbook sheets and a not-submitted notice", async () => {
     const result = await generateExportPackage(preparation, [], capability, { persist: false });
     const workbookArtifact = result.artifacts.find((artifact) => artifact.format === "xlsx")!;
-    const XLSX = await import("xlsx");
-    const workbook = XLSX.read(await workbookArtifact.data.arrayBuffer(), { type: "array" });
-
-    expect(workbook.SheetNames).toEqual(["Summary", "Income & Deductions", "Assumptions", "Document Index"]);
-    expect(XLSX.utils.sheet_to_csv(workbook.Sheets.Summary)).toContain("Not submitted");
+    const workbookBytes = new Uint8Array(await workbookArtifact.data.arrayBuffer());
+    expect(Array.from(workbookBytes.slice(0, 4))).toEqual([0x50, 0x4b, 0x03, 0x04]);
+    const entries = readStoredZipEntries(workbookBytes);
+    expect([...entries.keys()]).toEqual(expect.arrayContaining([
+      "[Content_Types].xml",
+      "xl/workbook.xml",
+      "xl/worksheets/sheet1.xml",
+      "xl/worksheets/sheet2.xml",
+      "xl/worksheets/sheet3.xml",
+      "xl/worksheets/sheet4.xml",
+    ]));
+    expect(entries.get("xl/workbook.xml")).toContain("Income &amp; Deductions");
+    expect(entries.get("xl/worksheets/sheet1.xml")).toContain("Not submitted");
   });
 });
+
+function readStoredZipEntries(bytes: Uint8Array): Map<string, string> {
+  const entries = new Map<string, string>();
+  const decoder = new TextDecoder();
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let offset = 0;
+
+  while (offset + 4 <= bytes.length && view.getUint32(offset, true) === 0x04034b50) {
+    const compressionMethod = view.getUint16(offset + 8, true);
+    if (compressionMethod !== 0) throw new Error("The XLSX archive must use stored XML entries in this test.");
+    const compressedSize = view.getUint32(offset + 18, true);
+    const nameLength = view.getUint16(offset + 26, true);
+    const extraLength = view.getUint16(offset + 28, true);
+    const nameStart = offset + 30;
+    const contentStart = nameStart + nameLength + extraLength;
+    const name = decoder.decode(bytes.slice(nameStart, contentStart - extraLength));
+    entries.set(name, decoder.decode(bytes.slice(contentStart, contentStart + compressedSize)));
+    offset = contentStart + compressedSize;
+  }
+
+  return entries;
+}

@@ -141,6 +141,43 @@ describe("phase-one feature controls", () => {
     );
   });
 
+  it("keeps bundled jurisdiction identity when cached metadata tries to rename it", async () => {
+    const renamed = { ...cachedLagosCapability, name: "Attacker-controlled Lagos", shortName: "Fake" };
+    const capabilities = await loadJurisdictionCapabilities({
+      cache: { read: async () => [renamed], write: async () => undefined },
+      refresh: async () => [],
+    });
+
+    expect(capabilities.find(({ jurisdictionCode }) => jurisdictionCode === "NG-LA")).toMatchObject({
+      jurisdictionCode: "NG-LA",
+      name: "Lagos",
+      shortName: "Lagos",
+    });
+  });
+
+  it("rejects refreshed evidence unless every source is an HTTPS government domain", async () => {
+    const untrustedRefresh = {
+      ...cachedLagosCapability,
+      registryVersion: "2026.2",
+      ruleProfile: {
+        ...cachedLagosCapability.ruleProfile,
+        evidence: {
+          ...cachedLagosCapability.ruleProfile.evidence,
+          source: "https://attacker.example/evidence",
+        },
+      },
+    };
+
+    const capabilities = await loadJurisdictionCapabilities({
+      cache: { read: async () => [], write: async () => undefined },
+      refresh: async () => [untrustedRefresh],
+    });
+
+    expect(capabilities.find(({ jurisdictionCode }) => jurisdictionCode === "NG-LA")).toEqual(
+      getJurisdictionCapability("NG-LA"),
+    );
+  });
+
   it("exposes only public runtime configuration", () => {
     const config = getPublicRuntimeConfig({
       VITE_OCR_ENDPOINT: "https://example.test/ocr",

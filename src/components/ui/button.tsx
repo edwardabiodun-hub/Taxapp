@@ -44,4 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
+// The variant contract is intentionally exported with the component for
+// consumers that need the same styling without duplicating class logic.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants };

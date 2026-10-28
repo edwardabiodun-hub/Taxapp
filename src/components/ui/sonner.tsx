@@ -24,4 +24,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
+// The toast function is intentionally exported with this toaster wrapper so
+// callers use the same configured notification implementation.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Toaster, toast };

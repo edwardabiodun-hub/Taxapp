@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { glossaryEntries, tokenizeGlossaryText } from "./glossary";
+import { glossaryEntries, parseGlossaryEntries, tokenizeGlossaryText } from "./glossary";
 
 describe("tax glossary", () => {
   it("contains a source-backed current-law dataset", () => {
@@ -8,6 +8,11 @@ describe("tax glossary", () => {
     expect(glossaryEntries.every((entry) => entry.sourceUrl.startsWith("https://"))).toBe(true);
     expect(glossaryEntries.every((entry) => entry.statutoryReference.length > 0)).toBe(true);
     expect(glossaryEntries.every((entry) => entry.definition.split(/\s+/).length <= 40)).toBe(true);
+  });
+
+  it("rejects malformed static data before it reaches the UI", () => {
+    expect(() => parseGlossaryEntries([])).toThrow(/at least 15 entries/);
+    expect(() => parseGlossaryEntries(Array.from({ length: 15 }, () => ({ id: "x" })))).toThrow(/sourceUrl/);
   });
 
   it("matches aliases case-insensitively while preserving surrounding text", () => {

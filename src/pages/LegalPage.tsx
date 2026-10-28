@@ -13,12 +13,16 @@ export type LegalPageProps = {
   disclaimerTone?: "caution" | "neutral";
 };
 
+// Legal pages intentionally share their operator and disclosure configuration
+// through this module to prevent inconsistent public wording.
+// eslint-disable-next-line react-refresh/only-export-components
 export const LEGAL_CONFIG = {
-  operatorLabel: "Operator identity pending approval",
-  privacyContactLabel: "Privacy contact pending approval",
-  effectiveDate: "Effective date pending operator approval",
-  disputeLanguage: "Dispute-resolution language pending operator and legal approval.",
-  contactPlaceholder: "Contact details pending operator approval.",
+  operatorLabel: "FileSmart BridgeIQ LTD",
+  operatorAddress: "Estate 10, Jordan Lane, Redemption City, Ogun State, Nigeria",
+  privacyContactLabel: "hello@filesmartnaija.com",
+  effectiveDate: "Effective date: October 27, 2026",
+  disputeLanguage: "Before starting formal proceedings, the parties should try in good faith to resolve a dispute through written notice and discussion. Where legally permissible and subject to applicable consumer-protection rights, this is intended to be a binding agreement to refer a dispute arising from these terms to arbitration in Nigeria under the Arbitration and Mediation Act 2023, with any award final and binding subject to lawful rights of challenge. Nothing in these terms removes a right or remedy that cannot lawfully be excluded.",
+  contactPlaceholder: "Email hello@filesmartnaija.com for privacy requests, deletion requests, complaints, and legal questions. We may ask for reasonable information to verify identity before responding.",
 } as const;
 
 const toneClasses = {
@@ -50,6 +54,7 @@ const LegalPage = ({ title, effectiveDate, sections, disclaimerTone = "neutral" 
       <div className="mt-8 grid gap-4 rounded-2xl border border-[#dce6df] bg-white/70 p-5 text-sm leading-6 text-[#55736c] sm:grid-cols-2">
         <p><strong className="text-[#12352f]">Operator:</strong> {LEGAL_CONFIG.operatorLabel}</p>
         <p><strong className="text-[#12352f]">Privacy contact:</strong> {LEGAL_CONFIG.privacyContactLabel}</p>
+        <p className="sm:col-span-2"><strong className="text-[#12352f]">Registered address:</strong> {LEGAL_CONFIG.operatorAddress}</p>
       </div>
 
       <article className="mt-10 break-words space-y-8 text-[#23483f]">

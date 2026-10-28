@@ -26,4 +26,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
+// The variant contract is intentionally exported with the component for
+// consumers that need the same styling without duplicating class logic.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Badge, badgeVariants };

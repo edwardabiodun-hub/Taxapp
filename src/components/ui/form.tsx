@@ -126,4 +126,7 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 );
 FormMessage.displayName = "FormMessage";
 
+// These primitives share one context hook and are intentionally exported as a
+// single form module for the existing form API.
+// eslint-disable-next-line react-refresh/only-export-components
 export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };

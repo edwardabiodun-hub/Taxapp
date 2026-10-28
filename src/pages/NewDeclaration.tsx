@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Save } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -115,8 +115,10 @@ const NewDeclaration = () => {
   const update = (key: string, value: string) =>
     setForm((previous) => ({ ...previous, [key]: value }));
 
-  const requiredDataComplete = () =>
-    validateStep(0, form, jurisdictionCode).valid && validateStep(1, form, jurisdictionCode).valid;
+  const requiredDataComplete = useCallback(
+    () => validateStep(0, form, jurisdictionCode).valid && validateStep(1, form, jurisdictionCode).valid,
+    [form, jurisdictionCode],
+  );
 
   const next = () => {
     const result = validateStep(currentStep, form, jurisdictionCode);
@@ -139,7 +141,7 @@ const NewDeclaration = () => {
     if (currentStep > 0) setCurrentStep((step) => step - 1);
   };
 
-  const handleSave = async (targetStatus: "draft" | "ready_for_review"): Promise<PreparationRecord | undefined> => {
+  const handleSave = useCallback(async (targetStatus: "draft" | "ready_for_review"): Promise<PreparationRecord | undefined> => {
     setIsSaving(true);
     setSaveError(undefined);
     let draftSaved = false;
@@ -227,7 +229,7 @@ const NewDeclaration = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [calculation, capability, documents, form, hasSavedPreparation, jurisdictionCode, preparationId, requiredDataComplete]);
 
   useEffect(() => {
     const hasMeaningfulInput =
@@ -239,7 +241,7 @@ const NewDeclaration = () => {
       void handleSave("draft");
     }, 1_000);
     return () => clearTimeout(timer);
-  }, [documents, form, isExported, isSaving, jurisdictionCode]);
+  }, [documents, form, handleSave, isExported, isSaving, jurisdictionCode]);
 
   const handleExport = async () => {
     const exportCapability = capability;

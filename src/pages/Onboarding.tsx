@@ -51,6 +51,9 @@ const steps = [
  * Exported and unit-tested directly (see Onboarding.test.tsx) rather than
  * only through the full 3-step wizard UI, which Radix's Select/Calendar
  * components make unreliable to drive in jsdom. */
+// This pure routing helper is intentionally exported for direct unit coverage
+// while the wizard component remains in the same route module.
+// eslint-disable-next-line react-refresh/only-export-components
 export function resolvePostSignUpRoute(
   result: Pick<AuthResult, "needsEmailConfirmation">,
   email: string

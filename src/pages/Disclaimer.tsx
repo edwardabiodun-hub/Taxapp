@@ -13,7 +13,7 @@ const sections: LegalSection[] = [
   },
   {
     heading: "Privacy and user content",
-    body: ["Users should avoid sharing information they are not authorized to share. The final privacy notice will explain how information and user-generated content are handled after operator approval."],
+    body: ["Users should avoid sharing information they are not authorized to share. FileSmart's draft privacy notice explains the proposed handling of personal data and user-generated content; it remains subject to external privacy review before launch."],
   },
   {
     heading: "Limitations",

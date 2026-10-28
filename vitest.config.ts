@@ -11,6 +11,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
+      "scripts/**/*.{test,spec}.{ts,tsx}",
       "supabase/functions/support-chat/**/*.{test,spec}.{ts,tsx}",
     ],
     // These use Deno.test and must run with the Deno runner, not Vitest.

@@ -91,6 +91,10 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
           <select id="minimum-wage-employment" aria-label="Minimum-wage employment status" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.minimumWageEmployment ?? ""} onChange={(event) => update("minimumWageEmployment", event.target.value)}>
             <option value="">Not confirmed</option><option value="yes">Yes, I confirm</option><option value="no">No</option>
           </select>
+          <label htmlFor="employment-period" className="block text-xs font-semibold">Employment period</label>
+          <select id="employment-period" aria-label="Employment period" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.employmentPeriod ?? ""} onChange={(event) => update("employmentPeriod", event.target.value)}>
+            <option value="">Not confirmed</option><option value="full_year">One full year</option><option value="part_year">Part year</option><option value="multiple_employers">Multiple employers</option>
+          </select>
           <p className="text-[10px] text-muted-foreground">Only select yes for one employment held for the full year; other income remains taxable. Keep employment records.</p>
         </div>
       )}

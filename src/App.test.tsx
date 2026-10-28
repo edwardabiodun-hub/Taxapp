@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 let hasProfile = false;
@@ -54,6 +54,7 @@ vi.mock("@/lib/realtime-sync", () => ({
 }));
 
 async function renderAppRoutes(initialPath: string) {
+  cleanup();
   const { AppRoutes } = await import("./App");
   render(
     <MemoryRouter initialEntries={[initialPath]}>
@@ -61,6 +62,10 @@ async function renderAppRoutes(initialPath: string) {
     </MemoryRouter>
   );
 }
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("AppRoutes — unauthenticated routing", () => {
   beforeEach(() => {
@@ -77,7 +82,7 @@ describe("AppRoutes — unauthenticated routing", () => {
     isUnlocked = false;
     await renderAppRoutes("/some/unknown/path");
 
-    expect(screen.getByText("Welcome to FileSmart")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Welcome to FileSmart")).toBeInTheDocument());
   });
 
   it("sends a returning logged-out user (has a local profile, no session) straight to Login", async () => {
@@ -85,7 +90,7 @@ describe("AppRoutes — unauthenticated routing", () => {
     isUnlocked = false;
     await renderAppRoutes("/some/unknown/path");
 
-    expect(screen.getByText("Welcome back")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Welcome back")).toBeInTheDocument());
   });
 
   it("keeps /forgot-password reachable even with no local profile", async () => {

@@ -16,6 +16,7 @@ const SOURCE_LABELS: Record<DeadlineSourceKind, string> = {
 };
 
 const EXPLICIT_TIMEZONE = /(Z|[+-]\d{2}:\d{2})$/;
+const MAX_VERIFICATION_AGE_MS = 92 * 24 * 60 * 60 * 1000;
 
 export function getDeadlineSourceLabel(sourceKind: DeadlineSourceKind): string {
   return SOURCE_LABELS[sourceKind];
@@ -25,6 +26,16 @@ function isValidIsoTimestamp(value: unknown): value is string {
   if (typeof value !== "string" || !EXPLICIT_TIMEZONE.test(value)) return false;
   const parsed = Date.parse(value);
   return Number.isFinite(parsed);
+}
+
+function isValidIanaTimezone(value: unknown): value is string {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function isConfidence(value: unknown): value is DeadlineConfidence {
@@ -79,8 +90,7 @@ function inspectCandidate(
     typeof evidence.source === "string" &&
     evidence.source.trim().length > 0 &&
     isValidIsoTimestamp(evidence.verifiedAt) &&
-    typeof evidence.timezone === "string" &&
-    evidence.timezone.trim().length > 0 &&
+    isValidIanaTimezone(evidence.timezone) &&
     isConfidence(evidence.confidence) &&
     isValidIsoTimestamp(evidence.effectiveFrom) &&
     (evidence.effectiveTo === undefined ||
@@ -98,7 +108,10 @@ function inspectCandidate(
   const stale =
     (effectiveFrom !== undefined && effectiveFrom > now.getTime()) ||
     (effectiveTo !== undefined && effectiveTo <= now.getTime()) ||
-    (verifiedAt !== undefined && verifiedAt > now.getTime());
+    (verifiedAt !== undefined && (
+      verifiedAt > now.getTime() ||
+      now.getTime() - verifiedAt > MAX_VERIFICATION_AGE_MS
+    ));
 
   return {
     candidate,
