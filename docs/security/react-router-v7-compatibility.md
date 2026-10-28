@@ -48,3 +48,41 @@ This is a migration blocker, not a production defect in the current v6 line. A f
 `npm audit --omit=dev --audit-level=high` still reports the same two moderate React Router advisories against the installed `react-router-dom@6.30.6` line. The audit tool offers only `npm audit fix --force`, which would install the breaking `react-router-dom@7.18.5` release. No patched 6.x remediation was identified by the package audit, and no upgrade was applied.
 
 The recommendation remains to keep the current v6 dependency pinned in this branch and schedule the v7 work as an isolated migration. The migration is not production-ready until the public prerenderer no longer depends on the incompatible `react-router-dom/server.mjs` boundary and the full authenticated/public/Cloudflare route matrix passes.
+
+## Proposed implementation plan — not applied
+
+### Phase A — SSR boundary prototype
+
+- Create a fresh branch from the current approved base.
+- Replace the prerenderer's v6-only server import through the smallest supported v7 SSR entrypoint or a dedicated server-renderer adapter.
+- Keep browser route declarations unchanged during this phase.
+- Acceptance: `npm run build:public` produces all expected public route files and `404.html` without duplicate-router or CommonJS/ESM errors.
+
+### Phase B — Route-behavior regression matrix
+
+- Run the existing route tests with fixtures for signed-out, signed-in, no-profile, password-recovery, and launch-gated filing states.
+- Add explicit direct-navigation and refresh tests for public routes, `/pricing`, `/filing-waitlist`, and protected application routes.
+- Verify `Navigate`, `NavLink`, `Outlet`, `useLocation`, `useNavigate`, and `useParams` behavior where each is currently used.
+- Acceptance: no redirect, authentication, or launch-gate behavior changes; the serialized suite passes without weakening existing assertions.
+
+### Phase C — Edge and production-equivalent validation
+
+- Run the authenticated build and public build.
+- Run the public-output verifier, Cloudflare route verifier, real 404 probe, sitemap/canonical checks, and accessibility smoke checks.
+- Deploy only to the non-production Cloudflare preview for this migration branch.
+- Acceptance: preview routes return expected canonical redirects and 200/404 responses; no production custom-domain change occurs.
+
+### Phase D — Security and release decision
+
+- Re-run `npm audit --omit=dev --audit-level=high` and review the exact advisory coverage.
+- Review v7 future flags and any changed SSR serialization behavior.
+- Obtain code review focused on redirect safety, SSR hydration, private-route boundaries, and public prerendering.
+- Acceptance: all gates pass, the two advisory paths are covered by the upgraded dependency, and a separate approval authorizes merging.
+
+### Explicit non-goals
+
+- No tax calculation changes.
+- No legal or content changes.
+- No database migration or secret changes.
+- No production deployment.
+- No `npm audit fix --force` on the current branch.

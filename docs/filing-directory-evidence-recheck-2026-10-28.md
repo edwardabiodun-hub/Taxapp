@@ -67,3 +67,15 @@ A targeted search refreshed three high-priority candidates using current officia
 | Yobe | [YIRS](https://www.irs.yb.gov.ng/) explicitly lists “Personal Income Tax Return” and says users can file annual income-tax returns online. | Strong portal-level candidate, but the authenticated workflow, Form A scope, and current service period still need confirmation. Keep unverified. |
 
 The source refresh confirms that these states should remain in the validation queue, not that they should be advertised as verified. The evidence contract still requires a dated workflow check, named second reviewer, service-period evidence, and limitations before status promotion.
+
+## Additional official-source refresh — October 28, 2026
+
+This follow-up pass captured additional official evidence for Bayelsa, Borno, and Cross River. It remains discovery evidence only. No row in `docs/filing-directory-evidence-register.csv` was promoted and no public filing claim was changed.
+
+| Jurisdiction | Official evidence refreshed | Conservative interpretation |
+|---|---|---|
+| Bayelsa | [Bayelsa State Board of Internal Revenue](https://www.bir.by.gov.ng/) explicitly describes online individual tax-return filing, including sign-in, **Tax Returns → File Returns**, completion, and submission. The same page says the eTax portal supports annual returns and provides a template-upload option. | Strongest new candidate for controlled validation. Confirm the current 2026 service period, the exact individual PIT/Form A scope, and the authenticated workflow before promotion. Keep unverified. |
+| Borno | [BoIRS FAQ](https://birs.bo.gov.ng/menu/FAQ/) explains individual self-assessment and annual filing obligations, while the [annual-return page](https://birs.bo.gov.ng/menu/Tax-Filling/) links to EasyTax but describes that service as for non-individuals/businesses. | Do not infer individual online PIT filing from the EasyTax link. Keep unverified pending an explicit individual workflow. |
+| Cross River | [CRIRS](https://crirs.crossriverstate.gov.ng/) exposes Direct Assessment and PAYE modules. The official [Cross River Pay portal](https://www.crossriverpay.com/) also lists annual filing and individual taxpayer services. | Candidate for individual self-assessment, but the end-to-end annual individual PIT/Form A submission sequence and current service period remain unconfirmed. Keep unverified. |
+
+This pass strengthens the research queue, particularly for Bayelsa, but does not satisfy the second-review and current-period requirements for publishing a verified status.
