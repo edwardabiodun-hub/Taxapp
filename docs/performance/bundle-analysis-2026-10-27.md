@@ -122,3 +122,15 @@ The calculator trace’s largest observed script resources were `vendor-supabase
 The authenticated production bundle still contains Supabase as a shared static dependency because authenticated services import it directly. Vite reports that the dynamic import cannot create a second authenticated chunk; this is expected and does not affect the public deferral. PDF/XLSX/export chunks remain deferred.
 
 This is a network-footprint measurement, not a Core Web Vitals or mobile-throttled browser trace. The real-browser mobile-viewport measurements above are complete; a true Fast 3G trace remains open because this browser tool does not expose network-condition emulation.
+
+## Independent Lighthouse lab trace — 2026-10-28
+
+The Cloudflare preview was tested with Lighthouse `13.6.0` using a fresh mobile context, cache disabled, a 390×844 viewport, and DevTools throttling configured to 150 ms RTT, 1.6 Mbps download, and 750 Kbps upload. This is a repeatable lab trace, not field data. PageSpeed Insights API requests were also attempted for all three routes, but Google returned HTTP 429 because the `pagespeedonline.googleapis.com` daily quota was exhausted.
+
+| Route | Performance score | FCP | LCP | TBT | CLS | Speed Index | Lighthouse transfer | Main-thread time | Unused-JS opportunity |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `/` | 90 | 2.4 s | 3.3 s | 0 ms | 0 | 2.4 s | 290 KiB | 0.9 s | 55 KiB |
+| `/calculator/` | 86 | 2.0 s | 3.9 s | 70 ms | 0 | 2.9 s | 281 KiB | 0.9 s | 82 KiB |
+| `/filing-waitlist/` | 97 | 2.0 s | 2.1 s | 50 ms | 0 | 2.8 s | 229 KiB | 0.6 s | 55 KiB |
+
+The calculator's largest identified unused-JavaScript opportunities were the shared Supabase vendor (approximately 56 KiB wasted of 58 KiB) and motion vendor (approximately 28 KiB wasted of 42 KiB). The scores, zero layout shift, low blocking time, and existing public Supabase deferral do not justify another shared-vendor refactor in this branch. Revisit only after field data or a route-specific interaction trace identifies a measurable user impact.

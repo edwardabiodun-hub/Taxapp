@@ -55,3 +55,15 @@ This pass extended the search to the remaining jurisdictions using official stat
 ### Research conclusion
 
 The evidence gap is now narrowed to a smaller validation queue, but no public status is promoted in this pass. The highest-priority controlled follow-ups are Adamawa, Akwa Ibom, Bauchi, Benue, Imo, Kaduna, Kogi, Sokoto, and Yobe because official sources explicitly describe online return activity or individual filing. The remaining jurisdictions still require workflow-level evidence rather than portal or payment signals.
+
+## Official-source refresh — October 28, 2026
+
+A targeted search refreshed three high-priority candidates using current official pages and documents. This remains discovery evidence only; no controlled-register row was promoted.
+
+| Jurisdiction | Official evidence refreshed | Conservative interpretation |
+|---|---|---|
+| Kaduna | [KADIRS e-services](https://kadirs.kdsg.gov.ng/e-services/) says taxpayers can log in with a TIN and submit annual income-tax returns, and separately identifies Direct Assessment for self-employed individuals. | Strong candidate, but the exact individual PIT/Form A workflow and current service period still require direct workflow review. Keep unverified. |
+| Kogi | [KOGIREMS guide](https://taxpayers.irs.kg.gov.ng/E-TAXGuide.pdf) describes annual-return filing for individuals, and the [individual annual-return form](https://irs.kg.gov.ng/Individual_Annual_Tax_Reture_form.pdf) is issued for taxable individuals under the 2025 administration framework. | Strong evidence of an individual-return process, but the live submission path and current period still need controlled confirmation. Keep unverified. |
+| Yobe | [YIRS](https://www.irs.yb.gov.ng/) explicitly lists “Personal Income Tax Return” and says users can file annual income-tax returns online. | Strong portal-level candidate, but the authenticated workflow, Form A scope, and current service period still need confirmation. Keep unverified. |
+
+The source refresh confirms that these states should remain in the validation queue, not that they should be advertised as verified. The evidence contract still requires a dated workflow check, named second reviewer, service-period evidence, and limitations before status promotion.

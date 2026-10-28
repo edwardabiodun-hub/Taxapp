@@ -35,6 +35,12 @@ The verified `filesmartnaija.com` Search Console property was inspected after th
 
 This checkpoint closes the Search Console setup verification but does not complete the AEO benchmark. The benchmark rows remain `NOT_RUN` until query/indexing observations or answer-engine captures are available. No ranking, citation, or visibility claim should be published from the current evidence.
 
+### Accessible-browser recheck — October 28, 2026
+
+The verified Search Console property was reopened in an accessible browser and the sitemap/indexing surfaces were re-read. The sitemap remained **Success**, last read October 28, with 12 discovered pages. Page indexing still displayed “Processing data, please check again in a day or so.” Four additional site-restricted searches were run for FileSmart identity, tax education, the filing directory, and the calculator; none surfaced a FileSmart result or citation.
+
+This is a repeatable no-observation checkpoint. It does not change the 40 benchmark rows from `NOT_RUN`, and it does not establish that the site is unavailable to Google or answer engines.
+
 ## Recording rules
 
 For each question, record the date, engine or test method, observed answer, cited source, page surfaced, and reviewer. Do not publish a result as a visibility claim without a captured observation. Tax answers require source and tax-year review before being marked accurate.

@@ -31,3 +31,7 @@ This plan is preparatory. It does not authorize a production rollback or databas
 - [ ] Public routes, 404, calculator, auth, and core preparation flows pass smoke tests.
 - [ ] No new database objects or policy changes remain partially applied.
 - [ ] Monitoring shows recovery and no elevated error rate.
+
+## Preview rollback reference — October 28, 2026
+
+The non-production preview currently points to Cloudflare deployment `4c6b8f21`, built from commit `126a229`, at `https://codex-public-seo-conversion-rm52.filesmartnaija.pages.dev`. If preview validation fails, roll back that preview to the last known-good immutable Cloudflare deployment for the same branch and rerun the route verifier, including `/filing-waitlist/` and the real `404` probe. Do not change `www.filesmartnaija.com` as part of preview rollback.

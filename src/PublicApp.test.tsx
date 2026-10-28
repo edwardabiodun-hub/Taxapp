@@ -41,6 +41,17 @@ describe("PublicRoutes", () => {
     expect(screen.getAllByText("Not verified yet").length).toBeGreaterThan(1);
   });
 
+  it("renders the filing waitlist route with a navigable home affordance", async () => {
+    mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
+
+    render(<MemoryRouter initialEntries={["/filing-waitlist"]}><PublicRoutes /></MemoryRouter>);
+
+    expect(await screen.findByRole("heading", { name: /be first to file with filesmart/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /notify me/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /back to filesmart/i })).toHaveAttribute("href", "/");
+  });
+
   it("renders the branded not-found page instead of redirecting unknown paths home", async () => {
     mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
 

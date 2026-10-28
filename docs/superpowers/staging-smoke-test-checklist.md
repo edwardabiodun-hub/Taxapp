@@ -10,6 +10,21 @@ npm run verify:cloudflare -- https://staging.example.com
 
 The command must pass all representative public-route checks and must receive an actual `404` for `/__filesmart_404_probe__`. A branded page rendered with HTTP `200` is a failure because it can make unknown routes appear valid to crawlers and monitoring systems.
 
+## Verified non-production preview
+
+The current review preview is:
+
+`https://codex-public-seo-conversion-rm52.filesmartnaija.pages.dev`
+
+It was deployed from commit `126a229` as Cloudflare deployment `4c6b8f21` on October 28, 2026. The production custom domain was not changed. The route verifier passed representative public routes and a real unknown-route `404`.
+
+Waitlist route expectations:
+
+- `/filing-waitlist` returns the expected same-origin canonical `308` redirect to `/filing-waitlist/`.
+- `/filing-waitlist/` returns `200` with the branded “Be first to file with FileSmart.” heading.
+- The waitlist page is `noindex, nofollow` and is absent from `sitemap.xml`.
+- Filing entry points remain gated to the waitlist during launch; the public calculator remains accessible and does not submit a return.
+
 ## Public routes and indexing
 
 - [ ] `/` returns `200`, has one meaningful H1, title, description, canonical, and usable mobile layout.

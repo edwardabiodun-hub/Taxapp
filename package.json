@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:ci": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "verify:public": "node scripts/verify-public-output.mjs dist-public",
     "verify:filing-evidence": "node scripts/verify-filing-evidence-register.mjs docs/filing-directory-evidence-register.csv",

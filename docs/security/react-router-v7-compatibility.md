@@ -42,3 +42,9 @@ The upgrade was tested on branch `codex/react-router-v7-spike` at commit `ce4909
 - `npm run lint`: passed with the repository's existing 14 warnings and zero errors.
 
 This is a migration blocker, not a production defect in the current v6 line. A future v7 migration needs a deliberate SSR compatibility change (likely a Vite/SSR entrypoint adjustment), then must rerun public prerender, direct-route, Cloudflare preview, and authenticated-route validation before review or merge.
+
+## Advisory recheck — October 28, 2026
+
+`npm audit --omit=dev --audit-level=high` still reports the same two moderate React Router advisories against the installed `react-router-dom@6.30.6` line. The audit tool offers only `npm audit fix --force`, which would install the breaking `react-router-dom@7.18.5` release. No patched 6.x remediation was identified by the package audit, and no upgrade was applied.
+
+The recommendation remains to keep the current v6 dependency pinned in this branch and schedule the v7 work as an isolated migration. The migration is not production-ready until the public prerenderer no longer depends on the incompatible `react-router-dom/server.mjs` boundary and the full authenticated/public/Cloudflare route matrix passes.
