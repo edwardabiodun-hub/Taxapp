@@ -31,7 +31,7 @@ export const PublicRoutes = () => {
     <Route path="*" element={<Navigate to="/reset-password" replace />} />
   </Routes></Suspense>;
 
-  return <Suspense fallback={<Waiting />}><Routes>
+  return <Routes>
     <Route path="/" element={<Landing />} />
     <Route path="/learn" element={<Learn />} />
     <Route path="/learn/:slug" element={<Guide />} />
@@ -44,17 +44,17 @@ export const PublicRoutes = () => {
     <Route path="/filing-waitlist" element={<FilingWaitlist />} />
     <Route path="/filing-directory" element={<FilingDirectory />} />
     <Route path="/calculator" element={<TaxCalculator />} />
-    <Route path="/create-account" element={<CreateAccount />} />
+    <Route path="/create-account" element={<Suspense fallback={<Waiting />}><CreateAccount /></Suspense>} />
     <Route path="/onboarding" element={loading ? <Waiting /> : <Navigate to={isUnlocked ? "/filing-waitlist" : "/create-account"} replace />} />
     <Route path="/pricing" element={loading ? <Waiting /> : isUnlocked ? <Pricing /> : <Navigate to="/create-account" replace state={{ from: "/pricing" }} />} />
-    <Route path="/login" element={loading ? <Waiting /> : isUnlocked ? <Navigate to="/filing-waitlist" replace /> : <PublicLogin />} />
-    <Route path="/check-email" element={<CheckEmail />} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/login" element={loading ? <Waiting /> : isUnlocked ? <Navigate to="/filing-waitlist" replace /> : <Suspense fallback={<Waiting />}><PublicLogin /></Suspense>} />
+    <Route path="/check-email" element={<Suspense fallback={<Waiting />}><CheckEmail /></Suspense>} />
+    <Route path="/forgot-password" element={<Suspense fallback={<Waiting />}><ForgotPassword /></Suspense>} />
     <Route path="/reset-password" element={<Navigate to="/forgot-password" replace />} />
     {["/welcome", "/declare", "/submissions", "/submissions/:id", "/messages", "/profile", "/receipt-scanner", "/tax-calendar", "/invoices"].map((path) =>
       <Route key={path} path={path} element={<Navigate to="/filing-waitlist" replace />} />)}
     <Route path="*" element={<PublicNotFound />} />
-  </Routes></Suspense>;
+  </Routes>;
 };
 
 const PublicApp = () => <AuthProvider><TooltipProvider><BrowserRouter><PublicRoutes /></BrowserRouter></TooltipProvider></AuthProvider>;
