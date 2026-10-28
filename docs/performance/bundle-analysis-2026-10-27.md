@@ -83,3 +83,18 @@ The homepage transfer is approximately 88% smaller than the earlier 2.08 MB trac
 The post-optimization build was rechecked against `https://codex-public-seo-conversion.filesmartnaija.pages.dev` using the repository route verifier and public-load measurement script. Representative routes returned `200` after expected same-origin `308` trailing-slash redirects, and an unknown-route probe returned a real `404` response. The uncached Node baseline recorded approximately 33.6–35.7 kB of HTML and 628.3 kB of same-origin initial assets per tested route.
 
 This confirms edge routing and the network footprint only. It is not a throttled browser trace. The existing throttled trace above is the pre-hero-optimization Cloudflare baseline; the post-optimization throttled measurements below were captured locally and should be repeated against this deployed preview before making further shared-vendor changes.
+
+## Public-auth vendor deferral — 2026-10-28
+
+The public entry previously module-preloaded the Supabase vendor even on marketing and education routes. `AuthProvider` and the public support assistant now load `src/lib/supabase-client.ts` dynamically, preserving the existing session, sign-out, support-chat, and error behavior while removing the client from the public entry's preload set.
+
+| Measurement | Before | After | Change |
+|---|---:|---:|---:|
+| Public module-preloaded Supabase vendor | 226.68 kB raw | 0 kB | removed from initial preload |
+| Local public same-origin initial assets | baseline unavailable in this checkout | 401.8 kB raw | new post-change baseline |
+
+The local preview measurement covered `/`, `/calculator`, and `/filing-waitlist`; each served 33.5 kB of HTML and 401.8 kB of same-origin initial assets. Public output verification passed with 14 prerendered pages, 14 sitemap entries, and `404.html`.
+
+The authenticated production bundle still contains Supabase as a shared static dependency because authenticated services import it directly. Vite reports that the dynamic import cannot create a second authenticated chunk; this is expected and does not affect the public deferral. PDF/XLSX/export chunks remain deferred.
+
+This is a network-footprint measurement, not a Core Web Vitals or mobile-throttled browser trace. The real-browser trace remains open until the browse daemon or another accessible browser performance tool is available.

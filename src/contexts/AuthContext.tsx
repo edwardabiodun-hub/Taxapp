@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase-client";
 
 /** sessionStorage key backing the password-recovery flag below — namespaced
  * so it doesn't collide with anything else in the app or in Supabase's own
@@ -82,21 +81,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [recoveryFlag, setRecoveryFlag] = useState(readStoredRecoveryFlag);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, newSession) => {
-      setSession(newSession);
-      if (event === "PASSWORD_RECOVERY") {
-        writeStoredRecoveryFlag(true);
-        setRecoveryFlag(true);
-      }
-      if (event === "SIGNED_OUT") {
-        writeStoredRecoveryFlag(false);
-        setRecoveryFlag(false);
-      }
+    void import("@/lib/supabase-client").then(({ supabase }) => {
+      if (!active) return;
+
+      void supabase.auth.getSession().then(({ data }) => {
+        if (active) setSession(data.session);
+      });
+
+      const { data: subscription } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if (!active) return;
+        setSession(newSession);
+        if (event === "PASSWORD_RECOVERY") {
+          writeStoredRecoveryFlag(true);
+          setRecoveryFlag(true);
+        }
+        if (event === "SIGNED_OUT") {
+          writeStoredRecoveryFlag(false);
+          setRecoveryFlag(false);
+        }
+      });
+      unsubscribe = () => subscription.subscription.unsubscribe();
+    }).catch(() => {
+      if (active) setSession(null);
     });
 
-    return () => subscription.subscription.unsubscribe();
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
   }, []);
 
   return (
@@ -109,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isPasswordRecovery: recoveryFlag && session != null,
         signOut: async () => {
           try {
+            const { supabase } = await import("@/lib/supabase-client");
             await supabase.auth.signOut();
           } catch (error) {
             console.error("signOut failed:", error);

@@ -1,5 +1,3 @@
-import { supabase } from "@/lib/supabase-client";
-
 export type SupportChatTurn = { role: "user" | "assistant"; content: string };
 export type SupportChatResponse = { answer: string; citations: { label: string; url: string }[] };
 export type SupportChatErrorCode = "invalid_request" | "offline" | "authentication" | "rate_limit" | "unavailable";
@@ -65,13 +63,14 @@ export function normalizeSupportChatResponse(value: unknown): SupportChatRespons
 }
 
 export function isSupportChatConfigured(): boolean {
-  return Boolean(supabase);
+  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 }
 
 export async function sendSupportChatMessage(input: { message: string; history: SupportChatTurn[] }): Promise<SupportChatResponse> {
   validateSupportChatInput(input);
   if (typeof navigator !== "undefined" && !navigator.onLine) throw new SupportChatError("offline");
 
+  const { supabase } = await import("@/lib/supabase-client");
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData.session) throw new SupportChatError("authentication");
 
