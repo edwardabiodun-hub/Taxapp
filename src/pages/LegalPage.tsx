@@ -13,6 +13,9 @@ export type LegalPageProps = {
   disclaimerTone?: "caution" | "neutral";
 };
 
+// Legal pages intentionally share their operator and disclosure configuration
+// through this module to prevent inconsistent public wording.
+// eslint-disable-next-line react-refresh/only-export-components
 export const LEGAL_CONFIG = {
   operatorLabel: "FileSmart BridgeIQ LTD",
   operatorAddress: "Estate 10, Jordan Lane, Redemption City, Ogun State, Nigeria",

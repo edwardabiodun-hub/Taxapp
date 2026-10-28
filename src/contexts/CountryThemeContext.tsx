@@ -18,6 +18,9 @@ const ThemeContext = createContext<ThemeContextType>({
   setCountry: () => {},
 });
 
+// The hook and provider intentionally share this context module so the theme
+// state has one stable context instance.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCountryTheme = () => useContext(ThemeContext);
 
 export function CountryThemeProvider({ children }: { children: ReactNode }) {

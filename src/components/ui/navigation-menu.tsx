@@ -107,7 +107,10 @@ const NavigationMenuIndicator = React.forwardRef<
 ));
 NavigationMenuIndicator.displayName = NavigationMenuPrimitive.Indicator.displayName;
 
+// The trigger style is intentionally exported with the navigation primitives
+// so menus and links can share the same design-system contract.
 export {
+  // eslint-disable-next-line react-refresh/only-export-components
   navigationMenuTriggerStyle,
   NavigationMenu,
   NavigationMenuList,

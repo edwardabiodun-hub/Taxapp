@@ -12,6 +12,9 @@ interface ExportPanelProps {
 
 const labels = { pdf: "PDF", csv: "CSV", xlsx: "XLSX" } as const;
 
+// The download helper is intentionally co-located with the panel so the UI and
+// browser-only artifact behavior stay in one module.
+// eslint-disable-next-line react-refresh/only-export-components
 export function downloadExportArtifact(artifact: ExportArtifact): void {
   const url = URL.createObjectURL(artifact.data);
   const anchor = document.createElement("a");

@@ -609,6 +609,8 @@ const SidebarMenuSubButton = React.forwardRef<
 });
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton";
 
+// The hook is intentionally exported with the sidebar primitives because it is
+// the public control surface for the provider in this design-system module.
 export {
   Sidebar,
   SidebarContent,
@@ -633,5 +635,6 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  // eslint-disable-next-line react-refresh/only-export-components
   useSidebar,
 };
