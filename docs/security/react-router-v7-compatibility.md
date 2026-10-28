@@ -28,3 +28,17 @@
 ## Decision
 
 Do not upgrade in the current mixed-change branch. The compatibility spike is complete enough to define the migration boundary, but the major upgrade remains a separate engineering change requiring regression evidence.
+
+## Isolated spike execution — October 28, 2026
+
+The upgrade was tested on branch `codex/react-router-v7-spike` at commit `ce49098` without changing this production-oriented branch.
+
+- `react-router-dom` and `react-router` were upgraded together to `7.18.5` with the lockfile updated.
+- `npx tsc --noEmit -p tsconfig.app.json`: passed.
+- `npm test -- --run`: passed, 118 test files and 860 tests.
+- `npm run build`: reached the Vite production build, but the command did not produce a complete recorded result in the spike session and is not treated as a pass.
+- `npm run build:public`: failed during the prerender stage. The current `scripts/prerender-public.mjs` imports `react-router-dom/server.mjs`, a subpath that is not exported by v7.18.5. Compatibility experiments using the v7 root export also exposed Vite 5 SSR CommonJS/ESM resolution and router-context duplication problems.
+- `npm run verify:public`: failed because the failed prerender left only the shell `index.html`; the expected route files and `404.html` were not generated.
+- `npm run lint`: passed with the repository's existing 14 warnings and zero errors.
+
+This is a migration blocker, not a production defect in the current v6 line. A future v7 migration needs a deliberate SSR compatibility change (likely a Vite/SSR entrypoint adjustment), then must rerun public prerender, direct-route, Cloudflare preview, and authenticated-route validation before review or merge.
