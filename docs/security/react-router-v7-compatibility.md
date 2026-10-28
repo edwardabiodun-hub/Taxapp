@@ -36,7 +36,7 @@ The upgrade was tested on branch `codex/react-router-v7-spike` at commit `ce4909
 - `react-router-dom` and `react-router` were upgraded together to `7.18.5` with the lockfile updated.
 - `npx tsc --noEmit -p tsconfig.app.json`: passed.
 - `npm test -- --run`: passed, 118 test files and 860 tests.
-- `npm run build`: reached the Vite production build, but the command did not produce a complete recorded result in the spike session and is not treated as a pass.
+- `npm run build`: passed with exit code 0; the authenticated bundle produced the existing large exporter/vendor chunks, with no new build error.
 - `npm run build:public`: failed during the prerender stage. The current `scripts/prerender-public.mjs` imports `react-router-dom/server.mjs`, a subpath that is not exported by v7.18.5. Compatibility experiments using the v7 root export also exposed Vite 5 SSR CommonJS/ESM resolution and router-context duplication problems.
 - `npm run verify:public`: failed because the failed prerender left only the shell `index.html`; the expected route files and `404.html` were not generated.
 - `npm run lint`: passed with the repository's existing 14 warnings and zero errors.
