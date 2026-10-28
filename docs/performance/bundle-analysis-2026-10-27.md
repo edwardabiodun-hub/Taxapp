@@ -105,8 +105,20 @@ Commit `59f98db` was deployed to the existing Cloudflare Pages project as the no
 
 The live route verifier passed for `/`, `/calculator`, `/filing-directory`, `/learn`, `/privacy`, `/terms`, and `/contact`. The canonical route forms returned the expected same-origin `308` trailing-slash redirect followed by `200`, and the unknown-route probe returned a real `404`.
 
-The post-deployment uncached Node measurement recorded 33.5–35.7 kB of HTML and 401.8 kB of same-origin initial assets for `/`, `/calculator`, and `/filing-waitlist`. This is an edge/network-footprint measurement, not a real mobile-throttled browser trace. The post-change browser trace remains open until the browse daemon is available.
+The post-deployment uncached Node measurement recorded 33.5–35.7 kB of HTML and 401.8 kB of same-origin initial assets for `/`, `/calculator`, and `/filing-waitlist`. This is an edge/network-footprint measurement, not a mobile-throttled browser trace.
+
+## Browser measurement — 2026-10-28
+
+The gstack browser was built and used against the preview at a `390×844` viewport. The browser tool does not expose network-condition emulation, so these are real browser timings without Fast 3G throttling:
+
+| Route | Final URL | Response start | DOM interactive | Load event | Notes |
+|---|---|---:|---:|---:|---|
+| `/` | `/` | 48.2 ms | 60.8 ms | 112.1 ms | Cached reload; transfer size was cache-dominated. |
+| `/calculator` | `/calculator/` | 408.4 ms | 421.6 ms | 523.5 ms | Loaded calculator, motion, and Supabase client chunks. |
+| `/filing-waitlist` | `/` | 413.7 ms | 423.1 ms | 542.1 ms | Application resolved this path to the homepage; route behavior should be confirmed before using it as a standalone performance target. |
+
+The calculator trace’s largest observed script resources were `vendor-supabase-7KcKRj6y.js` at 58.7 kB transferred, `vendor-motion-Bbn4ZNjF.js` at 42.5 kB, `vendor-react-BNp8CyxV.js` at 46.7 kB, and `TaxCalculator-a9gXcgBL.js` at 12.6 kB. These measurements support the existing public-auth deferral decision but do not justify a further shared-vendor refactor without a throttled trace.
 
 The authenticated production bundle still contains Supabase as a shared static dependency because authenticated services import it directly. Vite reports that the dynamic import cannot create a second authenticated chunk; this is expected and does not affect the public deferral. PDF/XLSX/export chunks remain deferred.
 
-This is a network-footprint measurement, not a Core Web Vitals or mobile-throttled browser trace. The real-browser trace remains open until the browse daemon or another accessible browser performance tool is available.
+This is a network-footprint measurement, not a Core Web Vitals or mobile-throttled browser trace. The real-browser mobile-viewport measurements above are complete; a true Fast 3G trace remains open because this browser tool does not expose network-condition emulation.
