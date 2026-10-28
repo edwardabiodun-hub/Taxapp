@@ -8,7 +8,6 @@
 /welcome /index.html 200
 /declare /index.html 200
 /submissions /index.html 200
-/submissions/* /index.html 200
 /messages /index.html 200
 /profile /index.html 200
 /receipt-scanner /index.html 200
