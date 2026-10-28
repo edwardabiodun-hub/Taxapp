@@ -31,6 +31,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Evidence-register guard: `READY_FOR_REVIEW` — CI can validate row count, status discipline, source format, review metadata, and prevention of partial evidence.
 - CSV escaping support: `READY_FOR_REVIEW` — evidence-register validation now accepts quoted fields containing commas and doubled quotes while rejecting malformed quoted fields.
 - Route/accessibility smoke coverage: `READY_FOR_REVIEW` — public route tests cover H1 rendering and navigation/home affordances across 13 public routes; calculator behavior remains covered by dedicated tests.
+- Test harness stability: `READY_FOR_REVIEW` — App and onboarding route tests now await asynchronous route rendering and explicitly clean up DOM state, preventing duplicate-render and timeout failures under the full parallel suite.
 - Bundle-performance analysis: `READY_FOR_REVIEW` — production build sizes and lazy-loading boundaries are documented; PDF/XLSX exporters are already deferred and no additional safe split was justified without browser traces. The post-optimization Cloudflare preview records the shared 628 KB same-origin asset footprint; the post-optimization throttled trace remains local-only and must be repeated against the deployed preview before shared-vendor changes.
 - Public cold-load measurement: `READY_FOR_REVIEW` — repeatable route-load measurement script follows same-origin canonical redirects and records HTML bytes, same-origin asset bytes, final status, and fetch timing for `/`, `/calculator`, and `/filing-waitlist`.
 - React Router compatibility spike: `READY_FOR_REVIEW` — inspected the v7 candidate, route API surface, prerenderer, auth/launch-gate route tables, and migration sequence; no major upgrade was applied to the mixed-change branch.
@@ -140,7 +141,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - AEO browser/search attempts: eight site-restricted searches across October 27–28 returned no surfaced FileSmart results. Search Console sitemap status is successful, with 12 discovered pages, while performance and indexing data remain in processing. This is recorded as no measurable visibility observation, not as proof that the site is inaccessible to search or answer engines.
 - Review-fact validation: passed; ambiguous rent periods/shared rent, insurance timing, mortgage residence, and minimum-wage employment context withhold numeric estimates without blocking preparation save/export.
 - Export provenance: passed; safe exports retain review facts and state that they are estimates/not submitted and remain subject to the relevant authority's requirements.
-- Documentation checkpoint verification: focused edge/evidence/output checks passed (12 tests). A full `npm test -- --run` run completed with 856/860 tests passing; four existing `App.test.tsx`/`Onboarding.test.tsx` failures were caused by test-isolation timeouts and duplicate rendered elements, and were not introduced by this documentation-only checkpoint.
+- Documentation and staging checkpoint verification: focused edge/evidence/output checks passed (12 tests). After hardening the affected test harness, the full `npm test -- --run` run passed with 118 test files and 860/860 tests.
 
 ## Risks and next action
 

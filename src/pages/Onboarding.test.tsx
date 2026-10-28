@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("@aparajita/capacitor-secure-storage", () => {
@@ -30,6 +30,7 @@ vi.mock("@/lib/supabase-client", () => ({
 }));
 
 async function renderOnboarding() {
+  cleanup();
   const { default: Onboarding } = await import("./Onboarding");
   const { AuthProvider } = await import("@/contexts/AuthContext");
   render(
@@ -44,6 +45,10 @@ async function renderOnboarding() {
   // with the form, so that resolution isn't an unwrapped act().
   await waitFor(() => expect(screen.getByPlaceholderText("e.g. Amara Okafor")).toBeInTheDocument());
 }
+
+afterEach(() => {
+  cleanup();
+});
 
 function fillRequiredFields() {
   fireEvent.change(screen.getByPlaceholderText("e.g. Amara Okafor"), {
