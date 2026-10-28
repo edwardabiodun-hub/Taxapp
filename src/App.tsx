@@ -37,6 +37,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const FilingDirectory = lazy(() => import("./pages/FilingDirectory"));
 const FilingWaitlist = lazy(() => import("./pages/FilingWaitlist"));
 
 const queryClient = new QueryClient();
@@ -47,7 +48,31 @@ const LoadingScreen = ({ message = "Loading…" }: { message?: string }) => (
   </div>
 );
 
-export const AppRoutes = () => {
+/**
+ * Public builds are prerendered with the public route components directly.
+ * Keep their first client render free of auth/profile checks so hydrateRoot
+ * sees the same tree that was emitted into the HTML shell.
+ */
+const PublicAppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
+    <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
+    <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+    <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
+    <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
+    <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />
+    <Route path="/privacy" element={<RouteBoundary><Privacy /></RouteBoundary>} />
+    <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
+    <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
+    <Route path="/calculator" element={<RouteBoundary><TaxCalculator /></RouteBoundary>} />
+    <Route path="/filing-directory" element={<RouteBoundary><FilingDirectory /></RouteBoundary>} />
+    <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
+    <Route path="/404" element={<RouteBoundary><NotFound /></RouteBoundary>} />
+    <Route path="*" element={<RouteBoundary><NotFound /></RouteBoundary>} />
+  </Routes>
+);
+
+const AuthenticatedAppRoutes = () => {
   const { loading: profileLoading, hasProfile } = useHasProfile();
   const { loading: authLoading, isUnlocked, isPasswordRecovery } = useAuth();
   const { checking: restoringProfile } = useRestoreProfile(!hasProfile && isUnlocked && !isPasswordRecovery);
@@ -121,6 +146,10 @@ export const AppRoutes = () => {
       <Route path="*" element={<RouteBoundary><NotFound /></RouteBoundary>} />
     </Routes>;
 };
+
+export const AppRoutes = () => (
+  import.meta.env.MODE === "public" ? <PublicAppRoutes /> : <AuthenticatedAppRoutes />
+);
 
 const App = () => {
   useEffect(() => {
