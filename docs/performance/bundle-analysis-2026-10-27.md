@@ -134,3 +134,15 @@ The Cloudflare preview was tested with Lighthouse `13.6.0` using a fresh mobile 
 | `/filing-waitlist/` | 97 | 2.0 s | 2.1 s | 50 ms | 0 | 2.8 s | 229 KiB | 0.6 s | 55 KiB |
 
 The calculator's largest identified unused-JavaScript opportunities were the shared Supabase vendor (approximately 56 KiB wasted of 58 KiB) and motion vendor (approximately 28 KiB wasted of 42 KiB). The scores, zero layout shift, low blocking time, and existing public Supabase deferral do not justify another shared-vendor refactor in this branch. Revisit only after field data or a route-specific interaction trace identifies a measurable user impact.
+
+## Corrected preview hydration trace — 2026-10-28
+
+After the public prerender/client hydration boundary was hardened, the latest Cloudflare preview was rechecked with Lighthouse `13.6.0` using a fresh mobile context, cache disabled, a 390×844 viewport, and DevTools throttling at 150 ms RTT, 1.6 Mbps download, 750 Kbps upload, and 4× CPU slowdown. These are repeatable lab measurements, not field data.
+
+| Route | Performance score | FCP | LCP | TBT | CLS | Transfer | Requests |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `/` | 93 | 2.43 s | 2.43 s | 134 ms | 0 | 333 KiB | 12 |
+| `/calculator/` | 83 | 2.24 s | 3.31 s | 295 ms | 0 | 281 KiB | 12 |
+| `/filing-waitlist/` | 95 | 2.24 s | 2.24 s | 134 ms | 0 | 279 KiB | 11 |
+
+The calculator remains the slowest route because it loads the largest interactive surface and has the highest blocking time. Shared JavaScript still contributes materially to transfer, but the trace does not identify a safe additional vendor split after the public Supabase deferral and hydration fix. Defer further shared-vendor refactoring until field data or an interaction trace demonstrates a user-visible benefit. The preview also passed route, real-404, and fresh-browser console checks; production was not changed.
