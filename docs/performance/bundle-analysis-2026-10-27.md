@@ -95,6 +95,18 @@ The public entry previously module-preloaded the Supabase vendor even on marketi
 
 The local preview measurement covered `/`, `/calculator`, and `/filing-waitlist`; each served 33.5 kB of HTML and 401.8 kB of same-origin initial assets. Public output verification passed with 14 prerendered pages, 14 sitemap entries, and `404.html`.
 
+## Preview deployment verification — 2026-10-28
+
+Commit `59f98db` was deployed to the existing Cloudflare Pages project as the non-production branch preview:
+
+- Preview URL: `https://public-seo-conversion.filesmartnaija.pages.dev`
+- Deployment URL: `https://bfa9ebca.filesmartnaija.pages.dev`
+- Production custom domain: unchanged
+
+The live route verifier passed for `/`, `/calculator`, `/filing-directory`, `/learn`, `/privacy`, `/terms`, and `/contact`. The canonical route forms returned the expected same-origin `308` trailing-slash redirect followed by `200`, and the unknown-route probe returned a real `404`.
+
+The post-deployment uncached Node measurement recorded 33.5–35.7 kB of HTML and 401.8 kB of same-origin initial assets for `/`, `/calculator`, and `/filing-waitlist`. This is an edge/network-footprint measurement, not a real mobile-throttled browser trace. The post-change browser trace remains open until the browse daemon is available.
+
 The authenticated production bundle still contains Supabase as a shared static dependency because authenticated services import it directly. Vite reports that the dynamic import cannot create a second authenticated chunk; this is expected and does not affect the public deferral. PDF/XLSX/export chunks remain deferred.
 
 This is a network-footprint measurement, not a Core Web Vitals or mobile-throttled browser trace. The real-browser trace remains open until the browse daemon or another accessible browser performance tool is available.
