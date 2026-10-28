@@ -14,6 +14,27 @@ describe("Cloudflare deployment verifier", () => {
     expect(result.unknownRoute.status).toBe(404);
   });
 
+  it("follows same-origin canonical redirects before evaluating public routes", async () => {
+    const fetcher = vi.fn(async (url: string) => {
+      if (url.endsWith("/calculator")) {
+        return new Response("", { status: 308, headers: { location: "/calculator/" } });
+      }
+      return new Response("", {
+        status: url.endsWith("/__filesmart_404_probe__") ? 404 : 200,
+      });
+    });
+
+    const result = await verifyDeployment("https://staging.example.com", { fetcher });
+
+    expect(result.pass).toBe(true);
+    expect(result.routes.find((route) => route.route === "/calculator")).toMatchObject({
+      status: 200,
+      initialStatus: 308,
+      redirects: ["/calculator/"],
+      ok: true,
+    });
+  });
+
   it("fails when the edge returns a SPA fallback for an unknown route", async () => {
     const fetcher = vi.fn(async () => new Response("", { status: 200 }));
 
