@@ -22,7 +22,7 @@ function assetUrls(html, origin) {
 
 async function fetchMeasured(url, fetcher) {
   const started = performance.now();
-  const response = await fetcher(url, { cache: "no-store", redirect: "manual" });
+  const response = await fetchSameOrigin(url, fetcher);
   const body = await response.arrayBuffer();
   return {
     url,
@@ -32,13 +32,35 @@ async function fetchMeasured(url, fetcher) {
   };
 }
 
+async function fetchSameOrigin(url, fetcher) {
+  const origin = new URL(url).origin;
+  let currentUrl = url;
+
+  for (let attempt = 0; attempt <= 3; attempt += 1) {
+    const response = await fetcher(currentUrl, { cache: "no-store", redirect: "manual" });
+    const location = response.headers.get("location");
+    const isRedirect = response.status >= 300 && response.status < 400 && location;
+
+    if (!isRedirect) return response;
+    if (attempt === 3) throw new Error(`Too many redirects while measuring ${url}`);
+
+    const nextUrl = new URL(location, currentUrl);
+    if (nextUrl.origin !== origin) {
+      throw new Error(`Cross-origin redirect while measuring ${url}`);
+    }
+    currentUrl = nextUrl.href;
+  }
+
+  throw new Error(`Unreachable redirect evaluation while measuring ${url}`);
+}
+
 export async function measurePublicLoad(origin, routes = DEFAULT_ROUTES, fetcher = fetch) {
   const base = normalizeOrigin(origin);
   const results = [];
 
   for (const route of routes) {
     const page = await fetchMeasured(`${base}${route}`, fetcher);
-    const htmlResponse = await fetcher(`${base}${route}`, { cache: "no-store", redirect: "manual" });
+    const htmlResponse = await fetchSameOrigin(`${base}${route}`, fetcher);
     const html = await htmlResponse.text();
     const assets = [];
     for (const assetUrl of assetUrls(html, base)) assets.push(await fetchMeasured(assetUrl, fetcher));

@@ -12,6 +12,17 @@ This is a repeatable question set for checking whether FileSmart's public pages 
 **Interpretation:** This is an instrumentation/search-availability result, not evidence that the pages are inaccurate or unavailable to users. Individual benchmark rows remain `NOT_RUN` until an answer/search engine observation can be captured with the required cited source and surfaced page.
 **Next action:** Repeat the benchmark from an accessible browser or Search Console-backed workflow after public deployment is confirmed, recording the engine, query, timestamp, result URL, cited source, and reviewer.
 
+### Follow-up execution — October 28, 2026
+
+The benchmark was repeated through an accessible web-search workflow against the verified Cloudflare preview and public-domain query intent. The following queries returned no search results:
+
+- `site:filesmartnaija.com FileSmart tax calculator`
+- `site:filesmartnaija.com Nigerian personal income tax FileSmart`
+- `site:filesmartnaija.com filing directory FileSmart`
+- `site:filesmartnaija.com FileSmart tax education`
+
+No FileSmart result, citation, ranking, or answer-engine response was surfaced. This remains a no-observation result rather than evidence of a technical indexing failure. The 40 benchmark rows remain `NOT_RUN` until Search Console or a browser capture provides reproducible result-page evidence.
+
 ## Recording rules
 
 For each question, record the date, engine or test method, observed answer, cited source, page surfaced, and reviewer. Do not publish a result as a visibility claim without a captured observation. Tax answers require source and tax-year review before being marked accurate.

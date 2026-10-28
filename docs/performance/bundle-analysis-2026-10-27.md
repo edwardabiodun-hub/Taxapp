@@ -34,3 +34,15 @@ The build completed successfully with Vite 5.4.21. The largest emitted JavaScrip
 - Keep PDF/XLSX imports dynamic and add a regression check if export code is refactored.
 - Consider replacing or isolating the unused legacy `src/lib/filing-summary-pdf.ts` path only after confirming no runtime consumer; do not delete it as part of this audit.
 - Revisit `xlsx` and `jspdf` only after export requirements and browser support are confirmed; they are not initial-load blockers today.
+
+## Cloudflare preview measurement — 2026-10-28
+
+The route measurement script was updated to follow same-origin canonical redirects before reading HTML and assets. A live measurement against the stable branch preview `https://codex-public-seo-conversion.filesmartnaija.pages.dev` recorded:
+
+| Route | Final status | HTML bytes | Same-origin asset bytes |
+|---|---:|---:|---:|
+| `/` | 200 | 33,322 | 628,230 |
+| `/calculator` | 200 after `308 → /calculator/` | 35,737 | 628,230 |
+| `/filing-waitlist` | 200 after canonical redirect | 33,322 | 628,230 |
+
+The public graph is still dominated by shared React, Supabase, Radix, icon and CSS assets. No additional lazy-loading change is justified without a real browser trace showing route-level execution and interaction costs. The next safe optimization remains a mobile-throttled browser trace, followed by an isolated change to shared vendor boundaries if the trace identifies a measurable bottleneck.
