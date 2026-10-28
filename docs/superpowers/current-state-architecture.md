@@ -57,8 +57,8 @@ Jurisdiction context
 1. Define consent, retention, provider, and dashboard controls before enabling analytics transmission.
 2. FS-06 route decision: retain `/calculator` as the single canonical public estimator route. It already provides the 2026 annual estimate and does not submit a return; do not add a duplicate `/tools/paye-calculator` alias or change formulas without professional review.
 3. Use the source-verification workflow to populate the filing directory only after official state evidence is reviewed.
-4. Run the AEO benchmark with captured observations; do not convert `NOT_RUN` rows into visibility claims without evidence.
-5. Validate the generated output on a Cloudflare staging target before production deployment.
+4. Complete the AEO benchmark with captured query/indexing or answer-engine observations; Search Console setup is verified, but performance and page-indexing data are still processing. Do not convert `NOT_RUN` rows into visibility claims without evidence.
+5. Repeat the post-optimization performance trace against the deployed Cloudflare preview; the current route verifier and network-footprint checks already pass.
 6. Review and remediate the remaining React Router advisory set without using a breaking `npm audit fix --force`; the `zod` and `xlsx` production dependencies have been removed. React Router requires a separate v7 compatibility review.
 
 ## Explicitly blocked or deferred

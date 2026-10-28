@@ -23,6 +23,18 @@ The benchmark was repeated through an accessible web-search workflow against the
 
 No FileSmart result, citation, ranking, or answer-engine response was surfaced. This remains a no-observation result rather than evidence of a technical indexing failure. The 40 benchmark rows remain `NOT_RUN` until Search Console or a browser capture provides reproducible result-page evidence.
 
+### Search Console checkpoint — October 28, 2026
+
+The verified `filesmartnaija.com` Search Console property was inspected after the sitemap submission:
+
+| Surface | Observation | Interpretation |
+|---|---|---|
+| Sitemaps | `https://www.filesmartnaija.com/sitemap.xml` — **Success**; submitted and last read October 28, 2026; 12 discovered pages; 0 discovered videos | Sitemap delivery is confirmed. |
+| Performance | “Processing data, please check again in a day or so”; no query data available | No search-performance claim can be made yet. |
+| Page indexing | “Processing data, please check again in a day or so”; no indexing reasons available | Index coverage remains unverified. |
+
+This checkpoint closes the Search Console setup verification but does not complete the AEO benchmark. The benchmark rows remain `NOT_RUN` until query/indexing observations or answer-engine captures are available. No ranking, citation, or visibility claim should be published from the current evidence.
+
 ## Recording rules
 
 For each question, record the date, engine or test method, observed answer, cited source, page surfaced, and reviewer. Do not publish a result as a visibility claim without a captured observation. Tax answers require source and tax-year review before being marked accurate.

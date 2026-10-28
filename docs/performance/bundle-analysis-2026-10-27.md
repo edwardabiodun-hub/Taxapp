@@ -77,3 +77,9 @@ The homepage hero was converted to AVIF/WebP with the original PNG retained as t
 | Desktop | `/calculator/` | 0.86 s | 1.30 s | 9 | 209 KB | FileSmart lockup — 12.8 KB |
 
 The homepage transfer is approximately 88% smaller than the earlier 2.08 MB trace, and the hero image is approximately 97% smaller than the original 1.87 MB PNG. The calculator footprint is effectively unchanged. The new trace archives and machine-readable report are stored locally under `.gstack/benchmark-reports/`.
+
+## Current Cloudflare preview verification — 2026-10-28
+
+The post-optimization build was rechecked against `https://codex-public-seo-conversion.filesmartnaija.pages.dev` using the repository route verifier and public-load measurement script. Representative routes returned `200` after expected same-origin `308` trailing-slash redirects, and an unknown-route probe returned a real `404` response. The uncached Node baseline recorded approximately 33.6–35.7 kB of HTML and 628.3 kB of same-origin initial assets per tested route.
+
+This confirms edge routing and the network footprint only. It is not a throttled browser trace. The existing throttled trace above is the pre-hero-optimization Cloudflare baseline; the post-optimization throttled measurements below were captured locally and should be repeated against this deployed preview before making further shared-vendor changes.
