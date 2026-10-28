@@ -1,28 +1,26 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, BrowserRouter } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-const Landing = lazy(() => import("./pages/Landing"));
-const Learn = lazy(() => import("./pages/Learn"));
-const Guide = lazy(() => import("./pages/Guide"));
-const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const About = lazy(() => import("./pages/About"));
-const Contact = lazy(() => import("./pages/Contact"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Disclaimer = lazy(() => import("./pages/Disclaimer"));
-const FilingWaitlist = lazy(() => import("./pages/FilingWaitlist"));
+import Landing from "./pages/Landing";
+import Learn from "./pages/Learn";
+import Guide from "./pages/Guide";
+import HowItWorks from "./pages/HowItWorks";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Disclaimer from "./pages/Disclaimer";
+import FilingWaitlist from "./pages/FilingWaitlist";
+import Pricing from "./pages/Pricing";
+import TaxCalculator from "./pages/TaxCalculator";
+import FilingDirectory from "./pages/FilingDirectory";
+import PublicNotFound from "./components/public/PublicNotFound";
 const CreateAccount = lazy(() => import("./pages/CreateAccount"));
 const PublicLogin = lazy(() => import("./pages/PublicLogin"));
 const CheckEmail = lazy(() => import("./pages/CheckEmail"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
-const FilingDirectory = lazy(() => import("./pages/FilingDirectory"));
-const PublicNotFound = lazy(() => import("./components/public/PublicNotFound"));
 
 const Waiting = () => <main className="flex min-h-screen items-center justify-center bg-[#f8f7f3] px-5 text-[#12352f]" role="status">Loading FileSmart…</main>;
 
@@ -59,6 +57,6 @@ export const PublicRoutes = () => {
   </Routes></Suspense>;
 };
 
-const PublicApp = () => <AuthProvider><TooltipProvider><Toaster /><Sonner /><BrowserRouter><PublicRoutes /></BrowserRouter></TooltipProvider></AuthProvider>;
+const PublicApp = () => <AuthProvider><TooltipProvider><BrowserRouter><PublicRoutes /></BrowserRouter></TooltipProvider></AuthProvider>;
 
 export default PublicApp;
