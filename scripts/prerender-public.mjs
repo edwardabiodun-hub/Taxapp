@@ -23,8 +23,17 @@ const pageModules = {
   "/disclaimer": "/src/pages/Disclaimer.tsx",
   "/calculator": "/src/pages/TaxCalculator.tsx",
   "/filing-directory": "/src/pages/FilingDirectory.tsx",
+  "/filing-waitlist": "/src/pages/FilingWaitlist.tsx",
   "/404": "/src/components/public/PublicNotFound.tsx",
 };
+
+const gatedPageMetadata = [
+  {
+    title: "Join the FileSmart filing waitlist | FileSmart",
+    description: "Join the FileSmart filing waitlist and be notified when the tax-season filing experience opens.",
+    path: "/filing-waitlist",
+  },
+];
 
 const vite = await createServer({
   configFile: path.join(projectRoot, "vite.config.ts"),
@@ -77,6 +86,15 @@ try {
       ? path.join(outputDirectory, "index.html")
       : path.join(outputDirectory, routePath.slice(1), "index.html");
     await writeHtml(outputPath, html);
+  }
+
+  for (const metadata of gatedPageMetadata) {
+    const Page = loadedPages.get(metadata.path);
+    if (!Page) throw new Error(`No prerender component registered for gated route: ${metadata.path}`);
+
+    const markup = renderRoute(metadata.path, Page);
+    const html = renderPublicDocument(shell, markup, metadata, origin, { noIndex: true });
+    await writeHtml(path.join(outputDirectory, metadata.path.slice(1), "index.html"), html);
   }
 
   const notFoundMetadata = { title: "Page not found | FileSmart", description: "The page could not be found.", path: "/404" };

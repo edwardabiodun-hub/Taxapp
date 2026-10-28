@@ -3,7 +3,6 @@
 /check-email /index.html 200
 /forgot-password /index.html 200
 /reset-password /index.html 200
-/filing-waitlist /index.html 200
 /pricing /index.html 200
 /onboarding /index.html 200
 /welcome /index.html 200

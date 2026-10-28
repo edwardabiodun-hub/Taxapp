@@ -53,6 +53,7 @@ describe("public route metadata and sitemap", () => {
 
     expect(robots).not.toMatch(/^Disallow:\s*\/calculator\s*$/m);
     expect(redirects).toContain("/pricing /index.html 200");
+    expect(redirects).not.toContain("/filing-waitlist /index.html 200");
     // Cloudflare Pages serves a top-level 404.html natively. Its _redirects
     // parser does not support 404 rewrites, so a catch-all rule here would
     // turn unknown paths into a non-404 response.

@@ -7,6 +7,7 @@ import { verifyPublicOutput } from "./verify-public-output";
 async function createPublicFixture(options: {
   readonly pageCount: number;
   readonly include404?: boolean;
+  readonly includeNoIndexPage?: boolean;
   readonly missingH1?: boolean;
   readonly missingCanonical?: boolean;
 }): Promise<string> {
@@ -25,6 +26,15 @@ async function createPublicFixture(options: {
     Array.from({ length: options.pageCount }, (_, index) => `<loc>https://example.test/${index}</loc>`).join("\n"),
     "utf8",
   );
+  if (options.includeNoIndexPage) {
+    const noIndexRoot = path.join(root, "filing-waitlist");
+    await mkdir(noIndexRoot, { recursive: true });
+    await writeFile(
+      path.join(noIndexRoot, "index.html"),
+      '<!doctype html><html><head><meta name="robots" content="noindex, nofollow" /></head><body><h1>Waitlist</h1></body></html>',
+      "utf8",
+    );
+  }
   if (options.include404 !== false) {
     await writeFile(path.join(root, "404.html"), "<!doctype html>", "utf8");
   }
@@ -58,6 +68,19 @@ describe("public output verification", () => {
       missingCanonical: ["index.html"],
       sitemapUrlCount: 1,
       has404: false,
+    });
+  });
+
+  it("allows gated noindex pages outside the sitemap", async () => {
+    const root = await createPublicFixture({ pageCount: 1, includeNoIndexPage: true });
+
+    await expect(verifyPublicOutput(root)).resolves.toMatchObject({
+      htmlCount: 2,
+      crawlableHtmlCount: 1,
+      missingH1: [],
+      missingCanonical: [],
+      sitemapUrlCount: 1,
+      has404: true,
     });
   });
 });
