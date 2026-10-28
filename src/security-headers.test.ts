@@ -8,7 +8,8 @@ describe("Netlify security headers", () => {
 
     expect(headers).toContain("X-Content-Type-Options: nosniff");
     expect(headers).toContain("Content-Security-Policy:");
-    expect(headers).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co");
+    expect(headers).toContain("script-src 'self' https://static.cloudflareinsights.com");
+    expect(headers).toContain("connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cloudflareinsights.com");
     expect(headers).toContain("object-src 'none'");
   });
 });

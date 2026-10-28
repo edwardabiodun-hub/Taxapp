@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Calculator, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -92,6 +92,11 @@ const TaxCalculator = () => {
     }
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    compute();
+  };
+
   return (
     <div className={isFilingLaunchPhase ? "min-h-screen bg-[#f8f7f3] text-[#12352f]" : undefined}>
     {isFilingLaunchPhase && <PublicNav />}
@@ -100,6 +105,7 @@ const TaxCalculator = () => {
       animate={{ opacity: 1 }}
       className="px-4 py-6 max-w-lg mx-auto pb-28 space-y-5"
     >
+      <form onSubmit={handleSubmit} aria-label="2026 tax estimate calculator" className="space-y-5">
       <div>
         <div className="flex items-center gap-2 mb-1">
           <Calculator className="w-5 h-5 text-primary" />
@@ -176,7 +182,7 @@ const TaxCalculator = () => {
         <p className="text-[10px] text-muted-foreground">Review facts are saved with your preparation. A cross-year or shared-tenancy rent entry prevents a numeric estimate until its attributable amount is confirmed.</p>
       </div>
 
-      <Button onClick={compute} className="w-full gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
+      <Button type="submit" className="w-full gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
         <Calculator className="w-4 h-4" /> Calculate 2026 estimate
       </Button>
 
@@ -247,6 +253,7 @@ const TaxCalculator = () => {
 
       {result && result.grossIncome > 0 && (
         <Button
+          type="button"
           onClick={() => navigate("/declare")}
           variant="outline"
           className="w-full gap-2"
@@ -259,6 +266,7 @@ const TaxCalculator = () => {
           <Link to={publicFilingPath}>Join the filing waitlist <ArrowRight className="w-4 h-4" /></Link>
         </Button>
       )}
+      </form>
     </motion.div>
     {isFilingLaunchPhase && <PublicFooter />}
     </div>

@@ -51,6 +51,14 @@ describe("TaxCalculator glossary integration", () => {
     expect(screen.queryAllByText("₦30,000")).toHaveLength(0);
   });
 
+  it("calculates from a form submit so keyboard and button submission share one path", () => {
+    render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
+    fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "1000000" } });
+    fireEvent.submit(screen.getByRole("form", { name: "2026 tax estimate calculator" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("₦30,000");
+  });
+
   it("explains why an employer vehicle cannot be estimated instead of showing a number", () => {
     render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
     fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "1000000" } });
