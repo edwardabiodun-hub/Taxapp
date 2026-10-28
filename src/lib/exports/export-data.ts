@@ -15,7 +15,8 @@ export const SAFE_PREPARATION_FIELDS = [
   "rentPaidByEmployer", "rentPaidByEmployerName", "domesticStaffBySelf", "domesticStaffByEmployer",
   "companyVehicleCost", "companyVehicleDetails", "employeePension", "annualRentPaid",
   "nationalHousingFund", "nationalHealthInsurance", "mortgageInterest", "lifeInsurancePremium",
-  "minimumWageEmployment",
+  "minimumWageEmployment", "rentPeriodStart", "rentPeriodEnd", "rentSharedWithOthers",
+  "lifeInsurancePremiumPaidYear", "mortgagePrincipalResidence", "employmentPeriod",
 ] as const satisfies readonly (keyof DeclarationIncomeFields)[];
 
 const UNSAFE_TEXT = /(?:data:|blob:|base64|bearer|authorization|api[_ -]?key|credential|password|secret|token|raw(?:[-_\s](?:image|file|bytes|payload|receipt))?)/i;
@@ -98,7 +99,9 @@ export function buildSanitizedExportModel(context: ExportContext): SanitizedExpo
     ["readiness", "Readiness", metadata.readiness], ["rule_source", "Rule source", metadata.source],
     ["rule_verified_at", "Rule verified at", metadata.sourceVerifiedAt], ["deadline_source", "Deadline source", metadata.deadlineSource],
     ["deadline_verified_at", "Deadline verified at", metadata.deadlineVerifiedAt], ["generated_at", "Generated at", metadata.generatedAt],
+    ["estimate_scope", "Estimate scope", "2026-only gross PIT estimate before PAYE and withholding-tax credits"],
     ["not_submitted", "Submission status", "Not submitted"],
+    ["submission_guidance", "Submission guidance", "Not submitted. Any manual submission remains subject to the relevant tax authority's portal and requirements."],
   ] as const;
   for (const [field, label, value] of summary) add({ section: "summary", field, label, value: safeValue(value), source: "FileSmart export metadata" });
 

@@ -56,6 +56,15 @@ const EVIDENCE_CONFIDENCES = new Set<EvidenceConfidence>([
   "low",
 ]);
 
+function isTrustedAuthoritySource(source: string): boolean {
+  try {
+    const url = new URL(source);
+    return url.protocol === "https:" && (url.hostname === "gov.ng" || url.hostname.endsWith(".gov.ng"));
+  } catch {
+    return false;
+  }
+}
+
 function defaultCache(): CapabilityCache {
   return {
     read: () => db.jurisdictionCapabilities.toArray(),
@@ -95,7 +104,7 @@ function safeText(value: unknown, required = false): string | undefined {
   return text;
 }
 
-function sanitizeEvidence(value: unknown, deadline = false): EvidenceMetadata | DeadlineEvidenceMetadata | undefined {
+function sanitizeEvidence(value: unknown, deadline = false, requireTrustedSource = false): EvidenceMetadata | DeadlineEvidenceMetadata | undefined {
   if (!isRecord(value)) return undefined;
   const source = safeText(value.source, true);
   const effectiveFrom = safeText(value.effectiveFrom, true);
@@ -104,6 +113,7 @@ function sanitizeEvidence(value: unknown, deadline = false): EvidenceMetadata | 
   if (!source || !effectiveFrom || !verifiedAt || !EVIDENCE_CONFIDENCES.has(confidence as EvidenceConfidence)) {
     return undefined;
   }
+  if (requireTrustedSource && !isTrustedAuthoritySource(source)) return undefined;
 
   const evidence: EvidenceMetadata = {
     source,
@@ -152,7 +162,7 @@ function sanitizeBaseline(value: unknown): BaselineMetadata | undefined {
   };
 }
 
-function sanitizeRuleProfile(value: unknown): RuleProfile | undefined {
+function sanitizeRuleProfile(value: unknown, requireTrustedSource = false): RuleProfile | undefined {
   if (!isRecord(value)) return undefined;
   const kind = value.kind;
   const profileId = safeText(value.profileId, true);
@@ -160,7 +170,7 @@ function sanitizeRuleProfile(value: unknown): RuleProfile | undefined {
   if (!profileId || version === undefined) return undefined;
 
   if (kind === "verified_state") {
-    const evidence = sanitizeEvidence(value.evidence);
+    const evidence = sanitizeEvidence(value.evidence, false, requireTrustedSource);
     if (!evidence) return undefined;
     return { kind, profileId, version, evidence };
   }
@@ -173,29 +183,29 @@ function sanitizeRuleProfile(value: unknown): RuleProfile | undefined {
   return undefined;
 }
 
-function sanitizeDeadlineProfile(value: unknown): DeadlineProfile | undefined {
+function sanitizeDeadlineProfile(value: unknown, requireTrustedSource = false): DeadlineProfile | undefined {
   if (!isRecord(value)) return undefined;
   if (value.kind === "unverified" && value.confidence === "low") {
     return { kind: "unverified", confidence: "low" };
   }
   if (value.kind !== "verified_state" && value.kind !== "national_baseline") return undefined;
-  const evidence = sanitizeEvidence(value.evidence, true);
+  const evidence = sanitizeEvidence(value.evidence, true, requireTrustedSource);
   return evidence && "dueAt" in evidence
     ? { kind: value.kind, evidence }
     : undefined;
 }
 
-function sanitizeCapability(value: unknown): JurisdictionCapability | undefined {
+function sanitizeCapability(value: unknown, requireTrustedSource = false): JurisdictionCapability | undefined {
   if (!isRecord(value)) return undefined;
   const jurisdictionCode = safeText(value.jurisdictionCode, true)?.toUpperCase();
   const name = safeText(value.name, true);
   const shortName = safeText(value.shortName, true);
   const registryVersion = safeText(value.registryVersion, true);
-  const ruleProfile = sanitizeRuleProfile(value.ruleProfile);
-  const deadlineProfile = sanitizeDeadlineProfile(value.deadlineProfile);
+  const ruleProfile = sanitizeRuleProfile(value.ruleProfile, requireTrustedSource);
+  const deadlineProfile = sanitizeDeadlineProfile(value.deadlineProfile, requireTrustedSource);
   const nationalDeadlineProfile = value.nationalDeadlineProfile === undefined
     ? undefined
-    : sanitizeDeadlineProfile(value.nationalDeadlineProfile);
+    : sanitizeDeadlineProfile(value.nationalDeadlineProfile, requireTrustedSource);
   const submissionModes = Array.isArray(value.submissionModes)
     ? value.submissionModes.filter((mode): mode is SubmissionMode => SUBMISSION_MODES.has(mode as SubmissionMode))
     : [];
@@ -226,7 +236,7 @@ function sanitizeCapability(value: unknown): JurisdictionCapability | undefined 
   const evidence: { template?: EvidenceMetadata; integration?: EvidenceMetadata } = {};
   for (const key of ["template", "integration"] as const) {
     if (value.evidence[key] !== undefined) {
-      const sanitized = sanitizeEvidence(value.evidence[key]);
+      const sanitized = sanitizeEvidence(value.evidence[key], false, requireTrustedSource);
       if (!sanitized) return undefined;
       evidence[key] = sanitized;
     }
@@ -266,11 +276,11 @@ function compareVersions(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
-function validatedCapabilities(overlays: unknown): JurisdictionCapability[] {
+function validatedCapabilities(overlays: unknown, requireTrustedSource = false): JurisdictionCapability[] {
   if (!Array.isArray(overlays)) return [];
 
   return overlays.flatMap((rawCapability) => {
-    const capability = sanitizeCapability(rawCapability);
+    const capability = sanitizeCapability(rawCapability, requireTrustedSource);
     return capability ? [capability] : [];
   });
 }
@@ -297,7 +307,13 @@ function mergeCapabilities(
     ) {
       continue;
     }
-    byCode.set(capability.jurisdictionCode, capability);
+    byCode.set(capability.jurisdictionCode, {
+      ...capability,
+      // Jurisdiction identity is bundled application data. Remote registries
+      // may update evidence and readiness, but never rename a jurisdiction.
+      name: bundledCapability.name,
+      shortName: bundledCapability.shortName,
+    });
   }
 
   return bundled.map((capability) => byCode.get(capability.jurisdictionCode) ?? capability);
@@ -323,11 +339,11 @@ export async function loadJurisdictionCapabilities(
   // Cached entries may legitimately equal the bundled version while carrying
   // richer verified evidence. A refresh at that same version may not replace
   // them unless a newer registry version is supplied.
-  let capabilities = mergeCapabilities(bundled, cached, { allowEqualVersion: true });
+  let capabilities = mergeCapabilities(bundled, validatedCapabilities(cached), { allowEqualVersion: true });
   const refresh = options.refresh ?? (() => fetchRegistry(options.fetchImpl ?? fetch));
   try {
     const refreshed = await refresh();
-    capabilities = mergeCapabilities(capabilities, validatedCapabilities(refreshed));
+    capabilities = mergeCapabilities(capabilities, validatedCapabilities(refreshed, true));
     try {
       await cache.write(capabilities);
     } catch {

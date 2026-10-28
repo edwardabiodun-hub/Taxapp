@@ -12,7 +12,7 @@ const evidence = (dueAt: string, overrides: Record<string, unknown> = {}) => ({
   dueAt,
   taxYear: "2026",
   source: "https://authority.example/deadlines",
-  verifiedAt: "2025-12-01T00:00:00.000Z",
+  verifiedAt: "2026-09-01T00:00:00.000Z",
   effectiveFrom: "2025-01-01T00:00:00.000Z",
   confidence: "high",
   timezone: "Africa/Lagos",
@@ -123,7 +123,7 @@ describe("deadline service", () => {
 
     expect(resolved.sourceKind).toBe("unverified");
     expect(resolved.isStale).toBe(true);
-    expect(resolved.verifiedAt).toBe("2025-12-01T00:00:00.000Z");
+    expect(resolved.verifiedAt).toBe("2026-09-01T00:00:00.000Z");
   });
 
   it("does not treat a deadline with future effectiveFrom as verified", () => {
@@ -133,6 +133,36 @@ describe("deadline service", () => {
         evidence: evidence("2026-06-30T23:59:59+01:00", {
           effectiveFrom: "2027-02-01T00:00:00.000Z",
         }),
+      }),
+      "2026",
+      now,
+    );
+
+    expect(resolved.sourceKind).toBe("unverified");
+    expect(resolved.isStale).toBe(true);
+  });
+
+  it("marks evidence older than one quarterly review cycle as stale", () => {
+    const resolved = resolveDeadline(
+      capabilityWithProfile({
+        kind: "verified_state",
+        evidence: evidence("2026-06-30T23:59:59+01:00", {
+          verifiedAt: "2026-05-01T00:00:00.000Z",
+        }),
+      }),
+      "2026",
+      new Date("2026-10-06T00:00:00.000Z"),
+    );
+
+    expect(resolved.sourceKind).toBe("unverified");
+    expect(resolved.isStale).toBe(true);
+  });
+
+  it("rejects an unknown IANA timezone", () => {
+    const resolved = resolveDeadline(
+      capabilityWithProfile({
+        kind: "verified_state",
+        evidence: evidence("2026-06-30T23:59:59+01:00", { timezone: "Africa/NotARealCity" }),
       }),
       "2026",
       now,

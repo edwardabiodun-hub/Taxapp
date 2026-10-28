@@ -7,12 +7,16 @@
     "dev": "vite",
     "dev:public": "vite --mode public",
     "build": "vite build",
-    "build:public": "vite build --mode public --outDir dist-public",
+    "build:public": "node scripts/build-public.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:public": "node scripts/verify-public-output.mjs dist-public",
+    "verify:filing-evidence": "node scripts/verify-filing-evidence-register.mjs docs/filing-directory-evidence-register.csv",
+    "verify:cloudflare": "node scripts/verify-cloudflare-deployment.mjs",
+    "measure:public-load": "node scripts/measure-public-load.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^8.0.1",
@@ -71,9 +75,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "vaul": "^0.9.9",
-    "xlsx": "0.18.5",
-    "zod": "^3.25.76"
+    "vaul": "^0.9.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

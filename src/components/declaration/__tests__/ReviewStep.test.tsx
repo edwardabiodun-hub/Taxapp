@@ -65,4 +65,25 @@ describe("ReviewStep", () => {
     expect(screen.getByText("Commissions").parentElement?.parentElement).toHaveTextContent("120000");
     expect(screen.getByText("Bonuses").parentElement?.parentElement).toHaveTextContent("80000");
   });
+
+  it("shows review facts so unresolved deduction treatment is visible before saving", () => {
+    const form = {
+      ...defaultNigeriaForm,
+      taxYear: "2026",
+      annualSalary: "1000000",
+      annualRentPaid: "1200000",
+      rentPeriodStart: "2026-01-01",
+      rentPeriodEnd: "2026-12-31",
+      rentSharedWithOthers: "no",
+      mortgagePrincipalResidence: "yes",
+      lifeInsurancePremiumPaidYear: "2025",
+      employmentPeriod: "full_year",
+    };
+    const calculation = calculatePreparation({ ...form, jurisdictionCode: "NG-LA" }, getJurisdictionCapability("NG-LA"));
+    render(<ReviewStep form={form} calculation={calculation} />);
+
+    expect(screen.getByText("2026-01-01 to 2026-12-31")).toBeInTheDocument();
+    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(screen.getByText("Yes")).toBeInTheDocument();
+  });
 });

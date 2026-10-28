@@ -13,8 +13,9 @@ const links = [
 
 const productLinks = [
   { to: "/calculator", label: "Tax estimator" },
+  { to: "/filing-directory", label: "Filing directory" },
   { to: isFilingLaunchPhase ? publicFilingPath : "/declare", label: "File taxes" },
-  { to: isFilingLaunchPhase ? publicFilingPath : "/pricing", label: "Pricing" },
+  { to: "/pricing", label: "Pricing" },
   { to: "/contact", label: "Contact" },
 ];
 

@@ -22,7 +22,7 @@ const legalPages = [
 ] as const;
 
 describe("public legal pages", () => {
-  it.each(legalPages)("renders the $name page with approval-safe placeholders", async ({ Component, heading }) => {
+  it.each(legalPages)("renders the $name page with confirmed operator details and the required draft-review notice", async ({ Component, heading }) => {
     render(
       <MemoryRouter>
         <Component />
@@ -30,11 +30,39 @@ describe("public legal pages", () => {
     );
 
     expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
-    expect(screen.getByText(/operator identity pending approval/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/privacy contact pending approval/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("FileSmart BridgeIQ LTD")).toBeInTheDocument();
+    expect(screen.getByText("Estate 10, Jordan Lane, Redemption City, Ogun State, Nigeria")).toBeInTheDocument();
+    expect(screen.getAllByText("hello@filesmartnaija.com").length).toBeGreaterThan(0);
+    expect(screen.getByText("Effective date: October 27, 2026")).toBeInTheDocument();
     expect(screen.getByText(/requires operator approval before launch/i)).toBeInTheDocument();
     expect(screen.getByRole("article").className).toContain("break-words");
     expect(document.querySelectorAll("h1")).toHaveLength(1);
+  });
+
+  it("publishes the approved privacy-policy draft controls", () => {
+    render(
+      <MemoryRouter>
+        <Privacy />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: /retention schedule/i })).toBeInTheDocument();
+    expect(screen.getByText(/up to seven years from the relevant tax year/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /privacy rights and deletion requests/i })).toBeInTheDocument();
+    expect(screen.getByText(/complain to the Nigeria Data Protection Commission/i)).toBeInTheDocument();
+  });
+
+  it("publishes the approved terms dispute safeguards", () => {
+    render(
+      <MemoryRouter>
+        <Terms />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: /governing law and disputes/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Arbitration and Mediation Act 2023/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/binding agreement/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Nothing in these terms excludes or limits liability/i)).toBeInTheDocument();
   });
 
   it.each([

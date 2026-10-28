@@ -24,7 +24,8 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
     const result = calculateNigeriaTax(form({
       annualSalary: "5000000", annualRentPaid: "3000000", employeePension: "200000",
       nationalHousingFund: "100000", nationalHealthInsurance: "100000",
-      mortgageInterest: "100000", lifeInsurancePremium: "100000",
+      mortgageInterest: "100000", mortgagePrincipalResidence: "yes",
+      lifeInsurancePremium: "100000", lifeInsurancePremiumPaidYear: "2025",
     }));
     expect(result.totalDeductions).toBe(1100000);
     expect(result.taxableIncome).toBe(3900000);
@@ -71,6 +72,42 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
 
   it("requires a confirmed minimum-wage classification in the narrow exemption interval", () => {
     expect(() => calculateNigeriaTax(form({ annualSalary: "820000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("withholds an estimate when rent spans years or is shared without allocation review", () => {
+    expect(() => calculateNigeriaTax(form({
+      annualSalary: "3000000", annualRentPaid: "1200000",
+      rentPeriodStart: "2025-10-01", rentPeriodEnd: "2026-09-30",
+    }))).toThrow(TaxEstimateUnavailableError);
+    expect(() => calculateNigeriaTax(form({
+      annualSalary: "3000000", annualRentPaid: "1200000",
+      rentPeriodStart: "2026-01-01", rentPeriodEnd: "2026-12-31",
+      rentSharedWithOthers: "yes",
+    }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("withholds an estimate when insurance timing or mortgage residence is unconfirmed", () => {
+    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000" }))).toThrow(TaxEstimateUnavailableError);
+    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000", lifeInsurancePremiumPaidYear: "2026" }))).toThrow(TaxEstimateUnavailableError);
+    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", mortgageInterest: "100000" }))).toThrow(TaxEstimateUnavailableError);
+  });
+
+  it("preserves the approved calculation when review facts are complete and unambiguous", () => {
+    const result = calculateNigeriaTax(form({
+      annualSalary: "5000000", annualRentPaid: "3000000",
+      employeePension: "200000", nationalHousingFund: "100000", nationalHealthInsurance: "100000",
+      rentPeriodStart: "2026-01-01", rentPeriodEnd: "2026-12-31", rentSharedWithOthers: "no",
+      mortgageInterest: "100000", mortgagePrincipalResidence: "yes",
+      lifeInsurancePremium: "100000", lifeInsurancePremiumPaidYear: "2025",
+      employmentPeriod: "full_year",
+    }));
+    expect(result.finalTax).toBe(492000);
+  });
+
+  it("does not apply the minimum-wage treatment to a part-year employment context", () => {
+    expect(() => calculateNigeriaTax(form({
+      annualSalary: "840000", minimumWageEmployment: "yes", employmentPeriod: "part_year",
+    }))).toThrow(TaxEstimateUnavailableError);
   });
 
   it("does not apply legacy CRA or minimum tax", () => {

@@ -58,6 +58,23 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
           </div>
         ))}
         <p className="text-[10px] text-muted-foreground">For life-insurance or deferred-annuity premiums, enter only an amount that qualifies for this assessment year; the Act refers to premiums paid in the preceding year. Confirm the applicable period and keep your policy and payment records.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="life-insurance-premium-paid-year" className="text-xs font-semibold">Life-insurance premium paid year</label>
+            <select id="life-insurance-premium-paid-year" aria-label="Life-insurance premium paid year" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.lifeInsurancePremiumPaidYear ?? ""} onChange={(event) => update("lifeInsurancePremiumPaidYear", event.target.value)}>
+              <option value="">Not confirmed</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="mortgage-principal-residence" className="text-xs font-semibold">Mortgage is for principal residence</label>
+            <select id="mortgage-principal-residence" aria-label="Mortgage is for principal residence" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.mortgagePrincipalResidence ?? ""} onChange={(event) => update("mortgagePrincipalResidence", event.target.value)}>
+              <option value="">Not confirmed</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground">Claim only amounts that meet the Nigeria Tax Act 2025 conditions and for which you have supporting documents. No amount is added automatically.</p>
       </div>
 
@@ -78,6 +95,25 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
           <p className="text-[10px] text-muted-foreground">
             <GlossaryText>20% of qualifying annual rent paid, with relief capped at ₦500,000. Attach documentation.</GlossaryText>
           </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="rent-period-start" className="text-xs font-semibold">Rent period start</label>
+              <Input id="rent-period-start" aria-label="Rent period start" type="date" value={form.rentPeriodStart ?? ""} onChange={(event) => update("rentPeriodStart", event.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="rent-period-end" className="text-xs font-semibold">Rent period end</label>
+              <Input id="rent-period-end" aria-label="Rent period end" type="date" value={form.rentPeriodEnd ?? ""} onChange={(event) => update("rentPeriodEnd", event.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="rent-shared-with-others" className="text-xs font-semibold">Rent shared with others</label>
+            <select id="rent-shared-with-others" aria-label="Rent shared with others" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.rentSharedWithOthers ?? ""} onChange={(event) => update("rentSharedWithOthers", event.target.value)}>
+              <option value="">Not confirmed</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <p className="text-[10px] text-muted-foreground">These facts are saved for review. A period crossing tax years or shared rent currently prevents a numeric estimate until the attributable amount is confirmed.</p>
           {rentRelief && (
             <div className="flex items-center gap-2 bg-primary/5 rounded-lg px-3 py-2">
               <span className="text-[10px] text-primary font-semibold">

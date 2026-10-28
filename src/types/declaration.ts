@@ -52,6 +52,13 @@ export interface DeclarationIncomeFields {
   lifeInsurancePremium: string;
   /** yes only for one full-year employment at or below annual minimum wage */
   minimumWageEmployment: string;
+  /** Optional facts captured for professional review; they do not change the baseline formula. */
+  rentPeriodStart?: string;
+  rentPeriodEnd?: string;
+  rentSharedWithOthers?: string;
+  lifeInsurancePremiumPaidYear?: string;
+  mortgagePrincipalResidence?: string;
+  employmentPeriod?: string;
 }
 
 /** Canonical declaration shape for the jurisdiction-aware flow. */

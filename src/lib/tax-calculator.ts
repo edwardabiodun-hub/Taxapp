@@ -59,6 +59,66 @@ function readAmount(value: string | undefined, label: string, reasons: string[])
   return amount;
 }
 
+function isValidIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function validateReviewFacts(
+  form: NigeriaDeclarationForm,
+  amounts: Record<(typeof moneyFields)[number], number>,
+  reasons: string[],
+): void {
+  const taxYear = form.taxYear.trim();
+  const rentContext = [form.rentPeriodStart, form.rentPeriodEnd, form.rentSharedWithOthers]
+    .some((value) => Boolean(value?.trim()));
+  if (rentContext) {
+    const start = form.rentPeriodStart?.trim() ?? "";
+    const end = form.rentPeriodEnd?.trim() ?? "";
+    if (amounts.annualRentPaid <= 0) {
+      reasons.push("Enter annual rent paid before adding rent-period review facts.");
+    }
+    if (!start || !end) {
+      reasons.push("Provide both the rent period start and end dates before estimating.");
+    } else if (!isValidIsoDate(start) || !isValidIsoDate(end)) {
+      reasons.push("Rent period dates must be valid calendar dates.");
+    } else if (start > end) {
+      reasons.push("Rent period end date must be on or after the start date.");
+    } else if (start.slice(0, 4) !== taxYear || end.slice(0, 4) !== taxYear) {
+      reasons.push("Rent periods crossing tax years require allocation review before estimating.");
+    }
+    const shared = form.rentSharedWithOthers?.trim() ?? "";
+    if (shared && !["yes", "no"].includes(shared)) {
+      reasons.push("Confirm whether the rent was shared with other occupants.");
+    } else if (shared === "yes") {
+      reasons.push("Shared-tenancy rent requires an attributable-share review before estimating.");
+    }
+  }
+
+  if (amounts.lifeInsurancePremium > 0) {
+    const paidYear = form.lifeInsurancePremiumPaidYear?.trim() ?? "";
+    const precedingYear = String(Number(taxYear) - 1);
+    if (!/^\d{4}$/.test(paidYear)) {
+      reasons.push("Confirm the year in which the life-insurance or deferred-annuity premium was paid before estimating.");
+    } else if (paidYear !== precedingYear) {
+      reasons.push(`Life-insurance or deferred-annuity premiums must be reviewed for the applicable preceding year (${precedingYear}).`);
+    }
+  }
+
+  if (amounts.mortgageInterest > 0 && form.mortgagePrincipalResidence?.trim() !== "yes") {
+    reasons.push("Confirm that mortgage interest relates to the taxpayer's principal residence before estimating.");
+  }
+
+  const employmentPeriod = form.employmentPeriod?.trim() ?? "";
+  if (employmentPeriod && !["full_year", "part_year", "multiple_employers"].includes(employmentPeriod)) {
+    reasons.push("Confirm the employment period before estimating.");
+  }
+  if (form.minimumWageEmployment === "yes" && employmentPeriod && employmentPeriod !== "full_year") {
+    reasons.push("The minimum-wage treatment requires one full-year employment period.");
+  }
+}
+
 const roundCurrency = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 export function formatNaira(amount: number): string {
@@ -86,6 +146,8 @@ export function calculateNigeriaTax(
     reasons.push("Rental expenses are entered but net rent income is zero; confirm the net figure.");
   if (amounts.rentPaidBySelf > 0 && amounts.rentPaidBySelf !== amounts.annualRentPaid)
     reasons.push("Confirm annual rent paid: the housing and deduction entries differ or the deduction entry is missing.");
+
+  validateReviewFacts(form, amounts, reasons);
 
   const employment = roundCurrency(amounts.annualSalary + amounts.commissions + amounts.bonuses + amounts.allowances);
   const minimumWageStatus = form.minimumWageEmployment ?? "";
