@@ -21,6 +21,7 @@ import { useState } from "react";
 import PublicFooter from "@/components/public/PublicFooter";
 import PublicNav from "@/components/public/PublicNav";
 import { isFilingLaunchPhase, publicFilingPath } from "@/lib/launch-phase";
+import ResponsiveHeroImage from "@/components/public/ResponsiveHeroImage";
 
 const benefits = [
   {
@@ -105,7 +106,7 @@ const Landing = () => {
           <div className="relative mx-auto w-full max-w-[30rem] lg:mx-0 lg:justify-self-end">
             <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#f2b84b]/25 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-[#b9cec3] bg-[#fffdf8] p-5 shadow-[0_24px_60px_rgba(18,53,47,0.13)] sm:p-7">
-              <img src="/images/filesmart-hero-tax-preparation.png" alt="Woman reviewing tax preparation information at a laptop" className="mb-5 aspect-[4/3] w-full rounded-[1.35rem] object-cover" />
+              <ResponsiveHeroImage alt="Woman reviewing tax preparation information at a laptop" loading="eager" className="mb-5 aspect-[4/3] w-full rounded-[1.35rem] object-cover" />
               <div className="flex items-start justify-between border-b border-[#e5ece6] pb-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7a968d]">Your preparation</p>

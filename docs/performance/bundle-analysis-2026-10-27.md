@@ -46,3 +46,34 @@ The route measurement script was updated to follow same-origin canonical redirec
 | `/filing-waitlist` | 200 after canonical redirect | 33,322 | 628,230 |
 
 The public graph is still dominated by shared React, Supabase, Radix, icon and CSS assets. No additional lazy-loading change is justified without a real browser trace showing route-level execution and interaction costs. The next safe optimization remains a mobile-throttled browser trace, followed by an isolated change to shared vendor boundaries if the trace identifies a measurable bottleneck.
+
+## Throttled browser trace — 2026-10-28
+
+A cold-load browser trace was captured against the stable Cloudflare branch preview with cache disabled, a 390×844 mobile viewport, a 1440×900 desktop viewport, and a Fast 3G approximation (150 ms latency, 1.6 Mbps download, 750 Kbps upload). Each route used a fresh browser context. Trace archives and the machine-readable report are stored locally under `.gstack/benchmark-reports/`.
+
+| Viewport | Route | FCP | Load event | Requests | Transfer | Largest resource |
+|---|---|---:|---:|---:|---:|---|
+| Mobile | `/` | 1.52 s | 10.65 s | 10 | 2.08 MB | `filesmart-hero-tax-preparation.png` — 1.87 MB |
+| Mobile | `/calculator/` | 1.06 s | 1.43 s | 9 | 209 KB | Supabase vendor — 58.7 KB |
+| Desktop | `/` | 1.20 s | 10.62 s | 10 | 2.08 MB | `filesmart-hero-tax-preparation.png` — 1.87 MB |
+| Desktop | `/calculator/` | 1.03 s | 1.45 s | 9 | 209 KB | Supabase vendor — 58.6 KB |
+
+### Interpretation
+
+1. The main performance issue is the homepage hero image, not the JavaScript bundle. The 1.87 MB image accounts for roughly 90% of the homepage transfer and drives the 10.6-second load event under the tested network profile.
+2. The calculator route has a materially smaller cold-load footprint and does not show a large route-specific JavaScript regression.
+3. The safe next optimization is image-specific: generate a responsive, compressed WebP/AVIF hero variant with explicit dimensions and a conservative fallback. Do not split shared Supabase or React vendors based on this trace alone.
+4. The trace is a repeatable baseline, not a Lighthouse field score. Repeat after image optimization and compare FCP, load event, transfer bytes, and largest-resource duration.
+
+## Responsive hero image validation — 2026-10-28
+
+The homepage hero was converted to AVIF/WebP with the original PNG retained as the fallback. The production bundle was measured locally with the same Fast 3G approximation, cache disabled, fresh browser contexts, and mobile/desktop viewports. This is a lab comparison against the earlier Cloudflare preview trace; local-server timings should not be treated as field data.
+
+| Viewport | Route | FCP | Load event | Requests | Transfer | Largest image |
+|---|---|---:|---:|---:|---:|---|
+| Mobile | `/` | 1.18 s | 1.55 s | 10 | 260 KB | AVIF — 50.9 KB |
+| Mobile | `/calculator/` | 0.86 s | 1.29 s | 9 | 209 KB | FileSmart lockup — 12.8 KB |
+| Desktop | `/` | 0.95 s | 1.55 s | 10 | 260 KB | AVIF — 50.9 KB |
+| Desktop | `/calculator/` | 0.86 s | 1.30 s | 9 | 209 KB | FileSmart lockup — 12.8 KB |
+
+The homepage transfer is approximately 88% smaller than the earlier 2.08 MB trace, and the hero image is approximately 97% smaller than the original 1.87 MB PNG. The calculator footprint is effectively unchanged. The new trace archives and machine-readable report are stored locally under `.gstack/benchmark-reports/`.
