@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { AppRoutes } from "./App";
 
 let hasProfile = false;
 let profileLoading = false;
@@ -55,7 +56,6 @@ vi.mock("@/lib/realtime-sync", () => ({
 
 async function renderAppRoutes(initialPath: string) {
   cleanup();
-  const { AppRoutes } = await import("./App");
   render(
     <MemoryRouter initialEntries={[initialPath]}>
       <AppRoutes />
