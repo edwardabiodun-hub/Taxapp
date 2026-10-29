@@ -6,19 +6,19 @@
 
 ### Repository and merge state
 
-- Authoritative production baseline: `taxapp/main` at `59e10c1` (PR #33 documentation reconciliation merged after PR #32).
-- PR #33 is merged; there are no open pull requests for the completed sequence.
-- The former review branch `codex/public-seo-conversion` is retained for history. This follow-up documentation is being prepared on `codex/filing-evidence-refresh-20261029`.
-- The new follow-up branch is clean apart from the documentation changes in this work package and contains no application-code or tax-rule changes.
+- Authoritative production baseline: `taxapp/main` at `72b3455` (PR #35, following PR #34).
+- PRs #34 and #35 are merged; there are no open pull requests for the completed sequence.
+- The prior review branches are retained for history. This follow-up documentation is being prepared on `codex/open-work-followups-20261029`, cut from the merged production baseline.
+- The follow-up branch is isolated from the stale mixed-change checkout and contains only documentation and an explicitly unconnected React Router SSR prototype; it contains no tax-rule, database, secret, or production configuration changes.
 
 ### Current verification state
 
-- `npm run lint`: passed with 0 errors and 0 warnings.
-- Full parallel suite after the timeout fix: 122 test files and 869 tests passed.
+- `npm run lint`: passed with 0 errors and 0 warnings on the merged baseline.
+- Full parallel suite after the timeout fix: 122 test files and 869 tests passed on the merged baseline; this follow-up branch adds 1 adapter test file and the serial suite passes 123 files / 874 tests.
 - `npm run verify:public`: passed with 15 HTML files, 14 crawlable pages, 14 sitemap URLs, complete H1/canonical coverage, and a branded 404.
 - `npm run verify:filing-evidence`: passed with 37 rows and 0 publicly verified rows.
-- Production smoke checks: homepage, calculator, waitlist, education, filing directory, sitemap, robots, CSP, console errors, and real 404 behavior passed on the live Cloudflare-served site.
-- Cloudflare preview deployment provenance is verified in the authenticated Pages dashboard: preview branch `filing-evidence-refresh-20261029`, commit `1b9f3e5`, and deployment `https://75c17de3.filesmartnaija.pages.dev`. This is a preview deployment; production was not changed.
+- Production smoke checks: homepage, calculator, waitlist, education, filing directory, sitemap, robots, CSP, console errors, and real 404 behavior passed on the live Cloudflare-served site after the merged `72b3455` build.
+- Cloudflare production provenance is verified in the authenticated Pages dashboard: `main` commit `72b3455`, deployment URL `https://05bc332b.filesmartnaija.pages.dev`, and live custom domain `https://www.filesmartnaija.com`. No additional production deployment was triggered by this follow-up.
 
 ### Open-work status
 
@@ -26,9 +26,9 @@
 |---|---|---|
 | Implementation-record reconciliation | `READY_FOR_REVIEW` | Dated status, deployment provenance, performance evidence, and conservative filing evidence are reconciled; older entries remain historical snapshots. |
 | Filing-directory evidence research | `READY_FOR_REVIEW` | Continue official-source discovery; do not promote public statuses without current-period workflow evidence and second review. |
-| Current preview Fast 3G trace | `READY_FOR_REVIEW` | Calculator remains the weakest route; investigate route-specific render work before any additional shared-vendor split. |
+| Current preview Fast 3G trace | `READY_FOR_REVIEW` | The calculator first-paint fix is measured and merged; no additional shared-vendor split is justified without a fresh deployed Fast 3G trace for all three routes. |
 | React Router v7 remediation | `READY_FOR_REVIEW` | Prepare an isolated SSR adapter prototype and migration matrix; do not upgrade the production branch. |
-| Cloudflare deployment provenance | `VERIFIED` | Preview row, branch, commit, and deployment URL confirmed in the authenticated Pages dashboard. |
+| Cloudflare deployment provenance | `VERIFIED` | Production `main` row, commit `72b3455`, deployment URL, and live custom domain were confirmed in the authenticated Pages dashboard. |
 | Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | October 29 recheck unchanged: sitemap successful with 12 discovered pages; indexing still processing. |
 | Legal/data-protection review | `BLOCKED` | Requires qualified Nigerian legal review. |
 | Tax content/calculation review | `BLOCKED` | Requires qualified Nigerian tax-professional review. |
@@ -66,15 +66,16 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Filing evidence follow-up research: `READY_FOR_REVIEW` — the October 28 official-source pass narrowed the validation queue and recorded source-backed candidates for Adamawa, Akwa Ibom, Bauchi, Benue, Imo, Kaduna, Kogi, Sokoto, and Yobe, while preserving conservative `not_verified` public statuses until current-period workflow confirmation and second review.
 - Filing evidence recheck: `READY_FOR_REVIEW` — the October 28 recheck captured direct FCT-IRS online filing instructions, an Oyo portal/guidance conflict, and access limitations for Ogun and Anambra; no jurisdiction status was promoted without second review.
 - Filing evidence follow-up pass: `READY_FOR_REVIEW` — official-source material for Delta, Ekiti, Gombe, and Niger was refreshed on October 29. Delta has the strongest Form A lead, while the other three remain assessment, registration, payment, or general-obligation evidence only. All 37 public rows remain `not_verified` pending controlled workflow confirmation and second review.
+- Filing evidence follow-up pass 2: `READY_FOR_REVIEW` — official/public source discovery on October 29 added Bayelsa's annual-returns e-filing lead, Benue's general online tax-return claim, and Taraba's self-assessment/invoicing/payment evidence. None establishes a current-period individual PIT workflow or authority acceptance, so all 37 public rows remain `not_verified`.
 - Evidence-register guard: `READY_FOR_REVIEW` — CI can validate row count, status discipline, source format, review metadata, and prevention of partial evidence.
 - CSV escaping support: `READY_FOR_REVIEW` — evidence-register validation now accepts quoted fields containing commas and doubled quotes while rejecting malformed quoted fields.
 - Route/accessibility smoke coverage: `READY_FOR_REVIEW` — public route tests cover H1 rendering and navigation/home affordances across 13 public routes; calculator behavior remains covered by dedicated tests.
 - Test harness stability: `READY_FOR_REVIEW` — App and onboarding route tests now await asynchronous route rendering and explicitly clean up DOM state, preventing duplicate-render and timeout failures under the full parallel suite.
-- Bundle-performance analysis: `READY_FOR_REVIEW` — production build sizes and lazy-loading boundaries are documented; PDF/XLSX exporters are already deferred and no additional safe split was justified without browser traces. The post-optimization Cloudflare preview records the shared 628 KB same-origin asset footprint; the post-optimization throttled trace remains local-only and must be repeated against the deployed preview before shared-vendor changes.
+- Bundle-performance analysis: `READY_FOR_REVIEW` — production build sizes and lazy-loading boundaries are documented; PDF/XLSX exporters are already deferred and no additional safe split was justified without a fresh three-route trace. The post-optimization Cloudflare preview records the shared 628 KB same-origin asset footprint, while the calculator-only Lighthouse trace is documented separately; repeat the full Fast 3G comparison against the deployed preview before shared-vendor changes.
 - Public cold-load measurement: `READY_FOR_REVIEW` — repeatable route-load measurement script follows same-origin canonical redirects and records HTML bytes, same-origin asset bytes, final status, and fetch timing for `/`, `/calculator`, and `/filing-waitlist`.
-- Supplementary browser performance trace: `READY_FOR_REVIEW` — the gstack browser was built and captured real browser timings at a 390×844 viewport for `/`, `/calculator`, and `/filing-waitlist`. The tool has no network-condition emulation, so the trace is not a Fast 3G result; the calculator route loaded in 523.5 ms and the homepage in 112.1 ms on a cached reload. The measured preview resolved `/filing-waitlist` to `/`; the local build now contains a dedicated static noindex route, which requires a subsequent preview deployment to verify at the edge.
+- Supplementary browser performance trace: `READY_FOR_REVIEW` — the gstack browser was built and captured real browser timings at a 390×844 viewport for `/`, `/calculator`, and `/filing-waitlist`. The tool has no network-condition emulation, so the trace is not a Fast 3G result. The dedicated calculator first-paint trace improved the calculator Lighthouse score from 83 to 93, LCP from 3.31 s to 2.12 s, and TBT from 295 ms to 224 ms without a meaningful transfer-size increase. A fresh deployed Fast 3G trace across all three routes remains required before another shared-vendor change.
 - Filing waitlist edge route: `READY_FOR_REVIEW` — `/filing-waitlist` now has a dedicated generated `noindex, nofollow` HTML page outside the sitemap, and the conflicting SPA rewrite was removed so Cloudflare Pages can serve the static route instead of redirecting it to `/`.
-- React Router compatibility spike: `READY_FOR_REVIEW` — inspected the v7 candidate, route API surface, prerenderer, auth/launch-gate route tables, and migration sequence; no major upgrade was applied to the mixed-change branch.
+- React Router compatibility spike: `READY_FOR_REVIEW` — the isolated SSR adapter prototype in `scripts/router-v7-ssr-adapter-prototype.ts` resolves named and namespace-shaped `StaticRouter` exports and fails closed for missing exports. Four focused tests pass. The prototype is not wired to the production prerenderer and the v6 dependency remains unchanged.
 - Local SEO/AEO content audit: `READY_FOR_REVIEW` — repository metadata, prerendered HTML, source-backed guide fields, legal draft status, and the unexecuted external AEO benchmark are documented.
 - Staging smoke and rollback preparation: `READY_FOR_REVIEW` — staging checklist and non-destructive hosting/database rollback plan are documented; the Cloudflare preview was validated without changing production.
 - Cloudflare deployment verifier: `READY_FOR_REVIEW` — reusable HTTPS route verifier and tests are implemented; the invalid Cloudflare `_redirects` 404 rewrite was removed because Pages supports a top-level `404.html` but not 404 rewrites. The existing `filesmartnaija` Pages project is Git-connected to `edwardabiodun-hub/Taxapp` on `main` with `npm run build:public` and `dist-public`. Both stale Bun lockfiles (`bun.lock` and `bun.lockb`) were removed so Cloudflare can use the tested npm `package-lock.json` instead of failing frozen-install checks. The stable preview `https://codex-public-seo-conversion.filesmartnaija.pages.dev` passes representative route checks, including same-origin `308` canonical redirects followed by `200` and a real `404` for the unknown-route probe.
@@ -140,12 +141,17 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - `docs/seo/search-console-aeo-runbook.md`
 - `docs/security/dependency-advisories.md`
 - `docs/security/react-router-v7-compatibility.md`
+- `docs/security/react-router-v7-ssr-adapter-prototype.md`
 - `docs/filing-directory-evidence-register.csv`
 - `docs/filing-directory-evidence-discovery-2026-10-27.md`
 - `docs/filing-directory-evidence-recheck-2026-10-29.md`
 - `scripts/verify-filing-evidence-register.mjs`
 - `scripts/verify-filing-evidence-register.test.ts`
 - `docs/performance/bundle-analysis-2026-10-27.md`
+- `docs/performance/calculator-first-paint-2026-10-29.md`
+- `docs/filing-directory-evidence-recheck-2026-10-29-follow-up.md`
+- `scripts/router-v7-ssr-adapter-prototype.ts`
+- `scripts/router-v7-ssr-adapter-prototype.test.ts`
 - `docs/seo/content-quality-audit-2026-10-27.md`
 - `docs/superpowers/staging-smoke-test-checklist.md`
 - `docs/superpowers/cloudflare-staging-access.md`
@@ -180,6 +186,8 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Dependency remediation: passed; the glossary validator, Cloudflare verifier, and public-load measurement focused tests pass, and the post-change audit no longer reports `zod`.
 - Cloudflare verifier: focused tests passed (4 tests). The preview deployment from commit `59f98db` at `https://public-seo-conversion.filesmartnaija.pages.dev` (deployment URL `https://bfa9ebca.filesmartnaija.pages.dev`) passed all seven public route checks after following same-origin trailing-slash redirects and returned `404` for the unknown-route probe. The production custom domain was not changed.
 - Public-load measurement tests: passed (3 tests); the stable Cloudflare branch preview recorded 33.3–35.7 kB HTML and 628.2 kB same-origin initial assets for the tested routes after following canonical redirects.
+- Calculator first-paint evidence: passed; Lighthouse 13.6.0 on the fresh mobile preview recorded score 93, FCP/LCP 2.12 s, TBT 224 ms, CLS 0, and approximately 282 KiB total byte weight. The detailed comparison is recorded in `docs/performance/calculator-first-paint-2026-10-29.md`.
+- React Router SSR adapter prototype: passed; `npx vitest run scripts/router-v7-ssr-adapter-prototype.test.ts` completed with 1 file and 4 tests passed. The prototype is intentionally disconnected from the production prerenderer.
 - AEO browser/search attempts: eight site-restricted searches across October 27–28 returned no surfaced FileSmart results. Search Console sitemap status is successful, with 12 discovered pages, while performance and indexing data remain in processing. This is recorded as no measurable visibility observation, not as proof that the site is inaccessible to search or answer engines.
 - Current-period jurisdiction validation: official-source rechecks found live individual filing or returns evidence for FCT, Lagos, Kano, Kwara, and Edo; Oyo's portal is reachable but its guidance is not sufficient to confirm the exact public PIT workflow; Ogun timed out and Anambra exposed insufficient filing text. No jurisdiction was promoted to the public verified register; second-review evidence remains required.
 - React Router v7 spike: isolated branch `codex/react-router-v7-spike` at `ce49098` passed typecheck, 118-file/860-test suite, and lint with existing warnings, but failed the public prerender/verification path because v7.18.5's SSR package exports do not match the current Vite 5 prerender setup. The upgrade remains unmerged and deferred pending an SSR-compatible migration design.
@@ -202,7 +210,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 
 ## Risks and next action
 
-The code is ready for review on the local branch, and the latest Cloudflare branch preview is validated at `https://78f13d48.filesmartnaija.pages.dev` (branch alias: `https://codex-public-seo-conversion.filesmartnaija.pages.dev`). The repository variable `CLOUDFLARE_STAGING_URL` is configured to enable the automated edge gate on future CI runs. Do not promote to the live custom domain without separate explicit authorization. Keep pricing behind account creation. Legal/privacy and tax content remain subject to professional approval; the current pages still visibly identify themselves as drafts. The pre-review calculation safeguards intentionally do not change tax law, bands, relief caps, deadlines, penalties, or authority-acceptance claims. Populate filing-directory rows only through a reviewed, source-backed process; do not convert the current discovery candidates into public claims without evidence and second review. Search Console setup is verified, but AEO benchmark visibility remains unconfirmed because the repeat site-restricted searches surfaced no FileSmart results. The remaining bundle warning is non-blocking; the post-optimization preview confirms edge routing and shared-asset cost. The true Fast 3G lab trace is complete; PageSpeed Insights remained unavailable because its API quota was exhausted. The waitlist-route fix is now externally validated on the non-production preview; the production custom domain remains unchanged.
+The follow-up branch is ready for review from the merged `taxapp/main` baseline at `72b3455`. Production provenance is verified at `https://05bc332b.filesmartnaija.pages.dev` with the live domain `https://www.filesmartnaija.com`; no production deployment was triggered by this follow-up. Keep pricing behind account creation. Legal/privacy and tax content remain subject to professional approval; the current pages still visibly identify themselves as drafts. The pre-review calculation safeguards intentionally do not change tax law, bands, relief caps, deadlines, penalties, or authority-acceptance claims. Populate filing-directory rows only through a reviewed, source-backed process; do not convert the current discovery candidates into public claims without evidence and second review. Search Console setup is verified, but AEO benchmark visibility remains unconfirmed because Google is still processing indexing/performance data; do not rerun or mark benchmark rows complete until that external data becomes available. The remaining bundle warning is non-blocking; the calculator first-paint fix is documented and no further shared-vendor split is justified without a fresh deployed Fast 3G comparison. The isolated React Router adapter is a prototype only; do not upgrade or wire it into production until the migration gates in its design note pass.
 
 ## Corrected preview validation — October 28, 2026
 
