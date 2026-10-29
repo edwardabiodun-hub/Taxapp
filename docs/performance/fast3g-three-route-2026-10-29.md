@@ -2,12 +2,14 @@
 
 ## Scope
 
-This report records a fresh Lighthouse trace against the Cloudflare pull-request preview for commit `dfd5bbe`:
+This report records a fresh Lighthouse trace against the Cloudflare pull-request preview for the application code in commit `dfd5bbe`:
 
 - Preview: `https://9deaa81c.filesmartnaija.pages.dev`
 - Branch: `codex/open-work-followups-20261029`
 - Commit: `dfd5bbe4c2baad08ca64738a046be0e9cca677ca`
 - Production was not changed.
+
+The follow-up commit `35b5b7d` contains documentation-only updates. Its Cloudflare preview was separately smoke-tested at `https://0cf0b798.filesmartnaija.pages.dev`; no application bundle code changed between the trace and that preview.
 
 ## Method
 
