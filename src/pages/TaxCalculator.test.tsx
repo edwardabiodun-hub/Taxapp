@@ -6,6 +6,21 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import TaxCalculator from "./TaxCalculator";
 
 describe("TaxCalculator glossary integration", () => {
+  it("renders the primary calculator content immediately without hiding it behind an entrance animation", () => {
+    render(
+      <TooltipProvider>
+        <MemoryRouter>
+          <TaxCalculator />
+        </MemoryRouter>
+      </TooltipProvider>,
+    );
+
+    const heading = screen.getByRole("heading", { level: 1, name: "Tax Estimator" });
+    const calculatorContent = heading.closest(".max-w-lg");
+
+    expect(calculatorContent).not.toHaveStyle({ opacity: "0" });
+  });
+
   it("adds glossary triggers to explanatory tax content", () => {
     render(
       <TooltipProvider>

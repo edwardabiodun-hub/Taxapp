@@ -100,11 +100,7 @@ const TaxCalculator = () => {
   return (
     <div className={isFilingLaunchPhase ? "min-h-screen bg-[#f8f7f3] text-[#12352f]" : undefined}>
     {isFilingLaunchPhase && <PublicNav />}
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="px-4 py-6 max-w-lg mx-auto pb-28 space-y-5"
-    >
+    <div className="px-4 py-6 max-w-lg mx-auto pb-28 space-y-5">
       <form onSubmit={handleSubmit} aria-label="2026 tax estimate calculator" className="space-y-5">
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -267,7 +263,7 @@ const TaxCalculator = () => {
         </Button>
       )}
       </form>
-    </motion.div>
+    </div>
     {isFilingLaunchPhase && <PublicFooter />}
     </div>
   );
