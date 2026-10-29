@@ -6,9 +6,9 @@
 
 ### Repository and merge state
 
-- Authoritative production baseline: `taxapp/main` at `12009e3a13c830d485e7ddaa63e782043b4a8258`.
-- PR #32 (`test: stabilize parallel app route coverage`) is merged; there are no open pull requests for the completed sequence.
-- The former review branch `codex/public-seo-conversion` is retained for history. New follow-up documentation is being prepared on `codex/open-work-reconciliation-20261029`.
+- Authoritative production baseline: `taxapp/main` at `59e10c1` (PR #33 documentation reconciliation merged after PR #32).
+- PR #33 is merged; there are no open pull requests for the completed sequence.
+- The former review branch `codex/public-seo-conversion` is retained for history. This follow-up documentation is being prepared on `codex/filing-evidence-refresh-20261029`.
 - The new follow-up branch is clean apart from the documentation changes in this work package and contains no application-code or tax-rule changes.
 
 ### Current verification state
@@ -18,17 +18,18 @@
 - `npm run verify:public`: passed with 15 HTML files, 14 crawlable pages, 14 sitemap URLs, complete H1/canonical coverage, and a branded 404.
 - `npm run verify:filing-evidence`: passed with 37 rows and 0 publicly verified rows.
 - Production smoke checks: homepage, calculator, waitlist, education, filing directory, sitemap, robots, CSP, console errors, and real 404 behavior passed on the live Cloudflare-served site.
-- Cloudflare public deployment provenance is partially verified: the custom domain serves the current application through Cloudflare and the GitHub `main` merge is confirmed, but the exact Pages dashboard deployment record was not exposed in the accessible dashboard route.
+- Cloudflare preview deployment provenance is verified in the authenticated Pages dashboard: preview branch `filing-evidence-refresh-20261029`, commit `1b9f3e5`, and deployment `https://75c17de3.filesmartnaija.pages.dev`. This is a preview deployment; production was not changed.
 
 ### Open-work status
 
 | Work item | Current status | Next action or dependency |
 |---|---|---|
-| Implementation-record reconciliation | `IN_PROGRESS` | Complete this dated update and retain older entries as historical snapshots. |
+| Implementation-record reconciliation | `READY_FOR_REVIEW` | Dated status, deployment provenance, performance evidence, and conservative filing evidence are reconciled; older entries remain historical snapshots. |
 | Filing-directory evidence research | `READY_FOR_REVIEW` | Continue official-source discovery; do not promote public statuses without current-period workflow evidence and second review. |
+| Current preview Fast 3G trace | `READY_FOR_REVIEW` | Calculator remains the weakest route; investigate route-specific render work before any additional shared-vendor split. |
 | React Router v7 remediation | `READY_FOR_REVIEW` | Prepare an isolated SSR adapter prototype and migration matrix; do not upgrade the production branch. |
-| Cloudflare deployment provenance | `PARTIALLY_VERIFIED` | Confirm the deployment row/SHA in the authenticated Pages dashboard if commit-level provenance is required. |
-| Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | Recheck after Google finishes indexing/performance processing; current sitemap submission is successful. |
+| Cloudflare deployment provenance | `VERIFIED` | Preview row, branch, commit, and deployment URL confirmed in the authenticated Pages dashboard. |
+| Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | October 29 recheck unchanged: sitemap successful with 12 discovered pages; indexing still processing. |
 | Legal/data-protection review | `BLOCKED` | Requires qualified Nigerian legal review. |
 | Tax content/calculation review | `BLOCKED` | Requires qualified Nigerian tax-professional review. |
 
@@ -64,6 +65,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Filing evidence discovery: `READY_FOR_REVIEW` — official-source candidates for the remaining jurisdictions were expanded on October 28, 2026 without changing the public registry; no credentials, forms, or authority APIs were accessed.
 - Filing evidence follow-up research: `READY_FOR_REVIEW` — the October 28 official-source pass narrowed the validation queue and recorded source-backed candidates for Adamawa, Akwa Ibom, Bauchi, Benue, Imo, Kaduna, Kogi, Sokoto, and Yobe, while preserving conservative `not_verified` public statuses until current-period workflow confirmation and second review.
 - Filing evidence recheck: `READY_FOR_REVIEW` — the October 28 recheck captured direct FCT-IRS online filing instructions, an Oyo portal/guidance conflict, and access limitations for Ogun and Anambra; no jurisdiction status was promoted without second review.
+- Filing evidence follow-up pass: `READY_FOR_REVIEW` — official-source material for Delta, Ekiti, Gombe, and Niger was refreshed on October 29. Delta has the strongest Form A lead, while the other three remain assessment, registration, payment, or general-obligation evidence only. All 37 public rows remain `not_verified` pending controlled workflow confirmation and second review.
 - Evidence-register guard: `READY_FOR_REVIEW` — CI can validate row count, status discipline, source format, review metadata, and prevention of partial evidence.
 - CSV escaping support: `READY_FOR_REVIEW` — evidence-register validation now accepts quoted fields containing commas and doubled quotes while rejecting malformed quoted fields.
 - Route/accessibility smoke coverage: `READY_FOR_REVIEW` — public route tests cover H1 rendering and navigation/home affordances across 13 public routes; calculator behavior remains covered by dedicated tests.

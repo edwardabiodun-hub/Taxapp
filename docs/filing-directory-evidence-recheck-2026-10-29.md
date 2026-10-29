@@ -25,3 +25,30 @@ No credentials were entered, no forms were submitted, no API access was requeste
 2. Record the exact page or portal step showing submission, not only payment or registration.
 3. Add reviewer identity, review date, service period, limitations, and confidence to the evidence register.
 4. Obtain second-person review before promoting any public status.
+
+## Follow-up official-source pass
+
+This follow-up pass refreshed four additional jurisdictions using official revenue-service material. It remains discovery-only: no credentials were entered, no return was submitted, and every corresponding public registry status remains `not_verified`.
+
+| Jurisdiction | Official source checked | Evidence observed | Conservative interpretation |
+|---|---|---|---|
+| Delta | [DSIRS self-service downloads](https://deltairs.com/self-service/), [DSIRS self-service portal](https://selfservice.deltairs.com/), and [individual taxpayer guidance](https://deltairs.com/personal-income-tax/) | DSIRS publishes Tax Form A, an annual tax returns data form, and annual-returns upload instructions. The official self-service FAQ says an individual payer can register and that the portal can file Form A returns. The same portal guidance also describes a self-employed route that starts with filing at the relevant tax office. | Strongest evidence in this pass for an individual-facing online Form A capability, but the current-period authenticated submission was not completed or independently confirmed. Keep `not_verified` pending a controlled workflow check and second review. |
+| Ekiti | [EKIRS official home](https://irs.ekitistate.gov.ng/) | EKIRS describes direct assessment as self-assessment where a taxpayer can calculate and pay online or at designated banks, and it publishes a tax-returns-form link. The page does not expose a complete individual annual PIT/Form A submission sequence. | Evidence supports online assessment/payment and the existence of tax forms, not confirmed individual annual PIT e-filing. Keep `not_verified`. |
+| Gombe | [GIRS official home](https://irs.gm.gov.ng/) and [GIRS individual self-enrolment](https://giras.irs.gm.gov.ng/) | GIRS provides individual taxpayer registration, direct-assessment information, tax calculators, and downloadable Form G/Form H1 materials. The reviewed official pages did not show a current authenticated individual annual PIT/Form A submission workflow. | Evidence supports online registration and tax-service access, but not confirmed individual annual PIT e-filing. Keep `not_verified`. |
+| Niger | [NGSIRS tax types](https://www.ngsirs.gov.ng/tax-types/), [NGSIRS taxpayer rights](https://www.ngsirs.gov.ng/), and [CBTAS online portal](https://nigerigr.ngsirs.gov.ng/) | NGSIRS states that individuals must declare income and comply with filing requirements. CBTAS supports individual sign-in, TIN generation, invoices, and online payments for listed taxes. The reviewed pages did not show an individual annual PIT/Form A upload or submission workflow. | Evidence supports online taxpayer registration/payment and a filing obligation, but not confirmed online individual PIT submission. Keep `not_verified`. |
+
+### Follow-up conclusion
+
+Delta now has a documented, official indication of Form A capability that merits priority for controlled validation. Ekiti, Gombe, and Niger remain evidence leads rather than confirmed individual-PIT competitors because the reviewed material stops at assessment, registration, payment, forms, or general filing obligations. This distinction is intentional and prevents the directory from overstating competitor capability.
+
+## Delta Form A workflow checkpoint
+
+The Delta workflow was rechecked against the official DSIRS portal and official published instructions:
+
+- The public self-service FAQ explicitly says an individual can register and that the portal can file Form A returns.
+- The official self-service dashboard instructions show a `File Form A Returns` module alongside other filing modules.
+- The official downloads page publishes Tax Form A and annual-return materials.
+- Separate official taxpayer guidance still instructs self-employed taxpayers to file annual returns with the relevant tax office, creating a channel/scope ambiguity.
+- The authenticated current-period Form A workflow was not entered, and no return was submitted.
+
+This evidence confirms that a Form A feature is publicly represented by DSIRS, but it does not establish current-period availability, eligible taxpayer scope, successful end-to-end submission, or authority acceptance. Delta therefore remains `not_verified` until an authorized authenticated walkthrough and second-person review resolve those gaps. No public status was changed.

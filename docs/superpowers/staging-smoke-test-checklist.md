@@ -12,6 +12,16 @@ The command must pass all representative public-route checks and must receive an
 
 ## Verified non-production preview
 
+The current documentation-review preview is:
+
+`https://75c17de3.filesmartnaija.pages.dev`
+
+Cloudflare Pages identifies it as a **Preview** deployment from branch `filing-evidence-refresh-20261029`, commit `1b9f3e5` (`docs: refresh router migration baseline`). The branch alias is `https://filing-evidence-refresh-2026.filesmartnaija.pages.dev`. The local branch name is longer than the generated alias; the authenticated deployment record is the source of truth. This was a non-production deployment and did not change the production custom domain.
+
+The public-output verifier passed with 15 HTML files, 14 crawlable pages, 14 sitemap URLs, complete H1/canonical coverage, and a branded `404.html`. Edge checks confirmed expected canonical redirects, `200` responses for representative routes including `/filing-waitlist/`, and a real `404` for an unknown route.
+
+### Earlier waitlist-focused preview
+
 The current review preview is:
 
 `https://codex-public-seo-conversion-rm52.filesmartnaija.pages.dev`
