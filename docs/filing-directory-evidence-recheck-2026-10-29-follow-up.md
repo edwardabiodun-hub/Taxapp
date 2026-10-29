@@ -2,7 +2,7 @@
 
 ## Scope and evidence rule
 
-This is a conservative public-source discovery pass for the filing-directory backlog. It records what official or apparently official portals publicly describe; it does **not** establish that a user can complete a current-period individual PIT return end to end. No credentials were created, no personal data was entered, no form was submitted, and no row in `docs/filing-directory-evidence-register.csv` was changed.
+This is a conservative public-source discovery and controlled-workflow pass for the filing-directory backlog. It records what official or apparently official portals publicly describe; it does **not** establish authority acceptance unless the workflow exposes a successful submission acknowledgement. No credentials were created, no personal data was entered, no form was submitted, and no row in `docs/filing-directory-evidence-register.csv` was changed.
 
 To promote a jurisdiction from `not_verified`, FileSmart still needs current-period workflow evidence, an identifiable official endpoint, confirmation of the relevant individual PIT return type, and a second review.
 
@@ -10,9 +10,9 @@ To promote a jurisdiction from `not_verified`, FileSmart still needs current-per
 
 | Jurisdiction | Official/public source | Observation | Conservative interpretation | Register status |
 |---|---|---|---|---|
-| Bayelsa | [Bayelsa State Board of Internal Revenue](https://bir.by.gov.ng/) | The portal advertises “Annual returns E-filing” and says a taxpayer can download a filing template, complete it, upload it, and submit online; it also exposes an annual-returns contact address. | Strong lead for online annual-return submission. The captured public text does not by itself confirm the exact current-period individual PIT/Form A workflow, successful submission, or acceptance receipt. | `not_verified` |
-| Benue | [Benue State Internal Revenue Service taxpayer portal](https://birs.be.gov.ng/) | The official portal states that individuals and businesses can use the platform to file tax returns, make payments, and access tax-status information. It also exposes a PIT regulations link and taxpayer-identification services. | Confirms an official online tax-service claim, but not a verified individual annual PIT workflow or current-period Form A submission. | `not_verified` |
-| Taraba | [Taraba State Board of Internal Revenue portal](https://tarababirs.revco.ng/) and [Taraba State IRS](https://irs.tr.gov.ng/) | The public portal describes individual/corporate tax access, self-assessment, invoice generation, payment, and transaction history. The state IRS site links registration and tax-information resources; a state-hosted guide references annual-return filing. | Evidence supports online registration, assessment, invoicing, and payment capabilities. It does not establish that a user can submit an individual annual PIT return through the portal without an offline step. | `not_verified` |
+| Bayelsa | [Bayelsa State Board of Internal Revenue](https://bir.by.gov.ng/) and [Bayelsa eTax](https://etax.bir.by.gov.ng/) | The official BIR site explicitly says “File Individual Tax Returns Online With Ease,” gives a four-step path (personal profile → Tax Returns → File Returns → Submit), and separately advertises annual-returns e-filing. The linked eTax portal exposes an individual self-assessment flow with income inputs and a next-step control, plus sign-up/login and annual-return language. | Strongest current evidence in this pass for an individual online-return experience. It still does not prove a completed current-period Form A submission, generated acknowledgement, or authority acceptance because no personal test return was submitted. | `not_verified` |
+| Benue | [Benue State Internal Revenue Service taxpayer portal](https://birs.be.gov.ng/) | The official host returned a 200 Angular application shell during controlled inspection, but the rendered page did not expose accessible filing workflow text or a public individual-return path in the unauthenticated session. | The public claim remains insufficient for individual PIT workflow confirmation. Do not infer filing capability from an app shell or from an unverified claim. | `not_verified` |
+| Taraba | [Taraba State Board of Internal Revenue portal](https://tarababirs.revco.ng/) and [Taraba State IRS](https://irs.tr.gov.ng/) | The public portal exposes registration, login, self-assessment, invoice generation, payment, receipt validation, and transaction-history language. It explicitly describes access for individuals and corporate users, but no annual-return filing control was exposed in the unauthenticated flow. | Evidence supports online registration, assessment, invoicing, and payment capabilities. It does not establish that an individual annual PIT return can be submitted online without an offline step. | `not_verified` |
 
 ## Additional discovery lead not admitted as official evidence
 
@@ -20,9 +20,9 @@ To promote a jurisdiction from `not_verified`, FileSmart still needs current-per
 
 ## Follow-up queue
 
-1. Open Bayelsa's annual-returns flow in a controlled browser session and confirm the current assessment period, individual/PIT classification, required fields, submission acknowledgement, and whether the process is a true filing or only an upload/payment request.
-2. Confirm Benue's “file your tax returns” path with a direct workflow capture and identify whether the return is individual PIT, PAYE/employer, business, or another tax type.
-3. Resolve Taraba's portal ownership and test whether annual returns can be submitted online rather than only assessed, invoiced, or paid.
+1. Obtain a second reviewer for Bayelsa's individual-return evidence and, if authorized test credentials become available, capture the assessment period, final submission acknowledgement, and whether the process is a true filing or only an upload/payment request.
+2. Obtain an authenticated or official support-assisted Benue workflow capture and identify whether the return is individual PIT, PAYE/employer, business, or another tax type.
+3. Resolve Taraba's annual-return path through an official guide or support-assisted workflow; do not infer it from the self-assessment and payment features.
 4. Obtain a second reviewer for any evidence considered for publication.
 
 ## Decision
