@@ -87,3 +87,16 @@ For each question, record the date, engine or test method, observed answer, cite
 | AEO-38 | How can I join the filing waitlist? | `/filing-waitlist` | NOT_RUN |
 | AEO-39 | Does joining the waitlist file my taxes? | `/filing-waitlist` | NOT_RUN |
 | AEO-40 | How can I start preparing without a direct portal integration? | `/filing-directory` | NOT_RUN |
+
+### Search Console/AEO checkpoint — October 29, 2026
+
+Search Console was rechecked in the authenticated browser. The submitted sitemap remains **Success**, with last read **October 28, 2026** and **12 discovered pages**. The Page indexing report still displays **“Processing data, please check again in a day or so.”** No performance or indexing conclusion is made while Google is still processing the property.
+
+The four site-restricted searches below were repeated through the accessible search workflow and returned no results:
+
+- `site:filesmartnaija.com FileSmart Nigerian tax calculator`
+- `site:filesmartnaija.com Nigeria Tax Law 2026 FileSmart`
+- `site:filesmartnaija.com filing directory FileSmart`
+- `site:filesmartnaija.com "FileSmart" tax filing`
+
+No FileSmart result, citation, ranking, or answer-engine response was surfaced. This is recorded as a no-observation result, not proof of non-indexing or content failure. The 40 benchmark rows remain `NOT_RUN` until Search Console finishes processing or a reproducible answer/search result with cited evidence is captured.
