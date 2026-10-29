@@ -51,7 +51,7 @@ The recommendation remains to keep the current v6 dependency pinned in this bran
 
 ## Review checkpoint — October 29, 2026
 
-The merged production branch remains on `react-router-dom@6.30.6`. The current main commit is `12009e3a13c830d485e7ddaa63e782043b4a8258`; no router upgrade was included in that merge. A fresh `npm audit --omit=dev --audit-level=high` still reports the same two moderate advisories, with only the breaking v7 remediation offered by npm.
+The merged production branch remains on `react-router-dom@6.30.6`. The current main commit is `59e10c1` (PR #33 documentation reconciliation); no router upgrade was included in that merge. A fresh `npm audit --omit=dev --audit-level=high` still reports the same two moderate advisories, with only the breaking v7 remediation offered by npm.
 
 The v7 work is therefore an open security-remediation planning item, not an approved production change. The safe next deliverable is an isolated SSR adapter prototype and migration test matrix. Do not run `npm audit fix --force` against the production branch.
 
