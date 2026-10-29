@@ -1,5 +1,39 @@
 # Implementation Record
 
+> **Current-status authority:** The dated reconciliation below supersedes older snapshots in this record. Earlier entries are retained as historical evidence and may contain pre-merge counts or deployment states.
+
+## Current reconciliation — October 29, 2026
+
+### Repository and merge state
+
+- Authoritative production baseline: `taxapp/main` at `12009e3a13c830d485e7ddaa63e782043b4a8258`.
+- PR #32 (`test: stabilize parallel app route coverage`) is merged; there are no open pull requests for the completed sequence.
+- The former review branch `codex/public-seo-conversion` is retained for history. New follow-up documentation is being prepared on `codex/open-work-reconciliation-20261029`.
+- The new follow-up branch is clean apart from the documentation changes in this work package and contains no application-code or tax-rule changes.
+
+### Current verification state
+
+- `npm run lint`: passed with 0 errors and 0 warnings.
+- Full parallel suite after the timeout fix: 122 test files and 869 tests passed.
+- `npm run verify:public`: passed with 15 HTML files, 14 crawlable pages, 14 sitemap URLs, complete H1/canonical coverage, and a branded 404.
+- `npm run verify:filing-evidence`: passed with 37 rows and 0 publicly verified rows.
+- Production smoke checks: homepage, calculator, waitlist, education, filing directory, sitemap, robots, CSP, console errors, and real 404 behavior passed on the live Cloudflare-served site.
+- Cloudflare public deployment provenance is partially verified: the custom domain serves the current application through Cloudflare and the GitHub `main` merge is confirmed, but the exact Pages dashboard deployment record was not exposed in the accessible dashboard route.
+
+### Open-work status
+
+| Work item | Current status | Next action or dependency |
+|---|---|---|
+| Implementation-record reconciliation | `IN_PROGRESS` | Complete this dated update and retain older entries as historical snapshots. |
+| Filing-directory evidence research | `READY_FOR_REVIEW` | Continue official-source discovery; do not promote public statuses without current-period workflow evidence and second review. |
+| React Router v7 remediation | `READY_FOR_REVIEW` | Prepare an isolated SSR adapter prototype and migration matrix; do not upgrade the production branch. |
+| Cloudflare deployment provenance | `PARTIALLY_VERIFIED` | Confirm the deployment row/SHA in the authenticated Pages dashboard if commit-level provenance is required. |
+| Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | Recheck after Google finishes indexing/performance processing; current sitemap submission is successful. |
+| Legal/data-protection review | `BLOCKED` | Requires qualified Nigerian legal review. |
+| Tax content/calculation review | `BLOCKED` | Requires qualified Nigerian tax-professional review. |
+
+No public filing-directory status, tax calculation, production configuration, database schema, or secret was changed by this reconciliation.
+
 ## Approved scope
 
 Local development implementation of public rendering/indexability (FS-03), public SEO metadata and sitemap (FS-05), pricing discovery in the launch conversion journey (FS-07), privacy-safe event contracts (FS-08), calculator UX hardening (FS-06), an evidence-first filing-directory foundation (FS-10), and the owner-approved draft legal package. No production deployment, production database changes, or live tax-rule changes were performed.
@@ -106,6 +140,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - `docs/security/react-router-v7-compatibility.md`
 - `docs/filing-directory-evidence-register.csv`
 - `docs/filing-directory-evidence-discovery-2026-10-27.md`
+- `docs/filing-directory-evidence-recheck-2026-10-29.md`
 - `scripts/verify-filing-evidence-register.mjs`
 - `scripts/verify-filing-evidence-register.test.ts`
 - `docs/performance/bundle-analysis-2026-10-27.md`

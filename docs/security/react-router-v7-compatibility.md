@@ -49,6 +49,12 @@ This is a migration blocker, not a production defect in the current v6 line. A f
 
 The recommendation remains to keep the current v6 dependency pinned in this branch and schedule the v7 work as an isolated migration. The migration is not production-ready until the public prerenderer no longer depends on the incompatible `react-router-dom/server.mjs` boundary and the full authenticated/public/Cloudflare route matrix passes.
 
+## Review checkpoint — October 29, 2026
+
+The merged production branch remains on `react-router-dom@6.30.6`. The current main commit is `12009e3a13c830d485e7ddaa63e782043b4a8258`; no router upgrade was included in that merge. A fresh `npm audit --omit=dev --audit-level=high` still reports the same two moderate advisories, with only the breaking v7 remediation offered by npm.
+
+The v7 work is therefore an open security-remediation planning item, not an approved production change. The safe next deliverable is an isolated SSR adapter prototype and migration test matrix. Do not run `npm audit fix --force` against the production branch.
+
 ## Proposed implementation plan — not applied
 
 ### Phase A — SSR boundary prototype
