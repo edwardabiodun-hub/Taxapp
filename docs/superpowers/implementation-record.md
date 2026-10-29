@@ -18,17 +18,18 @@
 - `npm run verify:public`: passed with 15 HTML files, 14 crawlable pages, 14 sitemap URLs, complete H1/canonical coverage, and a branded 404.
 - `npm run verify:filing-evidence`: passed with 37 rows and 0 publicly verified rows.
 - Production smoke checks: homepage, calculator, waitlist, education, filing directory, sitemap, robots, CSP, console errors, and real 404 behavior passed on the live Cloudflare-served site.
-- Cloudflare public deployment provenance is partially verified: the custom domain serves the current application through Cloudflare and the GitHub `main` merge is confirmed, but the exact Pages dashboard deployment record was not exposed in the accessible dashboard route.
+- Cloudflare preview deployment provenance is verified in the authenticated Pages dashboard: preview branch `filing-evidence-refresh-20261029`, commit `1b9f3e5`, and deployment `https://75c17de3.filesmartnaija.pages.dev`. This is a preview deployment; production was not changed.
 
 ### Open-work status
 
 | Work item | Current status | Next action or dependency |
 |---|---|---|
-| Implementation-record reconciliation | `IN_PROGRESS` | Complete this dated update and retain older entries as historical snapshots. |
+| Implementation-record reconciliation | `READY_FOR_REVIEW` | Dated status, deployment provenance, performance evidence, and conservative filing evidence are reconciled; older entries remain historical snapshots. |
 | Filing-directory evidence research | `READY_FOR_REVIEW` | Continue official-source discovery; do not promote public statuses without current-period workflow evidence and second review. |
+| Current preview Fast 3G trace | `READY_FOR_REVIEW` | Calculator remains the weakest route; investigate route-specific render work before any additional shared-vendor split. |
 | React Router v7 remediation | `READY_FOR_REVIEW` | Prepare an isolated SSR adapter prototype and migration matrix; do not upgrade the production branch. |
-| Cloudflare deployment provenance | `PARTIALLY_VERIFIED` | Confirm the deployment row/SHA in the authenticated Pages dashboard if commit-level provenance is required. |
-| Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | Recheck after Google finishes indexing/performance processing; current sitemap submission is successful. |
+| Cloudflare deployment provenance | `VERIFIED` | Preview row, branch, commit, and deployment URL confirmed in the authenticated Pages dashboard. |
+| Search Console/AEO refresh | `WAITING_EXTERNAL_DATA` | October 29 recheck unchanged: sitemap successful with 12 discovered pages; indexing still processing. |
 | Legal/data-protection review | `BLOCKED` | Requires qualified Nigerian legal review. |
 | Tax content/calculation review | `BLOCKED` | Requires qualified Nigerian tax-professional review. |
 

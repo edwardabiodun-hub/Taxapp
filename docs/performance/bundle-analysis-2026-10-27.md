@@ -146,3 +146,22 @@ After the public prerender/client hydration boundary was hardened, the latest Cl
 | `/filing-waitlist/` | 95 | 2.24 s | 2.24 s | 134 ms | 0 | 279 KiB | 11 |
 
 The calculator remains the slowest route because it loads the largest interactive surface and has the highest blocking time. Shared JavaScript still contributes materially to transfer, but the trace does not identify a safe additional vendor split after the public Supabase deferral and hydration fix. Defer further shared-vendor refactoring until field data or an interaction trace demonstrates a user-visible benefit. The preview also passed route, real-404, and fresh-browser console checks; production was not changed.
+
+## Current branch Fast 3G trace — 2026-10-29
+
+The current documentation branch was deployed to the non-production Cloudflare preview at `https://75c17de3.filesmartnaija.pages.dev` and measured with Lighthouse `13.6.0`. Each route used a fresh mobile run, a 390×844 viewport, cache-disabled DevTools throttling at 150 ms RTT and 1.6 Mbps throughput, and a 4× CPU slowdown. These are lab results, not field Core Web Vitals.
+
+| Route | Score | FCP | LCP | TBT | CLS | Transfer | Main thread | JS bootup | Unused-JS opportunity |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `/` | 91 | 2.62 s | 2.62 s | 148 ms | 0 | 338 kB | 1.20 s | 282 ms | 56 kB |
+| `/calculator/` | 84 | 2.21 s | 3.18 s | 309 ms | 0 | 285 kB | 1.17 s | 467 ms | 56 kB |
+| `/filing-waitlist/` | 95 | 2.13 s | 2.13 s | 144 ms | 0 | 288 kB | 0.84 s | 262 ms | 94 kB |
+
+### Diagnosis and decision
+
+1. The calculator is the only materially weaker route. Its LCP element is explanatory form text; Lighthouse attributes approximately 3.03 seconds of its LCP to element-render delay rather than server response time. React bootup accounts for approximately 433 ms of scripting on this route.
+2. The shared Supabase vendor is the largest reported unused-JavaScript opportunity on all three routes at roughly 56 kB. The waitlist also reports roughly 38 kB of unused motion code, yet still scores 95 with a 144 ms TBT. Unused bytes alone therefore do not establish a user-visible bottleneck.
+3. A further global vendor split is **not justified** by this trace. It would increase cache/request complexity across otherwise healthy routes without addressing the calculator's route-specific render delay.
+4. The next performance change, if prioritized, should be an isolated calculator render/interaction profile. Candidate work includes reducing above-the-fold component work or deferring calculator-only animation—not restructuring React or Supabase globally.
+
+Lighthouse wrote complete, parseable JSON reports before its Windows cleanup process stalled. The metrics above were extracted from those completed reports. The generated raw reports were then removed because they are reproducible build artifacts and are not required in source control.

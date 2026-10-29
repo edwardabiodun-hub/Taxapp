@@ -40,3 +40,15 @@ This follow-up pass refreshed four additional jurisdictions using official reven
 ### Follow-up conclusion
 
 Delta now has a documented, official indication of Form A capability that merits priority for controlled validation. Ekiti, Gombe, and Niger remain evidence leads rather than confirmed individual-PIT competitors because the reviewed material stops at assessment, registration, payment, forms, or general filing obligations. This distinction is intentional and prevents the directory from overstating competitor capability.
+
+## Delta Form A workflow checkpoint
+
+The Delta workflow was rechecked against the official DSIRS portal and official published instructions:
+
+- The public self-service FAQ explicitly says an individual can register and that the portal can file Form A returns.
+- The official self-service dashboard instructions show a `File Form A Returns` module alongside other filing modules.
+- The official downloads page publishes Tax Form A and annual-return materials.
+- Separate official taxpayer guidance still instructs self-employed taxpayers to file annual returns with the relevant tax office, creating a channel/scope ambiguity.
+- The authenticated current-period Form A workflow was not entered, and no return was submitted.
+
+This evidence confirms that a Form A feature is publicly represented by DSIRS, but it does not establish current-period availability, eligible taxpayer scope, successful end-to-end submission, or authority acceptance. Delta therefore remains `not_verified` until an authorized authenticated walkthrough and second-person review resolve those gaps. No public status was changed.
