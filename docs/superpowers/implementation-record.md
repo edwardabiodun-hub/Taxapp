@@ -6,9 +6,9 @@
 
 ### Repository and merge state
 
-- Authoritative production baseline: `taxapp/main` at `12009e3a13c830d485e7ddaa63e782043b4a8258`.
-- PR #32 (`test: stabilize parallel app route coverage`) is merged; there are no open pull requests for the completed sequence.
-- The former review branch `codex/public-seo-conversion` is retained for history. New follow-up documentation is being prepared on `codex/open-work-reconciliation-20261029`.
+- Authoritative production baseline: `taxapp/main` at `59e10c1` (PR #33 documentation reconciliation merged after PR #32).
+- PR #33 is merged; there are no open pull requests for the completed sequence.
+- The former review branch `codex/public-seo-conversion` is retained for history. This follow-up documentation is being prepared on `codex/filing-evidence-refresh-20261029`.
 - The new follow-up branch is clean apart from the documentation changes in this work package and contains no application-code or tax-rule changes.
 
 ### Current verification state
@@ -64,6 +64,7 @@ Local development implementation of public rendering/indexability (FS-03), publi
 - Filing evidence discovery: `READY_FOR_REVIEW` — official-source candidates for the remaining jurisdictions were expanded on October 28, 2026 without changing the public registry; no credentials, forms, or authority APIs were accessed.
 - Filing evidence follow-up research: `READY_FOR_REVIEW` — the October 28 official-source pass narrowed the validation queue and recorded source-backed candidates for Adamawa, Akwa Ibom, Bauchi, Benue, Imo, Kaduna, Kogi, Sokoto, and Yobe, while preserving conservative `not_verified` public statuses until current-period workflow confirmation and second review.
 - Filing evidence recheck: `READY_FOR_REVIEW` — the October 28 recheck captured direct FCT-IRS online filing instructions, an Oyo portal/guidance conflict, and access limitations for Ogun and Anambra; no jurisdiction status was promoted without second review.
+- Filing evidence follow-up pass: `READY_FOR_REVIEW` — official-source material for Delta, Ekiti, Gombe, and Niger was refreshed on October 29. Delta has the strongest Form A lead, while the other three remain assessment, registration, payment, or general-obligation evidence only. All 37 public rows remain `not_verified` pending controlled workflow confirmation and second review.
 - Evidence-register guard: `READY_FOR_REVIEW` — CI can validate row count, status discipline, source format, review metadata, and prevention of partial evidence.
 - CSV escaping support: `READY_FOR_REVIEW` — evidence-register validation now accepts quoted fields containing commas and doubled quotes while rejecting malformed quoted fields.
 - Route/accessibility smoke coverage: `READY_FOR_REVIEW` — public route tests cover H1 rendering and navigation/home affordances across 13 public routes; calculator behavior remains covered by dedicated tests.
