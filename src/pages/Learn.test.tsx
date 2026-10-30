@@ -104,9 +104,9 @@ describe("public education routes", () => {
       "href",
       "/calculator",
     );
-    expect(screen.getByRole("img", { name: /woman reviewing tax records/i })).toHaveAttribute(
+    expect(screen.getByRole("img", { name: /small-business owner checking receipts/i })).toHaveAttribute(
       "src",
-      "/images/filesmart-hero-tax-preparation.webp",
+      "/images/tax-guide-calculator-2026.png",
     );
   });
 

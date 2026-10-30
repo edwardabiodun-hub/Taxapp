@@ -47,14 +47,54 @@ export interface TaxGuide {
 const educationalSourceNote =
   "General educational information only. Confirm the current rules with the relevant tax authority or a qualified adviser before acting.";
 
-const taxPreparationImage = {
-  src: "/images/filesmart-hero-tax-preparation.webp",
-  alt: "Woman reviewing tax records beside a laptop",
+const taxLawImage = {
+  src: "/images/tax-guide-law-2026.png",
+  alt: "Woman reviewing a tax checklist at home",
 };
 
-const smallBusinessImage = {
-  src: "/images/filesmart-small-business.png",
-  alt: "Small-business owners reviewing records together at a laptop",
+const exemptionsImage = {
+  src: "/images/tax-guide-exemptions-2026.png",
+  alt: "Man reviewing a salary statement and tax worksheet",
+};
+
+const freelancerImage = {
+  src: "/images/tax-guide-freelancer-2026.png",
+  alt: "Freelancer reviewing invoices in a creative studio",
+};
+
+const payeSalaryImage = {
+  src: "/images/tax-guide-paye-salary-2026.png",
+  alt: "Colleagues reviewing payroll records in an office",
+};
+
+const calculatorImage = {
+  src: "/images/tax-guide-calculator-2026.png",
+  alt: "Small-business owner checking receipts with a calculator",
+};
+
+const calculationImage = {
+  src: "/images/tax-guide-calculation-2026.png",
+  alt: "Couple organizing household tax records at home",
+};
+
+const onlineFilingImage = {
+  src: "/images/tax-guide-online-filing-2026.png",
+  alt: "Entrepreneur completing an online tax form",
+};
+
+const annualReturnImage = {
+  src: "/images/tax-guide-annual-return-2026.png",
+  alt: "Payroll adviser reviewing an annual tax checklist with an employee",
+};
+
+const deductionsImage = {
+  src: "/images/tax-guide-deductions-2026.png",
+  alt: "Renter reviewing a lease and rent receipts",
+};
+
+const deadlineImage = {
+  src: "/images/tax-guide-deadline-2026.png",
+  alt: "Small-business owner planning a tax deadline",
 };
 
 export const taxGuides: TaxGuide[] = [
@@ -63,7 +103,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Nigeria Tax Law 2026: New PAYE Rates and Changes Explained",
     summary:
       "Understand Nigeria's new 2026 personal income tax rates, exemptions, deductions and PAYE changes, with practical examples for employees.",
-    image: taxPreparationImage,
+    image: taxLawImage,
     category: "personal-income-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -102,7 +142,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Who Is Exempt From Income Tax in Nigeria? 2026 Guide",
     summary:
       "Find out who pays zero personal income tax in Nigeria in 2026, how the ₦800,000 tax-free band works, and whether you still need to file.",
-    image: taxPreparationImage,
+    image: exemptionsImage,
     category: "tax-compliance",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -136,7 +176,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Do Freelancers Pay Tax in Nigeria? 2026 Rules Explained",
     summary:
       "Learn how Nigerian freelancers and side hustlers are taxed in 2026, what records to keep, and how to calculate and file personal income tax.",
-    image: smallBusinessImage,
+    image: freelancerImage,
     category: "self-employed-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -174,7 +214,7 @@ export const taxGuides: TaxGuide[] = [
     title: "If You Earn ₦300,000 Monthly in Nigeria, How Much Tax Will You Pay in 2026?",
     summary:
       "See an illustrative 2026 Nigerian PAYE calculation for a ₦300,000 monthly salary, including progressive bands, deductions, and estimated take-home considerations.",
-    image: taxPreparationImage,
+    image: payeSalaryImage,
     category: "employment-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -211,7 +251,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Nigeria PAYE Tax Calculator 2026: How Much Tax Will You Pay?",
     summary:
       "Calculate an illustrative 2026 PAYE estimate using the current income-tax bands, salary examples, and eligible deductions.",
-    image: taxPreparationImage,
+    image: calculatorImage,
     category: "employment-tax",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -251,7 +291,7 @@ export const taxGuides: TaxGuide[] = [
     title: "How to Calculate Personal Income Tax in Nigeria: 2026 Guide",
     summary:
       "Work through annual income, eligible deductions, taxable income, and the 2026 progressive bands with practical examples.",
-    image: taxPreparationImage,
+    image: calculationImage,
     category: "personal-income-tax",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -293,7 +333,7 @@ export const taxGuides: TaxGuide[] = [
     title: "How to File Personal Income Tax Online in Nigeria in 2026",
     summary:
       "Prepare for an online personal income tax return with a Tax ID, income records, deduction evidence, and the right authority's filing route.",
-    image: smallBusinessImage,
+    image: onlineFilingImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -333,7 +373,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Does PAYE Mean You Don't Need to File a Tax Return?",
     summary:
       "PAYE may be deducted from your salary, but that does not automatically answer whether you have an annual individual return to complete.",
-    image: taxPreparationImage,
+    image: annualReturnImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -369,7 +409,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Tax Deductions and Rent Relief: What Can You Claim in 2026?",
     summary:
       "Understand how rent relief, pension, NHF, health insurance, mortgage interest, and insurance deductions may affect taxable income.",
-    image: smallBusinessImage,
+    image: deductionsImage,
     category: "eligible-deductions",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -409,7 +449,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Personal Income Tax Filing Deadline: Who Must File and When?",
     summary:
       "Keep track of the standard individual, employer, and monthly PAYE dates, plus the records to gather before filing.",
-    image: taxPreparationImage,
+    image: deadlineImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",

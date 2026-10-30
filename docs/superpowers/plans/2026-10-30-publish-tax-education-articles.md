@@ -76,3 +76,16 @@
 - [x] Add accessible image metadata to every education guide.
 - [x] Render lazy-loaded responsive thumbnails on `/learn` and a prominent responsive image on each guide page.
 - [x] Validate image source, alt text, focused rendering, full test suite, lint, public build, and crawlable output.
+
+### Task 5: Replace repeated guide imagery
+
+**Files:**
+- Modify: `src/content/tax-guides.ts`
+- Test: `src/content/tax-guides.test.ts`
+- Test: `src/pages/Learn.test.tsx`
+- Add: `public/images/tax-guide-*.png`
+
+- [x] Generate ten distinct local human-centered images for the education guides.
+- [x] Assign exactly one unique image and descriptive alt text to each guide.
+- [x] Add a regression test that prevents image reuse across guides.
+- [ ] Validate the updated cards, article routes, public build, and deployed output.

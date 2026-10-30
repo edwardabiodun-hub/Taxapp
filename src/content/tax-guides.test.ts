@@ -29,6 +29,12 @@ describe("tax guide content", () => {
     });
   });
 
+  it("assigns a unique image to every guide", () => {
+    expect(new Set(taxGuides.map((guide) => guide.image.src)).size).toBe(
+      taxGuides.length,
+    );
+  });
+
   it("covers the required Nigerian tax education topics", () => {
     expect(taxGuides.map((guide) => guide.slug)).toEqual(
       expect.arrayContaining([
