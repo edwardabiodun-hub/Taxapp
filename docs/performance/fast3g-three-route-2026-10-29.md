@@ -48,11 +48,15 @@ The same shared vendors are requested on the marketing homepage, calculator, and
 
 ## Decision
 
-Further vendor optimization is justified as a follow-up, but it should be targeted rather than a blind split:
+The trace does show material route-level impact on the calculator: a score of 77 and 530 ms of total blocking time under the tested Fast 3G profile. That justifies a targeted performance investigation. It does **not** by itself justify changing the shared vendor graph, because the trace does not attribute the blocking time to one specific vendor.
+
+Further vendor optimization should therefore remain conditional on a follow-up profile that demonstrates a measurable user-facing benefit:
 
 1. Keep the current PR limited to evidence and the isolated router prototype.
 2. Profile why `vendor-supabase` and `vendor-motion` are present on all public routes.
 3. Preserve the existing public Supabase deferral and test whether support chat, analytics, authenticated providers, and motion can be isolated from the public shell without changing behavior.
-4. Measure the result again on the same three routes before and after the change.
+4. Measure the result again on the same three routes before and after any isolated change.
+
+No vendor split is being applied in this workstream. The React Router v7 adapter also remains isolated and is not part of the performance path.
 
 The calculator's `530 ms` TBT is the first optimization target. No production bundle change is included in this PR, and no production deployment was triggered.
