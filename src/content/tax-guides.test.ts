@@ -8,7 +8,7 @@ describe("tax guide content", () => {
   it("contains the published guides with unique slugs and valid metadata", () => {
     const slugs = taxGuides.map((guide) => guide.slug);
 
-    expect(taxGuides).toHaveLength(4);
+    expect(taxGuides).toHaveLength(10);
     expect(new Set(slugs).size).toBe(taxGuides.length);
 
     taxGuides.forEach((guide) => {
@@ -34,8 +34,45 @@ describe("tax guide content", () => {
         "personal-income-tax-exemptions-nigeria-2026",
         "freelancer-side-hustle-tax-nigeria-2026",
         "paye-300000-monthly-nigeria-2026",
+        "nigeria-paye-tax-calculator-2026",
+        "how-to-calculate-personal-income-tax-nigeria-2026",
+        "how-to-file-personal-income-tax-online-nigeria-2026",
+        "paye-employees-annual-tax-return-nigeria",
+        "nigeria-tax-deductions-rent-relief-2026",
+        "nigeria-personal-income-tax-filing-deadline-2026",
       ]),
     );
+  });
+
+  it("marks the new articles for professional review and routes CTAs internally", () => {
+    const newSlugs = [
+      "nigeria-paye-tax-calculator-2026",
+      "how-to-calculate-personal-income-tax-nigeria-2026",
+      "how-to-file-personal-income-tax-online-nigeria-2026",
+      "paye-employees-annual-tax-return-nigeria",
+      "nigeria-tax-deductions-rent-relief-2026",
+      "nigeria-personal-income-tax-filing-deadline-2026",
+    ];
+
+    newSlugs.forEach((slug) => {
+      const guide = getTaxGuide(slug);
+
+      expect(guide?.reviewStatus).toBe("pending-professional-review");
+      expect(guide?.cta?.href).toMatch(/^\/(calculator|filing-waitlist)$/);
+    });
+  });
+
+  it("uses stable official source links for deadline and tax-framework claims", () => {
+    const deadlineGuide = getTaxGuide("nigeria-personal-income-tax-filing-deadline-2026");
+    const sourceUrls = taxGuides.flatMap((guide) => guide.sources?.map((source) => source.url) ?? []);
+
+    expect(sourceUrls).not.toContain("https://www.jrb.gov.ng/assets/2026-pit-guidelines-TJG3n9-T.pdf");
+    expect(deadlineGuide?.sources).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        label: "FCT-IRS individual filing deadline extension notice",
+        url: "https://fctirs.gov.ng/fct-irs-extends-deadline-for-filing-of-individual-tax-returns-by-one-month/",
+      }),
+    ]));
   });
 
   it("looks up guides and returns all guides when no category is supplied", () => {

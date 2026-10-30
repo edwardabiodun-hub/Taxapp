@@ -84,6 +84,16 @@ describe("public education routes", () => {
     expect(document.querySelectorAll("h1")).toHaveLength(1);
   });
 
+  it("shows the review status and internal CTA on a new guide", () => {
+    renderRoute("/learn/nigeria-paye-tax-calculator-2026", <Guide />);
+
+    expect(screen.getByText(/professional review pending/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /calculate your paye estimate/i })).toHaveAttribute(
+      "href",
+      "/calculator",
+    );
+  });
+
   it("renders the 2026 tax article cluster with structured sections and references", () => {
     renderRoute("/learn/nigeria-tax-law-2026-personal-income-tax", <Guide />);
 

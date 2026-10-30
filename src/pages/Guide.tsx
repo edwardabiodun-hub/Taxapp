@@ -59,6 +59,11 @@ const Guide = () => {
         <h1 className="mt-5 break-words font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl"><NairaText>{guide.title}</NairaText></h1>
         <p className="mt-5 text-lg leading-8 text-[#55736c]"><NairaText>{guide.summary}</NairaText></p>
         <p className="mt-4 text-sm text-[#55736c]">{guide.readTimeMinutes} min read · Last reviewed {guide.updatedAt}</p>
+        {guide.reviewStatus === "pending-professional-review" && (
+          <p className="mt-4 rounded-xl border border-[#e7c981] bg-[#fff8e9] px-4 py-3 text-sm leading-6 text-[#5c461e]" role="note">
+            Professional review pending — this is general information, not individualized tax advice.
+          </p>
+        )}
 
         <article className="mt-10 break-words space-y-6">
           {guide.blocks.map((block, index) => {
@@ -88,6 +93,22 @@ const Guide = () => {
             return <p key={`${block.type}-${index}`} className="leading-8 text-[#23483f]"><NairaText>{block.text}</NairaText></p>;
           })}
         </article>
+
+        {guide.cta && (
+          <Card className="mt-10 border-[#cfe0d4] bg-[#edf4ee] shadow-none">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-[#12352f]">Continue with FileSmart</p>
+                <p className="mt-1 text-sm leading-6 text-[#55736c]">Turn what you have learned into a clearer preparation record.</p>
+              </div>
+              <Button asChild className="min-h-11 rounded-full bg-[#12352f] text-[#fbfaf5] hover:bg-[#1c4e44]">
+                <Link className="inline-flex min-h-11 items-center" to={guide.cta.href}>
+                  {guide.cta.label} <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <aside className="mt-10 border-t border-[#dce6df] pt-6 text-sm leading-6 text-[#55736c]">
           <p><NairaText>{guide.sourceNote}</NairaText></p>
