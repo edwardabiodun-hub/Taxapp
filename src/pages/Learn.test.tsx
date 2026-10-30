@@ -37,6 +37,18 @@ describe("public education routes", () => {
     expect(document.querySelectorAll("h1")).toHaveLength(1);
   });
 
+  it("shows a human image for every education guide card", () => {
+    renderRoute("/learn", <Learn />);
+
+    taxGuides.forEach((guide) => {
+      const guideImages = screen
+        .getAllByRole("img")
+        .filter((image) => image.getAttribute("src") === guide.image?.src);
+      expect(guideImages.length).toBeGreaterThan(0);
+      expect(guideImages[0]).toHaveAttribute("alt", guide.image?.alt);
+    });
+  });
+
   it("keeps public education navigation and guide actions at least 44px tall", () => {
     renderRoute("/learn", <Learn />);
 
@@ -91,6 +103,10 @@ describe("public education routes", () => {
     expect(screen.getByRole("link", { name: /calculate your paye estimate/i })).toHaveAttribute(
       "href",
       "/calculator",
+    );
+    expect(screen.getByRole("img", { name: /woman reviewing tax records/i })).toHaveAttribute(
+      "src",
+      "/images/filesmart-hero-tax-preparation.webp",
     );
   });
 

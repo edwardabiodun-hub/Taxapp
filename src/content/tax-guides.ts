@@ -32,6 +32,7 @@ export interface TaxGuide {
   slug: string;
   title: string;
   summary: string;
+  image: { src: string; alt: string };
   category: string;
   publishedAt: string;
   updatedAt: string;
@@ -46,12 +47,23 @@ export interface TaxGuide {
 const educationalSourceNote =
   "General educational information only. Confirm the current rules with the relevant tax authority or a qualified adviser before acting.";
 
+const taxPreparationImage = {
+  src: "/images/filesmart-hero-tax-preparation.webp",
+  alt: "Woman reviewing tax records beside a laptop",
+};
+
+const smallBusinessImage = {
+  src: "/images/filesmart-small-business.png",
+  alt: "Small-business owners reviewing records together at a laptop",
+};
+
 export const taxGuides: TaxGuide[] = [
   {
     slug: "nigeria-tax-law-2026-personal-income-tax",
     title: "Nigeria Tax Law 2026: New PAYE Rates and Changes Explained",
     summary:
       "Understand Nigeria's new 2026 personal income tax rates, exemptions, deductions and PAYE changes, with practical examples for employees.",
+    image: taxPreparationImage,
     category: "personal-income-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -90,6 +102,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Who Is Exempt From Income Tax in Nigeria? 2026 Guide",
     summary:
       "Find out who pays zero personal income tax in Nigeria in 2026, how the ₦800,000 tax-free band works, and whether you still need to file.",
+    image: taxPreparationImage,
     category: "tax-compliance",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -123,6 +136,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Do Freelancers Pay Tax in Nigeria? 2026 Rules Explained",
     summary:
       "Learn how Nigerian freelancers and side hustlers are taxed in 2026, what records to keep, and how to calculate and file personal income tax.",
+    image: smallBusinessImage,
     category: "self-employed-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -160,6 +174,7 @@ export const taxGuides: TaxGuide[] = [
     title: "If You Earn ₦300,000 Monthly in Nigeria, How Much Tax Will You Pay in 2026?",
     summary:
       "See an illustrative 2026 Nigerian PAYE calculation for a ₦300,000 monthly salary, including progressive bands, deductions, and estimated take-home considerations.",
+    image: taxPreparationImage,
     category: "employment-tax",
     publishedAt: "2026-10-14",
     updatedAt: "2026-10-14",
@@ -196,6 +211,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Nigeria PAYE Tax Calculator 2026: How Much Tax Will You Pay?",
     summary:
       "Calculate an illustrative 2026 PAYE estimate using the current income-tax bands, salary examples, and eligible deductions.",
+    image: taxPreparationImage,
     category: "employment-tax",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -235,6 +251,7 @@ export const taxGuides: TaxGuide[] = [
     title: "How to Calculate Personal Income Tax in Nigeria: 2026 Guide",
     summary:
       "Work through annual income, eligible deductions, taxable income, and the 2026 progressive bands with practical examples.",
+    image: taxPreparationImage,
     category: "personal-income-tax",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -276,6 +293,7 @@ export const taxGuides: TaxGuide[] = [
     title: "How to File Personal Income Tax Online in Nigeria in 2026",
     summary:
       "Prepare for an online personal income tax return with a Tax ID, income records, deduction evidence, and the right authority's filing route.",
+    image: smallBusinessImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -315,6 +333,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Does PAYE Mean You Don't Need to File a Tax Return?",
     summary:
       "PAYE may be deducted from your salary, but that does not automatically answer whether you have an annual individual return to complete.",
+    image: taxPreparationImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -350,6 +369,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Tax Deductions and Rent Relief: What Can You Claim in 2026?",
     summary:
       "Understand how rent relief, pension, NHF, health insurance, mortgage interest, and insurance deductions may affect taxable income.",
+    image: smallBusinessImage,
     category: "eligible-deductions",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",
@@ -389,6 +409,7 @@ export const taxGuides: TaxGuide[] = [
     title: "Personal Income Tax Filing Deadline: Who Must File and When?",
     summary:
       "Keep track of the standard individual, employer, and monthly PAYE dates, plus the records to gather before filing.",
+    image: taxPreparationImage,
     category: "tax-compliance",
     publishedAt: "2026-10-30",
     updatedAt: "2026-10-30",

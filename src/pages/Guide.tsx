@@ -64,6 +64,17 @@ const Guide = () => {
             Professional review pending — this is general information, not individualized tax advice.
           </p>
         )}
+        <figure className="mt-8 overflow-hidden rounded-[2rem] border border-[#b9cec3] bg-white shadow-[0_24px_60px_rgba(18,53,47,0.13)]">
+          <img
+            src={guide.image.src}
+            alt={guide.image.alt}
+            width={1600}
+            height={900}
+            loading="eager"
+            decoding="async"
+            className="aspect-[16/9] w-full object-cover"
+          />
+        </figure>
 
         <article className="mt-10 break-words space-y-6">
           {guide.blocks.map((block, index) => {

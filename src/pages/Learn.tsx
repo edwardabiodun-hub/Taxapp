@@ -51,7 +51,16 @@ const Learn = () => {
 
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {guides.map((guide) => (
-            <Card key={guide.slug} className="min-w-0 flex h-full flex-col border-[#dce6df] bg-white/70 shadow-none">
+            <Card key={guide.slug} className="min-w-0 flex h-full flex-col overflow-hidden border-[#dce6df] bg-white/70 shadow-none">
+              <img
+                src={guide.image.src}
+                alt={guide.image.alt}
+                width={1600}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[16/9] w-full object-cover"
+              />
               <CardHeader>
                 <Badge variant="secondary" className="w-fit capitalize">{categoryLabel(guide.category)}</Badge>
                 <CardTitle className="min-w-0 break-words pt-3 text-xl leading-snug"><Link className="block min-h-11 break-words hover:underline" to={`/learn/${guide.slug}`}><NairaText>{guide.title}</NairaText></Link></CardTitle>

@@ -62,3 +62,17 @@
 - [ ] Confirm all six `/learn/<slug>` routes and sitemap entries are generated.
 - [ ] Run `git diff --check` and inspect the final diff for unintended changes.
 - [ ] Record tax-professional review as outstanding; do not deploy from this task.
+
+### Task 4: Embed generated human imagery
+
+**Files:**
+- Modify: `src/content/tax-guides.ts`
+- Modify: `src/pages/Learn.tsx`
+- Modify: `src/pages/Guide.tsx`
+- Test: `src/content/tax-guides.test.ts`
+- Test: `src/pages/Learn.test.tsx`
+
+- [x] Reuse the existing local FileSmart human-image assets rather than adding external image dependencies.
+- [x] Add accessible image metadata to every education guide.
+- [x] Render lazy-loaded responsive thumbnails on `/learn` and a prominent responsive image on each guide page.
+- [x] Validate image source, alt text, focused rendering, full test suite, lint, public build, and crawlable output.

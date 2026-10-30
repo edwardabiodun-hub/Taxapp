@@ -16,6 +16,8 @@ describe("tax guide content", () => {
       expect(guide.summary.trim()).not.toBe("");
       expect(guide.category.trim()).not.toBe("");
       expect(guide.sourceNote.trim()).not.toBe("");
+      expect(guide.image?.src).toMatch(/^\/images\/.+\.(png|webp|avif)$/);
+      expect(guide.image?.alt.trim()).not.toBe("");
       [guide.publishedAt, guide.updatedAt].forEach((date) => {
         expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         expect(new Date(`${date}T00:00:00.000Z`).toISOString()).toBe(
