@@ -70,6 +70,21 @@ This additional pass reviewed the next evidence queue using official revenue-ser
 
 All candidates remain `not_verified` until an authorized workflow check captures the relevant individual PIT/Form A path, current assessment period, final submission acknowledgement, and second review.
 
+## Official-source refresh — 2026-10-30
+
+This refresh used current official revenue-service pages and downloadable materials. It strengthens the controlled-validation queue but does not change any public register status. No account was created, no personal taxpayer data was entered, no payment was made, and no return was submitted.
+
+| Jurisdiction | Current official evidence | Conservative interpretation | Register status |
+|---|---|---|---|
+| Bayelsa | The [Bayelsa BIR](https://bir.by.gov.ng/) currently describes a four-step individual-return path, including **Tax Returns → File Returns → Submit**, and separately describes annual-returns e-filing through the official eTax portal. | Strong public evidence of an individual online-return path. Still needs a controlled current-period workflow capture, acknowledgement/reference, and second review before promotion. | `not_verified` |
+| Delta | The official [Delta self-service portal](https://selfservice.deltairs.com/) identifies **File Form A Returns** and annual/monthly return functions; the official [Delta downloads page](https://deltairs.com/self-service/) provides Tax Form A and annual-return materials. | Strongest current Form A validation lead. Public materials also contain PAYE-specific annual-upload instructions, so the individual Form A workflow and final acknowledgement must be distinguished in a controlled check. | `not_verified` |
+| Imo | [IIRS services](https://www.iirs.im.gov.ng/services) states that annual tax returns can be filed online through the self-service portal; the official [Form A](https://iirs.im.gov.ng/document/docs/forms/form%20a.pdf) is available, and the [IIRS self-service portal](https://iirs.fenixrms.com/) advertises returns/e-filing. | Strong candidate for individual PIT/Form A validation. The portal FAQ contains an inconsistent cross-state reference, so the actual current Imo workflow must be verified before relying on the claim. | `not_verified` |
+| Kaduna | The current [KADIRS portal](https://kadirs.kdsg.gov.ng/?cp=2) says taxpayers can submit annual income-tax returns digitally and separately lists digital tax services. | Supports an online annual-return claim, but the public material does not prove the individual PIT/Form A path, current assessment period, or successful acknowledgement. | `not_verified` |
+
+### Queue decision
+
+The evidence refresh confirms the order for controlled validation: **Bayelsa and Delta first**, followed by **Imo and Kaduna**, with Bauchi next. The evidence is sufficient to prioritize support-assisted or authorized test-account checks, not to publish a verified filing claim. All 37 register rows remain `not_verified`.
+
 ## Controlled portal inspection — first validation queue — 2026-10-29
 
 The first three candidates were inspected in a browser without creating accounts, entering personal data, or submitting forms.
