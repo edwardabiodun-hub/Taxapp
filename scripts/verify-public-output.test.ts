@@ -8,6 +8,7 @@ async function createPublicFixture(options: {
   readonly pageCount: number;
   readonly include404?: boolean;
   readonly includeNoIndexPage?: boolean;
+  readonly includeCreateAccountPage?: boolean;
   readonly missingH1?: boolean;
   readonly missingCanonical?: boolean;
 }): Promise<string> {
@@ -32,6 +33,15 @@ async function createPublicFixture(options: {
     await writeFile(
       path.join(noIndexRoot, "index.html"),
       '<!doctype html><html><head><meta name="robots" content="noindex, nofollow" /></head><body><h1>Waitlist</h1></body></html>',
+      "utf8",
+    );
+  }
+  if (options.includeCreateAccountPage) {
+    const accountRoot = path.join(root, "create-account");
+    await mkdir(accountRoot, { recursive: true });
+    await writeFile(
+      path.join(accountRoot, "index.html"),
+      '<!doctype html><html><head><meta name="robots" content="noindex, nofollow" /></head><body><h1>Create your account</h1></body></html>',
       "utf8",
     );
   }
@@ -81,6 +91,14 @@ describe("public output verification", () => {
       missingCanonical: [],
       sitemapUrlCount: 1,
       has404: true,
+    });
+  });
+
+  it("requires a deployed account route document for direct create-account links", async () => {
+    const root = await createPublicFixture({ pageCount: 14, includeCreateAccountPage: true });
+
+    await expect(verifyPublicOutput(root)).resolves.toMatchObject({
+      hasCreateAccount: true,
     });
   });
 });

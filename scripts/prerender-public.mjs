@@ -24,6 +24,7 @@ const pageModules = {
   "/calculator": "/src/pages/TaxCalculator.tsx",
   "/filing-directory": "/src/pages/FilingDirectory.tsx",
   "/filing-waitlist": "/src/pages/FilingWaitlist.tsx",
+  "/create-account": "/src/pages/CreateAccount.tsx",
   "/404": "/src/components/public/PublicNotFound.tsx",
 };
 
@@ -32,6 +33,11 @@ const gatedPageMetadata = [
     title: "Join the FileSmart filing waitlist | FileSmart",
     description: "Join the FileSmart filing waitlist and be notified when the tax-season filing experience opens.",
     path: "/filing-waitlist",
+  },
+  {
+    title: "Create a free FileSmart account | FileSmart",
+    description: "Create a free FileSmart account and get ready for the filing launch.",
+    path: "/create-account",
   },
 ];
 

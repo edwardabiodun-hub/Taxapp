@@ -28,6 +28,7 @@ export async function verifyPublicOutput(root) {
   const missingH1 = [];
   const missingCanonical = [];
   let crawlableHtmlCount = 0;
+  const hasCreateAccount = files.includes(path.join(root, "create-account", "index.html"));
 
   for (const filePath of htmlFiles) {
     const html = await readFile(filePath, "utf8");
@@ -50,6 +51,7 @@ export async function verifyPublicOutput(root) {
     missingCanonical,
     sitemapUrlCount: (sitemap.match(/<loc>/g) ?? []).length,
     has404: files.includes(path.join(root, "404.html")),
+    hasCreateAccount,
   };
 }
 
@@ -63,6 +65,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (result.missingCanonical.length > 0) errors.push(`missing canonical: ${result.missingCanonical.join(", ")}`);
   if (result.sitemapUrlCount !== result.crawlableHtmlCount) errors.push(`sitemap/page mismatch: ${result.sitemapUrlCount} sitemap URLs for ${result.crawlableHtmlCount} crawlable pages`);
   if (!result.has404) errors.push("missing 404.html");
+  if (!result.hasCreateAccount) errors.push("missing create-account/index.html");
 
   if (errors.length > 0) {
     console.error(errors.join("\n"));
