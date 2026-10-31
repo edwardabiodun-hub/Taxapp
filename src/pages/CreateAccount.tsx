@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
-import { signUp } from "@/lib/auth";
 import { setPageMetadata } from "@/lib/seo";
 
 const CreateAccount = () => {
@@ -33,6 +32,10 @@ const CreateAccount = () => {
     setSubmitting(true);
     setError("");
     try {
+      // Keep the public account page renderable when the optional Supabase
+      // configuration is unavailable. The auth gateway is only needed after
+      // the visitor submits the form.
+      const { signUp } = await import("@/lib/auth");
       const response = await signUp(email, password);
       if (!response.success) {
         setError("We couldn't create your account. Check the details or try signing in.");
