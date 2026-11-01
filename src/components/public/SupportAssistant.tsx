@@ -18,7 +18,7 @@ const fallbackAnswer = (question: string) => {
     return "Have your taxpayer details, income records, eligible deductions, and supporting documents available. FileSmart can help you organize the information before you review the next filing step.";
   }
   if (normalized.includes("estimate") || normalized.includes("calculator")) {
-    return "You can use the Tax Estimator to explore an indicative calculation. It is educational and should be checked against the applicable authority or a qualified adviser before filing.";
+    return "You can use the Nigeria Tax Calculator to explore an indicative calculation. It is educational and should be checked against the applicable authority or a qualified adviser before filing.";
   }
   return "I can explain general Nigerian tax topics and help you find the right FileSmart starting point. For complex or disputed situations, contact a qualified adviser or the relevant tax authority.";
 };

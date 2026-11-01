@@ -70,7 +70,7 @@ describe("phase one preparation experience", () => {
     expect(screen.getByRole("heading", { name: /recent preparations/i })).toBeInTheDocument();
     expect(screen.getByText(/Lagos: Generic Nigerian PIT estimate/i)).toBeInTheDocument();
     expect(screen.getAllByText(/not yet supported/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /tax estimator/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tax calculator/i })).toBeInTheDocument();
     expect(screen.queryByText(/file your taxes/i)).not.toBeInTheDocument();
   });
 

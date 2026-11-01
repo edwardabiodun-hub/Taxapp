@@ -47,7 +47,7 @@ const FilingDirectory = () => {
               <h2 id="directory-status-heading" className="text-xl font-bold">Evidence-first status</h2>
               <p className="mt-2 leading-7 text-[#55736c]">No jurisdiction is marked as supported here until the relevant authority source, online service, and individual PIT workflow have been checked. Until then, FileSmart can prepare generic records and exports, but does not claim that those exports are direct filing submissions.</p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button asChild className="min-h-11 rounded-full bg-[#12352f] text-white hover:bg-[#1c4e44]"><Link to="/calculator">Use the tax estimator <ArrowRight className="h-4 w-4" /></Link></Button>
+                <Button asChild className="min-h-11 rounded-full bg-[#12352f] text-white hover:bg-[#1c4e44]"><Link to="/calculator">Use the Nigeria tax calculator <ArrowRight className="h-4 w-4" /></Link></Button>
                 <Button asChild variant="outline" className="min-h-11 rounded-full"><Link to="/contact">Tell us about a verified portal <ExternalLink className="h-4 w-4" /></Link></Button>
               </div>
             </div>

@@ -30,6 +30,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Learn = lazy(() => import("./pages/Learn"));
 const Guide = lazy(() => import("./pages/Guide"));
+const News = lazy(() => import("./pages/News"));
+const NewsArticle = lazy(() => import("./pages/NewsArticle"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
@@ -58,6 +60,8 @@ const PublicAppRoutes = () => (
     <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
     <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
     <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+    <Route path="/news" element={<RouteBoundary><News /></RouteBoundary>} />
+    <Route path="/news/:slug" element={<RouteBoundary><NewsArticle /></RouteBoundary>} />
     <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
     <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
     <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />
@@ -97,6 +101,8 @@ const AuthenticatedAppRoutes = () => {
     <Route path="/" element={<RouteBoundary><Landing /></RouteBoundary>} />
     <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
     <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+    <Route path="/news" element={<RouteBoundary><News /></RouteBoundary>} />
+    <Route path="/news/:slug" element={<RouteBoundary><NewsArticle /></RouteBoundary>} />
     <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
     <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
     <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />
@@ -119,6 +125,8 @@ const AuthenticatedAppRoutes = () => {
   return <Routes>
       <Route path="/learn" element={<RouteBoundary><Learn /></RouteBoundary>} />
       <Route path="/learn/:slug" element={<RouteBoundary><Guide /></RouteBoundary>} />
+      <Route path="/news" element={<RouteBoundary><News /></RouteBoundary>} />
+      <Route path="/news/:slug" element={<RouteBoundary><NewsArticle /></RouteBoundary>} />
       <Route path="/how-it-works" element={<RouteBoundary><HowItWorks /></RouteBoundary>} />
       <Route path="/about" element={<RouteBoundary><About /></RouteBoundary>} />
       <Route path="/contact" element={<RouteBoundary><Contact /></RouteBoundary>} />

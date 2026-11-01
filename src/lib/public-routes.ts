@@ -1,4 +1,5 @@
 import { taxGuides } from "@/content/tax-guides";
+import { newsArticles } from "@/content/news";
 
 export interface PublicRouteMetadata {
   title: string;
@@ -24,6 +25,11 @@ const staticPublicRoutes: PublicRouteMetadata[] = [
     title: "Learn about Nigerian tax | FileSmart",
     description: "Plain-language Nigerian tax education guides for understanding preparation and filing.",
     path: "/learn",
+  },
+  {
+    title: "FileSmart news and product updates | FileSmart",
+    description: "Read FileSmart product announcements, calculator updates, and practical tax preparation news.",
+    path: "/news",
   },
   {
     title: "How FileSmart works | FileSmart",
@@ -56,8 +62,8 @@ const staticPublicRoutes: PublicRouteMetadata[] = [
     path: "/disclaimer",
   },
   {
-    title: "Personal income tax estimator | FileSmart",
-    description: "Estimate your 2026 personal income tax using the Nigeria Tax Act 2025. The estimator does not submit a tax return.",
+    title: "Nigeria Personal Income Tax Calculator 2026 | FileSmart",
+    description: "Calculate an indicative 2026 Nigeria personal income tax result using the Nigeria Tax Act 2025. The calculator does not submit a tax return.",
     path: "/calculator",
   },
   {
@@ -76,6 +82,14 @@ export const publicRouteMetadata: PublicRouteMetadata[] = [
     type: "article" as const,
     publishedTime: guide.publishedAt,
     modifiedTime: guide.updatedAt,
+  })),
+  ...newsArticles.map((article) => ({
+    title: `${article.title} | FileSmart`,
+    description: article.summary,
+    path: `/news/${article.slug}`,
+    type: "article" as const,
+    publishedTime: article.publishedAt,
+    modifiedTime: article.updatedAt,
   })),
 ];
 

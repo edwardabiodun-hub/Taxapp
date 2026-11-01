@@ -19,7 +19,7 @@ describe("PublicNav accessibility contract", () => {
     const mobileNavigation = screen.getByRole("navigation", { name: "Mobile navigation" });
     expect(menuButton).toHaveAccessibleName("Close navigation menu");
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
-    expect(within(mobileNavigation).getByRole("link", { name: "Tax estimator" })).toHaveAttribute("href", "/calculator");
+    expect(within(mobileNavigation).getByRole("link", { name: "Tax calculator" })).toHaveAttribute("href", "/calculator");
     expect(within(mobileNavigation).getByRole("link", { name: "Join waitlist" })).toHaveAttribute("href", "/filing-waitlist");
 
     fireEvent.click(menuButton);

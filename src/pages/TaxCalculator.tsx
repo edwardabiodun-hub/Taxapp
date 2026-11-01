@@ -46,8 +46,8 @@ const TaxCalculator = () => {
     });
     if (isFilingLaunchPhase) {
       setPageMetadata({
-        title: "Personal income tax estimator | FileSmart",
-        description: "Estimate your 2026 personal income tax using the Nigeria Tax Act 2025. The estimator does not submit a tax return.",
+        title: "Nigeria Personal Income Tax Calculator 2026 | FileSmart",
+        description: "Calculate an indicative 2026 Nigeria personal income tax result using the Nigeria Tax Act 2025. The calculator does not submit a tax return.",
         path: "/calculator",
       });
     }
@@ -105,7 +105,7 @@ const TaxCalculator = () => {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <Calculator className="w-5 h-5 text-primary" />
-          <h1 className="font-display font-bold text-lg text-foreground">Tax Estimator</h1>
+          <h1 className="font-display font-bold text-lg text-foreground">Nigeria Tax Calculator</h1>
         </div>
         <p className="text-xs text-muted-foreground">
           <GlossaryText>Estimate 2026 personal income tax under the Nigeria Tax Act 2025</GlossaryText>

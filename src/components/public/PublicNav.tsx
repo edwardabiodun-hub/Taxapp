@@ -8,11 +8,12 @@ import { isFilingLaunchPhase, publicFilingPath } from "@/lib/launch-phase";
 const links = [
   { to: "/how-it-works", label: "How it works" },
   { to: "/learn", label: "Tax education" },
+  { to: "/news", label: "News" },
   { to: "/about", label: "About FileSmart" },
 ];
 
 const productLinks = [
-  { to: "/calculator", label: "Tax estimator" },
+  { to: "/calculator", label: "Tax calculator" },
   { to: "/filing-directory", label: "Filing directory" },
   { to: isFilingLaunchPhase ? publicFilingPath : "/declare", label: "File taxes" },
   { to: "/pricing", label: "Pricing" },

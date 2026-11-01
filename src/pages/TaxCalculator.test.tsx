@@ -15,7 +15,7 @@ describe("TaxCalculator glossary integration", () => {
       </TooltipProvider>,
     );
 
-    const heading = screen.getByRole("heading", { level: 1, name: "Tax Estimator" });
+    const heading = screen.getByRole("heading", { level: 1, name: "Nigeria Tax Calculator" });
     const calculatorContent = heading.closest(".max-w-lg");
 
     expect(calculatorContent).not.toHaveStyle({ opacity: "0" });
@@ -30,7 +30,7 @@ describe("TaxCalculator glossary integration", () => {
       </TooltipProvider>,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: "Tax Estimator" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Nigeria Tax Calculator" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Personal income tax" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Chargeable income" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Eligible deductions" })).toBeInTheDocument();

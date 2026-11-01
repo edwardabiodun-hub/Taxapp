@@ -15,6 +15,7 @@ const safeSupabaseAnonKey = "prerender-only-placeholder";
 const pageModules = {
   "/": "/src/pages/Landing.tsx",
   "/learn": "/src/pages/Learn.tsx",
+  "/news": "/src/pages/News.tsx",
   "/how-it-works": "/src/pages/HowItWorks.tsx",
   "/about": "/src/pages/About.tsx",
   "/contact": "/src/pages/Contact.tsx",
@@ -68,6 +69,7 @@ try {
     loadedPages.set(routePath, (await vite.ssrLoadModule(modulePath)).default);
   }
   const Guide = (await vite.ssrLoadModule("/src/pages/Guide.tsx")).default;
+  const NewsArticle = (await vite.ssrLoadModule("/src/pages/NewsArticle.tsx")).default;
 
   const renderRoute = (routePath, Page, matchPath = routePath) => {
     const pageRoute = h(Route, { path: matchPath, element: h(Page) });
@@ -83,10 +85,11 @@ try {
   for (const metadata of publicRouteMetadata) {
     const routePath = metadata.path;
     const isGuide = routePath.startsWith("/learn/");
-    const Page = isGuide ? Guide : loadedPages.get(routePath);
+    const isNewsArticle = routePath.startsWith("/news/");
+    const Page = isGuide ? Guide : isNewsArticle ? NewsArticle : loadedPages.get(routePath);
     if (!Page) throw new Error(`No prerender component registered for public route: ${routePath}`);
 
-    const markup = renderRoute(routePath, Page, isGuide ? "/learn/:slug" : routePath);
+    const markup = renderRoute(routePath, Page, isGuide ? "/learn/:slug" : isNewsArticle ? "/news/:slug" : routePath);
     const html = renderPublicDocument(shell, markup, metadata, origin);
     const outputPath = routePath === "/"
       ? path.join(outputDirectory, "index.html")

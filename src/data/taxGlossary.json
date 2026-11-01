@@ -422,7 +422,7 @@
   {
     "id": "tax-estimate",
     "term": "Tax estimate",
-    "aliases": ["Tax Estimator", "Tax Estimate", "Estimated Tax Payable"],
+    "aliases": ["Tax Calculator", "Tax Estimator", "Tax Estimate", "Estimated Tax Payable"],
     "definition": "An indicative calculation based on the information entered; the final liability remains subject to the relevant authority’s assessment and verification.",
     "statutoryReference": "Nigeria Tax Act, 2025, section 58 and Fourth Schedule",
     "sourceUrl": "https://nass.gov.ng/documents/download/11249",

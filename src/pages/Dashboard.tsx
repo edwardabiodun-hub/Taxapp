@@ -173,7 +173,7 @@ const Dashboard = () => {
           <Calculator className="w-5 h-5" />
         </div>
         <div className="flex-1 text-left">
-          <p className="font-display font-bold">Tax Estimator</p>
+          <p className="font-display font-bold">Nigeria Tax Calculator</p>
           <p className="text-xs opacity-80">Explore a general personal income tax estimate</p>
         </div>
         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

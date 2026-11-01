@@ -8,7 +8,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 describe("public route metadata and sitemap", () => {
   it("defines metadata and a canonical path for every indexable public route", () => {
-    const paths = ["/", "/learn", "/how-it-works", "/about", "/contact", "/privacy", "/terms", "/disclaimer", "/calculator", "/filing-directory"];
+    const paths = ["/", "/learn", "/news", "/news/filesmart-nigeria-tax-calculator-launch", "/how-it-works", "/about", "/contact", "/privacy", "/terms", "/disclaimer", "/calculator", "/filing-directory"];
 
     for (const path of paths) {
       const metadata = getPublicRouteMetadata(path);
@@ -24,6 +24,8 @@ describe("public route metadata and sitemap", () => {
     const paths = entries.map((entry) => entry.path);
 
     expect(paths).toContain("/calculator");
+    expect(paths).toContain("/news");
+    expect(paths).toContain("/news/filesmart-nigeria-tax-calculator-launch");
     expect(paths).toContain("/filing-directory");
     expect(paths).toContain("/learn/nigeria-tax-law-2026-personal-income-tax");
     expect(paths).not.toContain("/pricing");
@@ -36,6 +38,7 @@ describe("public route metadata and sitemap", () => {
     const xml = renderPublicSitemap("https://example.test");
 
     expect(xml).toContain("<loc>https://example.test/calculator</loc>");
+    expect(xml).toContain("<loc>https://example.test/news/filesmart-nigeria-tax-calculator-launch</loc>");
     expect(xml).toContain("<loc>https://example.test/learn/nigeria-tax-law-2026-personal-income-tax</loc>");
     expect(xml.match(/<loc>https:\/\/example\.test\/calculator<\/loc>/g)).toHaveLength(1);
     expect(xml).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?>/);

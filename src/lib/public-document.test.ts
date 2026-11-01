@@ -5,14 +5,14 @@ describe("renderPublicDocument", () => {
   const template = `<!doctype html><html><head><title>Default</title><meta name="description" content="Default description"><link rel="canonical" href="https://example.test/"></head><body><div id="root"></div><script type="module" src="/assets/app.js"></script></body></html>`;
 
   it("embeds rendered route content and route-specific metadata in initial HTML", () => {
-    const html = renderPublicDocument(template, "<main><h1>Tax estimator</h1></main>", {
-      title: "Personal income tax estimator | FileSmart",
+    const html = renderPublicDocument(template, "<main><h1>Tax calculator</h1></main>", {
+      title: "Nigeria Personal Income Tax Calculator 2026 | FileSmart",
       description: "Estimate a 2026 tax position.",
       path: "/calculator",
     }, "https://example.test");
 
-    expect(html).toContain("<h1>Tax estimator</h1>");
-    expect(html).toContain("<title>Personal income tax estimator | FileSmart</title>");
+    expect(html).toContain("<h1>Tax calculator</h1>");
+    expect(html).toContain("<title>Nigeria Personal Income Tax Calculator 2026 | FileSmart</title>");
     expect(html).toContain('content="Estimate a 2026 tax position."');
     expect(html).toContain('href="https://example.test/calculator"');
     expect(html).toContain('type="application/ld+json"');
