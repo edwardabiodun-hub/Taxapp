@@ -41,6 +41,15 @@ describe("PublicRoutes", () => {
     expect(screen.getAllByText("Not verified yet").length).toBeGreaterThan(1);
   });
 
+  it.each(["/news", "/news/"])("renders the News page after hydration at %s", async (route) => {
+    mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
+
+    render(<MemoryRouter initialEntries={[route]}><PublicRoutes /></MemoryRouter>);
+
+    expect(await screen.findByRole("heading", { name: /product updates and tax preparation news/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /we couldn’t find that page/i })).not.toBeInTheDocument();
+  });
+
   it("renders the filing waitlist route with a navigable home affordance", async () => {
     mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
 

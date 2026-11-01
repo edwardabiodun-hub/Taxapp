@@ -15,6 +15,8 @@ import FilingWaitlist from "./pages/FilingWaitlist";
 import Pricing from "./pages/Pricing";
 import TaxCalculator from "./pages/TaxCalculator";
 import FilingDirectory from "./pages/FilingDirectory";
+import News from "./pages/News";
+import NewsArticle from "./pages/NewsArticle";
 import PublicNotFound from "./components/public/PublicNotFound";
 const CreateAccount = lazy(() => import("./pages/CreateAccount"));
 const PublicLogin = lazy(() => import("./pages/PublicLogin"));
@@ -43,6 +45,8 @@ export const PublicRoutes = () => {
     <Route path="/disclaimer" element={<Disclaimer />} />
     <Route path="/filing-waitlist" element={<FilingWaitlist />} />
     <Route path="/filing-directory" element={<FilingDirectory />} />
+    <Route path="/news" element={<News />} />
+    <Route path="/news/:slug" element={<NewsArticle />} />
     <Route path="/calculator" element={<TaxCalculator />} />
     <Route path="/create-account" element={<Suspense fallback={<Waiting />}><CreateAccount /></Suspense>} />
     <Route path="/onboarding" element={loading ? <Waiting /> : <Navigate to={isUnlocked ? "/filing-waitlist" : "/create-account"} replace />} />
