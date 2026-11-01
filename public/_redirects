@@ -12,3 +12,7 @@
 /receipt-scanner /index.html 200
 /tax-calendar /index.html 200
 /invoices /index.html 200
+
+# Serve prerendered public news pages when visitors omit the trailing slash.
+/news /news/index.html 200
+/news/* /news/:splat/index.html 200

@@ -8,4 +8,11 @@ describe("public route redirects", () => {
 
     expect(redirects).not.toMatch(/^\/create-account\s+\/index\.html\s+200\s*$/m);
   });
+
+  it("serves slashless prerendered news routes directly", async () => {
+    const redirects = await readFile(path.resolve(process.cwd(), "public/_redirects"), "utf8");
+
+    expect(redirects).toMatch(/^\/news\s+\/news\/index\.html\s+200\s*$/m);
+    expect(redirects).toMatch(/^\/news\/\*\s+\/news\/:splat\/index\.html\s+200\s*$/m);
+  });
 });
