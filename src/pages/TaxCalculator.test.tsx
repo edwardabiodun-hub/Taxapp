@@ -66,6 +66,21 @@ describe("TaxCalculator glossary integration", () => {
     expect(screen.queryAllByText("₦30,000")).toHaveLength(0);
   });
 
+  it("formats money inputs with thousands separators and recalculates as the value changes", () => {
+    render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
+    const salary = screen.getByRole("textbox", { name: "Annual Salary" });
+
+    fireEvent.change(salary, { target: { value: "3600000" } });
+
+    expect(salary).toHaveValue("3,600,000");
+    expect(screen.getByRole("status")).toHaveTextContent("₦438,000");
+
+    fireEvent.change(salary, { target: { value: "4200000" } });
+
+    expect(salary).toHaveValue("4,200,000");
+    expect(screen.getByRole("status")).toHaveTextContent("₦546,000");
+  });
+
   it("calculates from a form submit so keyboard and button submission share one path", () => {
     render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
     fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "1000000" } });

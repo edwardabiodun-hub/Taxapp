@@ -13,6 +13,48 @@ import { trackEvent } from "@/lib/analytics";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
 
+const moneyFieldKeys = new Set([
+  "annualSalary", "commissions", "bonuses", "allowances", "businessIncome", "businessExpenses",
+  "businessLoanInterest", "businessPremisesRent", "businessRepairsMaintenance",
+  "businessEmployeeRemuneration", "businessBadDebts", "businessProfessionalFees", "rentIncome",
+  "foreignIncome", "digitalAssetGains", "digitalAssetCharges", "chargeableGains", "rentPaidByEmployer",
+  "companyVehicleCost", "payeAlreadySuffered", "employeePension", "nationalHousingFund",
+  "nationalHealthInsurance", "mortgageInterest", "lifeInsurancePremium", "annualRentPaid",
+]);
+
+function formatMoneyInput(value: string): string {
+  const sanitized = value.replace(/[^\d.]/g, "");
+  if (!sanitized) return "";
+
+  const decimalIndex = sanitized.indexOf(".");
+  const integerPart = decimalIndex === -1 ? sanitized : sanitized.slice(0, decimalIndex);
+  const decimalPart = decimalIndex === -1 ? undefined : sanitized.slice(decimalIndex + 1).replace(/\./g, "").slice(0, 2);
+  const normalizedInteger = integerPart.replace(/^0+(?=\d)/, "") || (decimalPart !== undefined ? "0" : "");
+  const formattedInteger = normalizedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  return decimalPart === undefined ? formattedInteger : `${formattedInteger}.${decimalPart}`;
+}
+
+function hasIncomeInput(form: NigeriaDeclarationForm): boolean {
+  return [
+    form.annualSalary, form.commissions, form.bonuses, form.allowances, form.businessIncome,
+    form.rentIncome, form.foreignIncome, form.digitalAssetGains, form.chargeableGains,
+  ].some((value) => Boolean(value?.trim()));
+}
+
+function getEstimate(form: NigeriaDeclarationForm): { result: TaxBreakdown | null; warnings: readonly string[] } {
+  try {
+    const calculation = calculateNigeriaTax(form);
+    if (calculation.reportedIncome <= 0) {
+      return { result: null, warnings: ["Enter at least one income amount before calculating an estimate."] };
+    }
+    return { result: calculation, warnings: calculation.warnings };
+  } catch (error) {
+    if (!(error instanceof TaxEstimateUnavailableError)) throw error;
+    return { result: null, warnings: error.reasons };
+  }
+}
+
 const Field = ({ label, hint, value, onChange }: {
   label: string; hint?: string; value: string; onChange: (v: string) => void;
 }) => {
@@ -40,6 +82,18 @@ const TaxCalculator = () => {
   const [estimateWarnings, setEstimateWarnings] = useState<readonly string[]>([]);
 
   useEffect(() => {
+    if (!hasIncomeInput(form)) {
+      setResult(null);
+      setEstimateWarnings([]);
+      return;
+    }
+
+    const estimate = getEstimate(form);
+    setResult(estimate.result);
+    setEstimateWarnings(estimate.warnings);
+  }, [form]);
+
+  useEffect(() => {
     trackEvent("public_calculator_viewed", {
       surface: "public_calculator",
       route: "/calculator",
@@ -54,36 +108,23 @@ const TaxCalculator = () => {
   }, []);
 
   const update = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    setResult(null);
-    setEstimateWarnings([]);
+    setForm((prev) => ({
+      ...prev,
+      [key]: moneyFieldKeys.has(key) ? formatMoneyInput(value) : value,
+    }));
   };
 
   const compute = () => {
-    try {
-      const calculation = calculateNigeriaTax(form);
-      if (calculation.reportedIncome <= 0) {
-        setResult(null);
-        setEstimateWarnings(["Enter at least one income amount before calculating an estimate."]);
-        trackEvent("public_calculator_estimate_unavailable", {
-          surface: "public_calculator",
-          route: "/calculator",
-          result: "estimate_unavailable",
-        });
-        return;
-      }
-
-      setResult(calculation);
-      setEstimateWarnings(calculation.warnings);
+    const estimate = getEstimate(form);
+    setResult(estimate.result);
+    setEstimateWarnings(estimate.warnings);
+    if (estimate.result) {
       trackEvent("public_calculator_estimate_shown", {
         surface: "public_calculator",
         route: "/calculator",
         result: "estimate_shown",
       });
-    } catch (error) {
-      if (!(error instanceof TaxEstimateUnavailableError)) throw error;
-      setResult(null);
-      setEstimateWarnings(error.reasons);
+    } else {
       trackEvent("public_calculator_estimate_unavailable", {
         surface: "public_calculator",
         route: "/calculator",
