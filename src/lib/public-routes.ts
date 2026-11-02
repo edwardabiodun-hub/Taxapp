@@ -67,6 +67,11 @@ const staticPublicRoutes: PublicRouteMetadata[] = [
     path: "/calculator",
   },
   {
+    title: "Nigeria PAYE Calculator 2026 | FileSmart",
+    description: "Estimate 2026 PAYE and take-home pay from monthly employment income using FileSmart's Nigeria Tax Act 2025 calculator.",
+    path: "/paye-calculator",
+  },
+  {
     title: "State filing directory | FileSmart",
     description: "Check the evidence status for online tax services and individual PIT filing routes across Nigeria.",
     path: "/filing-directory",

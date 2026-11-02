@@ -1,6 +1,7 @@
 const EXPECTED_ROUTES = [
   "/",
   "/calculator",
+  "/paye-calculator",
   "/filing-directory",
   "/learn",
   "/privacy",

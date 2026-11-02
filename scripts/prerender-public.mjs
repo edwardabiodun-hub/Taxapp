@@ -23,6 +23,7 @@ const pageModules = {
   "/terms": "/src/pages/Terms.tsx",
   "/disclaimer": "/src/pages/Disclaimer.tsx",
   "/calculator": "/src/pages/TaxCalculator.tsx",
+  "/paye-calculator": "/src/pages/PayeCalculator.tsx",
   "/filing-directory": "/src/pages/FilingDirectory.tsx",
   "/filing-waitlist": "/src/pages/FilingWaitlist.tsx",
   "/create-account": "/src/pages/CreateAccount.tsx",

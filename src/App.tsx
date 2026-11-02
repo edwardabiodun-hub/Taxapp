@@ -26,6 +26,7 @@ const SubmissionDetail = lazy(() => import("./pages/SubmissionDetail"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Profile = lazy(() => import("./pages/Profile"));
 const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
+const PayeCalculator = lazy(() => import("./pages/PayeCalculator"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Learn = lazy(() => import("./pages/Learn"));
@@ -69,6 +70,7 @@ const PublicAppRoutes = () => (
     <Route path="/terms" element={<RouteBoundary><Terms /></RouteBoundary>} />
     <Route path="/disclaimer" element={<RouteBoundary><Disclaimer /></RouteBoundary>} />
     <Route path="/calculator" element={<RouteBoundary><TaxCalculator /></RouteBoundary>} />
+    <Route path="/paye-calculator" element={<RouteBoundary><PayeCalculator /></RouteBoundary>} />
     <Route path="/filing-directory" element={<RouteBoundary><FilingDirectory /></RouteBoundary>} />
     <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
     <Route path="/404" element={<RouteBoundary><NotFound /></RouteBoundary>} />
@@ -115,6 +117,7 @@ const AuthenticatedAppRoutes = () => {
     <Route path="/declare" element={isFilingLaunchPhase ? <RouteBoundary><FilingWaitlist /></RouteBoundary> : <Navigate to="/onboarding" replace />} />
     <Route path="/filing-waitlist" element={<RouteBoundary><FilingWaitlist /></RouteBoundary>} />
     <Route path="/calculator" element={<Navigate to="/onboarding" replace />} />
+    <Route path="/paye-calculator" element={<RouteBoundary><PayeCalculator /></RouteBoundary>} />
     <Route path="/pricing" element={<Navigate to="/onboarding" replace />} />
     <Route path="/check-email" element={<RouteBoundary><CheckEmailPage /></RouteBoundary>} />
     <Route path="/forgot-password" element={<RouteBoundary><ForgotPasswordPage /></RouteBoundary>} />
@@ -149,6 +152,7 @@ const AuthenticatedAppRoutes = () => {
         <Route path="/submissions/:id" element={<RouteBoundary><SubmissionDetail /></RouteBoundary>} />
         <Route path="/messages" element={<RouteBoundary><Messages /></RouteBoundary>} />
         <Route path="/calculator" element={<RouteBoundary><TaxCalculator /></RouteBoundary>} />
+        <Route path="/paye-calculator" element={<RouteBoundary><PayeCalculator /></RouteBoundary>} />
         <Route path="/profile" element={<RouteBoundary><Profile /></RouteBoundary>} />
       </Route>
       <Route path="*" element={<RouteBoundary><NotFound /></RouteBoundary>} />

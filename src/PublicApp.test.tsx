@@ -41,6 +41,15 @@ describe("PublicRoutes", () => {
     expect(screen.getAllByText("Not verified yet").length).toBeGreaterThan(1);
   });
 
+  it("renders the employee-first PAYE calculator as a public route", async () => {
+    mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
+
+    render(<MemoryRouter initialEntries={["/paye-calculator"]}><PublicRoutes /></MemoryRouter>);
+
+    expect(await screen.findByRole("heading", { level: 1, name: /paye calculator/i })).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "2026 PAYE calculator" })).toBeInTheDocument();
+  });
+
   it.each(["/news", "/news/"])("renders the News page after hydration at %s", async (route) => {
     mockedUseAuth.mockReturnValue({ loading: false, isUnlocked: false, isPasswordRecovery: false, signOut: vi.fn() });
 

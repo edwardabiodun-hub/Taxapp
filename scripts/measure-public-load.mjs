@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks";
 
-const DEFAULT_ROUTES = ["/", "/calculator", "/filing-waitlist"];
+const DEFAULT_ROUTES = ["/", "/calculator", "/paye-calculator", "/filing-waitlist"];
 
 function normalizeOrigin(value) {
   const url = new URL(String(value ?? "").trim());

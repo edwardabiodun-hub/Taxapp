@@ -14,6 +14,7 @@ import Disclaimer from "./pages/Disclaimer";
 import FilingWaitlist from "./pages/FilingWaitlist";
 import Pricing from "./pages/Pricing";
 import TaxCalculator from "./pages/TaxCalculator";
+import PayeCalculator from "./pages/PayeCalculator";
 import FilingDirectory from "./pages/FilingDirectory";
 import News from "./pages/News";
 import NewsArticle from "./pages/NewsArticle";
@@ -48,6 +49,7 @@ export const PublicRoutes = () => {
     <Route path="/news" element={<News />} />
     <Route path="/news/:slug" element={<NewsArticle />} />
     <Route path="/calculator" element={<TaxCalculator />} />
+    <Route path="/paye-calculator" element={<PayeCalculator />} />
     <Route path="/create-account" element={<Suspense fallback={<Waiting />}><CreateAccount /></Suspense>} />
     <Route path="/onboarding" element={loading ? <Waiting /> : <Navigate to={isUnlocked ? "/filing-waitlist" : "/create-account"} replace />} />
     <Route path="/pricing" element={loading ? <Waiting /> : isUnlocked ? <Pricing /> : <Navigate to="/create-account" replace state={{ from: "/pricing" }} />} />

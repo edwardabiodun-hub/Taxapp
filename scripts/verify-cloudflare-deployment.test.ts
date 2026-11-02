@@ -10,7 +10,7 @@ describe("Cloudflare deployment verifier", () => {
     const result = await verifyDeployment("https://staging.example.com", { fetcher });
 
     expect(result.pass).toBe(true);
-    expect(result.routes).toHaveLength(7);
+    expect(result.routes).toHaveLength(8);
     expect(result.unknownRoute.status).toBe(404);
   });
 

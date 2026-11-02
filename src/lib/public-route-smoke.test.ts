@@ -26,4 +26,12 @@ describe("public route smoke contract", () => {
     expect(paths).not.toContain("/declare");
     expect(paths).not.toContain("/messages");
   });
+
+  it("includes the PAYE calculator in the public sitemap contract", () => {
+    expect(getPublicRouteMetadata("/paye-calculator")).toMatchObject({
+      title: expect.stringMatching(/PAYE calculator/i),
+      path: "/paye-calculator",
+    });
+    expect(getPublicSitemapEntries().map((entry) => entry.path)).toContain("/paye-calculator");
+  });
 });
