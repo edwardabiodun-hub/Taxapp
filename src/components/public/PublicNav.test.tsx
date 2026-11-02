@@ -19,10 +19,23 @@ describe("PublicNav", () => {
     expect(screen.getByRole("img", { name: /filesmart brand lockup/i })).toHaveAttribute("src", "/brand/filesmart-lockup.png");
     expect(screen.getByText("Your connect for smarter, easier tax filing.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /file for free/i })).toHaveAttribute("href", "/onboarding");
-    expect(screen.getByRole("link", { name: /tax calculator/i })).toHaveAttribute("href", "/calculator");
+    expect(screen.getByRole("button", { name: "Calculators" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /file taxes/i })).toHaveAttribute("href", "/declare");
     expect(screen.getByRole("link", { name: /pricing/i })).toHaveAttribute("href", "/pricing");
     expect(screen.getByRole("link", { name: /contact/i })).toHaveAttribute("href", "/contact");
+  });
+
+  it("groups the tax and PAYE calculators in the desktop calculator menu", async () => {
+    vi.stubEnv("VITE_FILING_LAUNCH_PHASE", "false");
+    vi.resetModules();
+    const { default: PublicNav } = await import("./PublicNav");
+    render(<MemoryRouter><PublicNav /></MemoryRouter>);
+
+    const mainNavigation = screen.getByRole("navigation", { name: "Main navigation" });
+    fireEvent.click(within(mainNavigation).getByRole("button", { name: "Calculators" }));
+
+    expect(within(mainNavigation).getByRole("menuitem", { name: "Tax calculator" })).toHaveAttribute("href", "/calculator");
+    expect(within(mainNavigation).getByRole("menuitem", { name: "PAYE calculator" })).toHaveAttribute("href", "/paye-calculator");
   });
 
   it("routes desktop Pricing to the account-gated pricing page during launch", async () => {
@@ -41,5 +54,16 @@ describe("PublicNav", () => {
     const mobileNavigation = screen.getByRole("navigation", { name: "Mobile navigation" });
     expect(within(mobileNavigation).getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
     expect(within(mobileNavigation).getByRole("link", { name: "File taxes" })).toHaveAttribute("href", "/filing-waitlist");
+  });
+
+  it("groups the tax and PAYE calculators in the mobile calculator menu", async () => {
+    await renderLaunchNav();
+    fireEvent.click(screen.getByRole("button", { name: "Open navigation menu" }));
+
+    const mobileNavigation = screen.getByRole("navigation", { name: "Mobile navigation" });
+    fireEvent.click(within(mobileNavigation).getByRole("button", { name: "Calculators" }));
+
+    expect(within(mobileNavigation).getByRole("menuitem", { name: "Tax calculator" })).toHaveAttribute("href", "/calculator");
+    expect(within(mobileNavigation).getByRole("menuitem", { name: "PAYE calculator" })).toHaveAttribute("href", "/paye-calculator");
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import SupportAssistant from "./SupportAssistant";
@@ -13,18 +13,26 @@ const links = [
 ];
 
 const productLinks = [
-  { to: "/calculator", label: "Tax calculator" },
   { to: "/filing-directory", label: "Filing directory" },
   { to: isFilingLaunchPhase ? publicFilingPath : "/declare", label: "File taxes" },
   { to: "/pricing", label: "Pricing" },
   { to: "/contact", label: "Contact" },
 ];
 
+const calculatorLinks = [
+  { to: "/calculator", label: "Tax calculator" },
+  { to: "/paye-calculator", label: "PAYE calculator" },
+];
+
 const PublicNav = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [calculatorsOpen, setCalculatorsOpen] = useState(false);
   const location = useLocation();
 
-  useEffect(() => setMenuOpen(false), [location.pathname, location.hash]);
+  useEffect(() => {
+    setMenuOpen(false);
+    setCalculatorsOpen(false);
+  }, [location.pathname, location.hash]);
 
   return (
     <>
@@ -37,6 +45,23 @@ const PublicNav = () => {
 
           <nav className="hidden items-center gap-4 text-sm font-medium text-[#55736c] lg:flex" aria-label="Main navigation">
             {links.map((link) => <NavLink key={link.to} to={link.to} className={({ isActive }) => `inline-flex min-h-11 items-center border-b-2 px-1 transition-colors hover:text-[#12352f] ${isActive ? "border-[#d48a18] text-[#12352f]" : "border-transparent"}`}>{link.label}</NavLink>)}
+            <div className="relative">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center gap-1 border-b-2 border-transparent px-1 transition-colors hover:text-[#12352f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2"
+                aria-expanded={calculatorsOpen}
+                aria-haspopup="menu"
+                onClick={() => setCalculatorsOpen((open) => !open)}
+              >
+                Calculators
+                <ChevronDown className={`h-4 w-4 transition-transform ${calculatorsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+              </button>
+              {calculatorsOpen && (
+                <div role="menu" className="absolute left-0 top-full z-50 mt-2 min-w-48 rounded-xl border border-[#dce6df] bg-[#f8f7f3] p-2 shadow-lg">
+                  {calculatorLinks.map((link) => <NavLink key={link.to} role="menuitem" to={link.to} className="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-[#e9f2ed]">{link.label}</NavLink>)}
+                </div>
+              )}
+            </div>
             {productLinks.map((link) => <NavLink key={link.to} to={link.to} className="inline-flex min-h-11 items-center border-b-2 border-transparent px-1 hover:text-[#12352f]">{link.label}</NavLink>)}
           </nav>
 
@@ -56,6 +81,21 @@ const PublicNav = () => {
             <div className="mx-auto flex max-w-6xl flex-col gap-2 text-sm font-semibold">
               <NavLink to="/" className="inline-flex min-h-11 items-center" end>Home</NavLink>
               {links.map((link) => <NavLink key={link.to} to={link.to} className="inline-flex min-h-11 items-center">{link.label}</NavLink>)}
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d48a18] focus-visible:ring-offset-2"
+                aria-expanded={calculatorsOpen}
+                aria-haspopup="menu"
+                onClick={() => setCalculatorsOpen((open) => !open)}
+              >
+                <span>Calculators</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${calculatorsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+              </button>
+              {calculatorsOpen && (
+                <div role="menu" className="ml-3 flex flex-col gap-1 border-l border-[#dce6df] pl-3">
+                  {calculatorLinks.map((link) => <NavLink key={link.to} role="menuitem" to={link.to} className="inline-flex min-h-11 items-center">{link.label}</NavLink>)}
+                </div>
+              )}
               {productLinks.map((link) => <NavLink key={link.to} to={link.to} className="inline-flex min-h-11 items-center">{link.label}</NavLink>)}
               <Link to="/#questions" className="inline-flex min-h-11 items-center">Questions</Link>
               {isFilingLaunchPhase && <Link to="/create-account" className="inline-flex min-h-11 items-center">Create free account</Link>}
