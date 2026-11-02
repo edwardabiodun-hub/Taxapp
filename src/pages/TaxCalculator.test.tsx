@@ -16,7 +16,7 @@ describe("TaxCalculator glossary integration", () => {
     );
 
     const heading = screen.getByRole("heading", { level: 1, name: "Nigeria Tax Calculator" });
-    const calculatorContent = heading.closest(".max-w-lg");
+    const calculatorContent = screen.getByTestId("tax-calculator-layout");
 
     expect(calculatorContent).not.toHaveStyle({ opacity: "0" });
   });
@@ -79,6 +79,17 @@ describe("TaxCalculator glossary integration", () => {
 
     expect(salary).toHaveValue("4,200,000");
     expect(screen.getByRole("status")).toHaveTextContent("₦546,000");
+  });
+
+  it("keeps the result in a dedicated panel beside the form", () => {
+    render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
+
+    expect(screen.getByTestId("tax-calculator-layout")).toHaveClass("lg:grid-cols-2");
+    expect(screen.getByRole("complementary", { name: "Tax calculation result" })).toHaveTextContent("Your estimate will appear here");
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "3600000" } });
+
+    expect(screen.getByRole("complementary", { name: "Tax calculation result" })).toHaveTextContent("₦438,000");
   });
 
   it("calculates from a form submit so keyboard and button submission share one path", () => {

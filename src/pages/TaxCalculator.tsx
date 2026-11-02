@@ -141,7 +141,8 @@ const TaxCalculator = () => {
   return (
     <div className={isFilingLaunchPhase ? "min-h-screen bg-[#f8f7f3] text-[#12352f]" : undefined}>
     {isFilingLaunchPhase && <PublicNav />}
-    <div className="px-4 py-6 max-w-lg mx-auto pb-28 space-y-5">
+    <div className="px-4 py-6 max-w-7xl mx-auto pb-28">
+    <div data-testid="tax-calculator-layout" className="grid gap-6 lg:grid-cols-2 lg:items-start">
       <form onSubmit={handleSubmit} aria-label="2026 tax estimate calculator" className="space-y-5">
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -244,6 +245,18 @@ const TaxCalculator = () => {
         <ul className="mt-2 list-disc space-y-1 pl-5">{estimateWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
       </div>}
 
+      </form>
+
+      <aside className="lg:sticky lg:top-6" aria-label="Tax calculation result">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-card space-y-4">
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Live calculation</p>
+            <h2 className="font-display text-lg font-bold text-foreground">Your result</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">Updates live</span>
+        </div>
+
       {/* Results */}
       {result && result.reportedIncome > 0 && (
         <motion.div
@@ -311,6 +324,11 @@ const TaxCalculator = () => {
         </motion.div>
       )}
 
+      {!result && <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+        <p className="font-semibold text-foreground">Your estimate will appear here</p>
+        <p className="mt-2 leading-6">Enter an income amount on the left to see your 2026 personal income tax estimate update automatically.</p>
+      </div>}
+
       {result && result.reportedIncome > 0 && (
         <Button
           type="button"
@@ -326,7 +344,9 @@ const TaxCalculator = () => {
           <Link to={publicFilingPath}>Join the filing waitlist <ArrowRight className="w-4 h-4" /></Link>
         </Button>
       )}
-      </form>
+      </div>
+      </aside>
+    </div>
     </div>
     {isFilingLaunchPhase && <PublicFooter />}
     </div>
