@@ -12,6 +12,7 @@ import { setPageMetadata } from "@/lib/seo";
 import { trackEvent } from "@/lib/analytics";
 import PublicNav from "@/components/public/PublicNav";
 import PublicFooter from "@/components/public/PublicFooter";
+import { formatMoneyInput } from "@/lib/money-input";
 
 const moneyFieldKeys = new Set([
   "annualSalary", "commissions", "bonuses", "allowances", "businessIncome", "businessExpenses",
@@ -21,19 +22,6 @@ const moneyFieldKeys = new Set([
   "companyVehicleCost", "payeAlreadySuffered", "employeePension", "nationalHousingFund",
   "nationalHealthInsurance", "mortgageInterest", "lifeInsurancePremium", "annualRentPaid",
 ]);
-
-function formatMoneyInput(value: string): string {
-  const sanitized = value.replace(/[^\d.]/g, "");
-  if (!sanitized) return "";
-
-  const decimalIndex = sanitized.indexOf(".");
-  const integerPart = decimalIndex === -1 ? sanitized : sanitized.slice(0, decimalIndex);
-  const decimalPart = decimalIndex === -1 ? undefined : sanitized.slice(decimalIndex + 1).replace(/\./g, "").slice(0, 2);
-  const normalizedInteger = integerPart.replace(/^0+(?=\d)/, "") || (decimalPart !== undefined ? "0" : "");
-  const formattedInteger = normalizedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-  return decimalPart === undefined ? formattedInteger : `${formattedInteger}.${decimalPart}`;
-}
 
 function hasIncomeInput(form: NigeriaDeclarationForm): boolean {
   return [
