@@ -4,8 +4,13 @@ import "./index.css";
 
 const root = document.getElementById("root")!;
 
-if (import.meta.env.MODE === "public") {
-  hydrateRoot(root, <App />);
-} else {
-  createRoot(root).render(<App />);
+export function mountApp(target: HTMLElement, isPublic = import.meta.env.MODE === "public") {
+  if (isPublic && target.hasChildNodes()) {
+    hydrateRoot(target, <App />);
+    return;
+  }
+
+  createRoot(target).render(<App />);
 }
+
+mountApp(root);
