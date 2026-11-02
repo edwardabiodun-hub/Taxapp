@@ -50,6 +50,13 @@ function hasIncomeSource(form: NigeriaDeclarationForm): boolean {
     form.bonuses,
     form.allowances,
     form.businessIncome,
+    form.businessExpenses,
+    form.businessLoanInterest,
+    form.businessPremisesRent,
+    form.businessRepairsMaintenance,
+    form.businessEmployeeRemuneration,
+    form.businessBadDebts,
+    form.businessProfessionalFees,
     form.rentIncome,
     form.nigerianDividends,
     form.otherDividends,
@@ -62,6 +69,8 @@ function hasIncomeSource(form: NigeriaDeclarationForm): boolean {
     form.annuityInsurance,
     form.gratuities,
     form.foreignIncome,
+    form.digitalAssetGains,
+    form.chargeableGains,
   ].some((value) => value.trim().length > 0);
 }
 

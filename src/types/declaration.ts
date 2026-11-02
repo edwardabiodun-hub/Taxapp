@@ -1,7 +1,14 @@
 export interface DeclarationIncomeFields {
   // Earned Income - Trade/Business
   businessIncome: string;
+  /** Legacy catch-all for other wholly and exclusively incurred business costs. */
   businessExpenses: string;
+  businessLoanInterest: string;
+  businessPremisesRent: string;
+  businessRepairsMaintenance: string;
+  businessEmployeeRemuneration: string;
+  businessBadDebts: string;
+  businessProfessionalFees: string;
 
   // Earned Income - Employment
   annualSalary: string;
@@ -22,6 +29,10 @@ export interface DeclarationIncomeFields {
 
   // Earned Income - Foreign
   foreignIncome: string;
+  digitalAssetGains: string;
+  digitalAssetCharges: string;
+  /** Disclosed for review; not included in the automated PIT estimate until a reviewed gains module exists. */
+  chargeableGains: string;
 
   // Investment Income
   nigerianDividends: string;
@@ -50,13 +61,17 @@ export interface DeclarationIncomeFields {
   nationalHealthInsurance: string;
   mortgageInterest: string;
   lifeInsurancePremium: string;
-  /** yes only for one full-year employment at or below annual minimum wage */
+  /** Retained for disclosure; the 0% first band is applied without a separate exclusion. */
   minimumWageEmployment: string;
+  /** PAYE already deducted by an employer; shown as a credit against the estimated liability. */
+  payeAlreadySuffered: string;
   /** Optional facts captured for professional review; they do not change the baseline formula. */
   rentPeriodStart?: string;
   rentPeriodEnd?: string;
   rentSharedWithOthers?: string;
   lifeInsurancePremiumPaidYear?: string;
+  lifeInsurancePremiumWithdrawn?: string;
+  lifeInsuranceBeneficiary?: string;
   mortgagePrincipalResidence?: string;
   employmentPeriod?: string;
 }
@@ -84,6 +99,12 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   state: "",
   businessIncome: "",
   businessExpenses: "",
+  businessLoanInterest: "",
+  businessPremisesRent: "",
+  businessRepairsMaintenance: "",
+  businessEmployeeRemuneration: "",
+  businessBadDebts: "",
+  businessProfessionalFees: "",
   annualSalary: "",
   commissions: "",
   bonuses: "",
@@ -98,6 +119,9 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   gratuityPayerName: "",
   gratuityPayerAddress: "",
   foreignIncome: "",
+  digitalAssetGains: "",
+  digitalAssetCharges: "",
+  chargeableGains: "",
   nigerianDividends: "",
   otherDividends: "",
   interestIncome: "",
@@ -121,6 +145,7 @@ export const defaultNigeriaForm: NigeriaDeclarationForm = {
   mortgageInterest: "",
   lifeInsurancePremium: "",
   minimumWageEmployment: "",
+  payeAlreadySuffered: "",
 };
 
 /**

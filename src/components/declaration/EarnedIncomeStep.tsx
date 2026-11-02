@@ -87,7 +87,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
           <Field label="Commissions" hint="Sales commissions not already included in base pay" value={form.commissions} onChange={(v) => update("commissions", v)} />
           <Field label="Bonuses" hint="Performance bonuses not already included in base pay or commissions" value={form.bonuses} onChange={(v) => update("bonuses", v)} />
           <Field label="Allowances" hint="Leave allowance, 13th month, etc." value={form.allowances} onChange={(v) => update("allowances", v)} />
-          <label htmlFor="minimum-wage-employment" className="block text-xs font-semibold">Single full-year employment at or below national minimum wage?</label>
+          <label htmlFor="minimum-wage-employment" className="block text-xs font-semibold">National minimum wage disclosure (optional)</label>
           <select id="minimum-wage-employment" aria-label="Minimum-wage employment status" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.minimumWageEmployment ?? ""} onChange={(event) => update("minimumWageEmployment", event.target.value)}>
             <option value="">Not confirmed</option><option value="yes">Yes, I confirm</option><option value="no">No</option>
           </select>
@@ -95,7 +95,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
           <select id="employment-period" aria-label="Employment period" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.employmentPeriod ?? ""} onChange={(event) => update("employmentPeriod", event.target.value)}>
             <option value="">Not confirmed</option><option value="full_year">One full year</option><option value="part_year">Part year</option><option value="multiple_employers">Multiple employers</option>
           </select>
-          <p className="text-[10px] text-muted-foreground">Only select yes for one employment held for the full year; other income remains taxable. Keep employment records.</p>
+          <p className="text-[10px] text-muted-foreground">Recorded for review only. The progressive bands, including the first ₦800,000 at 0%, are applied to chargeable income without a separate full-year exclusion.</p>
         </div>
       )}
 
@@ -103,8 +103,14 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {activeTab === "business" && (
         <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Trade, Business, Profession or Vocation</GlossaryText></p>
-          <Field label="Net Business Income" hint="Net after deduction of all allowable expenses" value={form.businessIncome} onChange={(v) => update("businessIncome", v)} />
-          <Field label="Allowable Business Expenses" hint="Attach copies of accounts for the year ended" value={form.businessExpenses} onChange={(v) => update("businessExpenses", v)} />
+          <Field label="Gross Business Income" hint="Enter gross receipts before allowable business deductions" value={form.businessIncome} onChange={(v) => update("businessIncome", v)} />
+          <Field label="Other allowable business expenses" hint="Wholly and exclusively incurred costs not listed below" value={form.businessExpenses} onChange={(v) => update("businessExpenses", v)} />
+          <Field label="Business loan interest" value={form.businessLoanInterest} onChange={(v) => update("businessLoanInterest", v)} />
+          <Field label="Business premises rent" value={form.businessPremisesRent} onChange={(v) => update("businessPremisesRent", v)} />
+          <Field label="Business repairs and maintenance" value={form.businessRepairsMaintenance} onChange={(v) => update("businessRepairsMaintenance", v)} />
+          <Field label="Employee remuneration and benefits" value={form.businessEmployeeRemuneration} onChange={(v) => update("businessEmployeeRemuneration", v)} />
+          <Field label="Bad debts" value={form.businessBadDebts} onChange={(v) => update("businessBadDebts", v)} />
+          <Field label="Professional fees" value={form.businessProfessionalFees} onChange={(v) => update("businessProfessionalFees", v)} />
         </div>
       )}
 
@@ -137,7 +143,7 @@ const EarnedIncomeStep = ({ form, update, errors = [] }: EarnedIncomeStepProps) 
       {activeTab === "foreign" && (
         <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Foreign Income</GlossaryText></p>
-          <Field label="Income from Outside Nigeria" hint="Requires source, remittance and treaty review before estimating" value={form.foreignIncome} onChange={(v) => update("foreignIncome", v)} />
+          <Field label="Income from Outside Nigeria" hint="Included provisionally; confirm residency, source, treaty relief and foreign-tax evidence" value={form.foreignIncome} onChange={(v) => update("foreignIncome", v)} />
         </div>
       )}
     </div>

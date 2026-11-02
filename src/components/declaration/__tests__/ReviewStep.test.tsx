@@ -19,14 +19,14 @@ describe("ReviewStep", () => {
     expect(screen.getByText("Potential rent relief (subject to validation)").parentElement?.parentElement).toHaveTextContent("200,000");
   });
 
-  it("does not show a numeric tax estimate for an unclassified benefit", () => {
+  it("shows the numeric estimate with a review warning for an unclassified benefit", () => {
     const form = { ...defaultNigeriaForm, taxYear: "2026", annualSalary: "1000000", companyVehicleCost: "100000" };
     const calculation = calculatePreparation(
       { ...form, jurisdictionCode: "NG-LA" },
       getJurisdictionCapability("NG-LA"),
     );
 
-    expect(calculation.label).toBe("Not filing-ready");
+    expect(calculation.label).toBe("Generic Nigerian PIT estimate");
 
     render(
       <ReviewStep
@@ -36,9 +36,8 @@ describe("ReviewStep", () => {
       />,
     );
 
-    expect(screen.queryByText("Tax Liability Estimate")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Not filing-ready").length).toBeGreaterThan(0);
-    expect(screen.getByText(/Company vehicle ownership or hire details/)).toBeInTheDocument();
+    expect(screen.getByText("Tax Liability Estimate")).toBeInTheDocument();
+    expect(screen.getByText(/company vehicle benefit is disclosed/i)).toBeInTheDocument();
   });
 
   it("shows a 2026 sourced estimate without CRA or minimum tax", () => {

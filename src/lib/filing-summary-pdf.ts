@@ -95,12 +95,13 @@ export function renderFilingSummaryPdf(summary: FilingSummary): Blob {
   y += 2;
 
   row("Computed Tax", formatNgn(summary.tax.computedTax));
+  row("PAYE already suffered", formatNgn(summary.tax.payeCredit));
   y += 2;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("Estimated tax before credits", MARGIN, y);
-  doc.text(formatNgn(summary.tax.finalTax), PAGE_WIDTH - MARGIN, y, { align: "right" });
+  doc.text("Estimated balance after PAYE credit", MARGIN, y);
+  doc.text(formatNgn(summary.tax.estimatedBalanceAfterCredits), PAGE_WIDTH - MARGIN, y, { align: "right" });
   y += 6;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);

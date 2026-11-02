@@ -39,9 +39,13 @@ const ruleInputs: PitRuleInputs = Object.freeze({
   minimumWageAnnual: 840_000,
   assumptions: Object.freeze([
     "2026 Nigeria Tax Act 2025 Fourth Schedule bands; no unverified state adjustment.",
-    "Business and rental income entered are net amounts; listed expenses are not deducted again.",
+    "Business income is entered gross and reduced by documented wholly and exclusively incurred business expenses.",
+    "Investment income subject to final withholding tax is disclosed but excluded from this automated PIT base; confirm the treatment and evidence separately.",
+    "Foreign income and net digital-asset gains are included with a source, treaty and records review warning; chargeable gains remain outside this estimate until separately reviewed.",
     "Pension, NHF, NHIS, owner-occupied mortgage interest and qualifying insurance amounts require supporting evidence.",
-    "Estimated income tax precedes PAYE and withholding tax credits and is not a government assessment.",
+    "Estimated income tax is reduced only by PAYE already suffered when the user supplies it; withholding-tax credits and any refund remain subject to review.",
+    "The first ₦800,000 band is applied directly; minimum-wage status is disclosed but does not create a separate full-year employment exclusion in this calculator.",
+    "Preparation may be saved for historical years, but numeric calculation is available only for the reviewed 2026 profile.",
   ]),
 });
 
@@ -52,7 +56,7 @@ const ruleInputs: PitRuleInputs = Object.freeze({
 const PIT_BASELINE: PitBaseline = Object.freeze({
   profileId: "ng-pit-baseline",
   status: "configured",
-  version: "nta-2025-2026.1",
+  version: "nta-2025-2026.2",
   effectiveTaxYears: Object.freeze(["2026"]),
   source: "https://nass.gov.ng/documents/download/11249",
   verifiedAt: "2026-10-16",

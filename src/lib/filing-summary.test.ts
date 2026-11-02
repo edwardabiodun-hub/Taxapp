@@ -51,10 +51,11 @@ describe("buildFilingSummary", () => {
     expect(summary.tax?.finalTax).toBe(30000);
   });
 
-  it("withholds a numeric result for historical and unsupported returns", () => {
+  it("withholds historical results but keeps a numeric result with review warnings for newly supported income", () => {
     expect(buildFilingSummary(declaration(), profile()).tax).toBeNull();
     const unsupported = declaration({ taxYear: "2026", formData: { ...defaultNigeriaForm, annualSalary: "1000000", foreignIncome: "500000" } });
-    expect(buildFilingSummary(unsupported, profile()).tax).toBeNull();
+    expect(buildFilingSummary(unsupported, profile()).tax?.finalTax).toBe(105000);
+    expect(buildFilingSummary(unsupported, profile()).tax?.warnings.join(" ")).toMatch(/foreign income/i);
   });
 
   it("includes guidance naming where to actually file, since there is no direct government API integration", () => {

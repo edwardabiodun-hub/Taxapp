@@ -293,8 +293,11 @@ const NewDeclaration = () => {
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">Select tax year</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
                 <option value="2026">2026</option>
               </select>
+              <p className="mt-1 text-[10px] text-muted-foreground">Preparation can be saved for the last three years; numeric tax calculation is currently reviewed for 2026 only.</p>
               {errors.some((error) => error.toLowerCase().includes("tax year")) && (
                 <p className="text-[10px] font-medium text-destructive">Please select a tax year.</p>
               )}

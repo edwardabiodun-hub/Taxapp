@@ -107,11 +107,15 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
               <span className="opacity-70">Computed Tax</span>
               <span className="font-semibold">{fmtN(tax.computedTax)}</span>
             </div>
+            <div className="flex justify-between text-[11px]">
+              <span className="opacity-70">PAYE already suffered</span>
+              <span className="font-semibold">{fmtN(tax.payeCredit)}</span>
+            </div>
           </div>
 
           <div className="bg-background/20 rounded-xl p-4 text-center">
-            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated tax before credits</p>
-            <p className="font-display font-bold text-2xl mt-1">{fmtN(tax.finalTax)}</p>
+            <p className="text-[10px] opacity-70 uppercase tracking-wider font-semibold">Estimated balance after PAYE credit</p>
+            <p className="font-display font-bold text-2xl mt-1">{fmtN(tax.estimatedBalanceAfterCredits)}</p>
             <p className="text-[10px] opacity-70 mt-0.5">Effective rate: {tax.effectiveRate.toFixed(1)}%</p>
           </div>
 
@@ -121,9 +125,10 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
             </p>
             <p className="text-[10px] opacity-80 leading-relaxed">
               This tax computation is an <strong>estimate only</strong> and is provided for informational purposes. 
-              Based on the Nigeria Tax Act 2025 for tax year 2026. PAYE and withholding-tax credits are not included. Actual liability depends on your documents and the relevant tax authority. This is not professional tax advice.
+              Based on the Nigeria Tax Act 2025 for tax year 2026. PAYE entered above is shown as a provisional credit; withholding-tax treatment, review notes and actual liability depend on your documents and the relevant tax authority. This is not professional tax advice.
             </p>
           </div>
+          {tax.warnings.length > 0 && <ul className="list-disc space-y-1 pl-4 text-[10px] opacity-80">{tax.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>}
         </div>
       )}
 
@@ -159,7 +164,14 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="Bonuses" value={fmt(form.bonuses)} />
           <SummaryRow label="Allowances" value={fmt(form.allowances)} />
           <SummaryRow label="Employment period" value={reviewValue(form.employmentPeriod)} />
-          <SummaryRow label="Business Income (Net)" value={fmt(form.businessIncome)} />
+          <SummaryRow label="Business Income (Gross)" value={fmt(form.businessIncome)} />
+          <SummaryRow label="Other business expenses" value={fmt(form.businessExpenses)} />
+          <SummaryRow label="Business loan interest" value={fmt(form.businessLoanInterest)} />
+          <SummaryRow label="Business premises rent" value={fmt(form.businessPremisesRent)} />
+          <SummaryRow label="Business repairs and maintenance" value={fmt(form.businessRepairsMaintenance)} />
+          <SummaryRow label="Employee remuneration and benefits" value={fmt(form.businessEmployeeRemuneration)} />
+          <SummaryRow label="Bad debts" value={fmt(form.businessBadDebts)} />
+          <SummaryRow label="Professional fees" value={fmt(form.businessProfessionalFees)} />
           <SummaryRow label="Pension Received" value={fmt(form.pensionReceived)} />
           <SummaryRow label="Annuity Insurance" value={fmt(form.annuityInsurance)} />
           <SummaryRow label="Gratuities" value={fmt(form.gratuities)} />
@@ -172,7 +184,10 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="Nigerian Dividends" value={fmt(form.nigerianDividends)} />
           <SummaryRow label="Other Dividends" value={fmt(form.otherDividends)} />
           <SummaryRow label="Interest Income" value={fmt(form.interestIncome)} />
-          <SummaryRow label="Rent Income (Net)" value={fmt(form.rentIncome)} />
+          <SummaryRow label="Rent Income" value={fmt(form.rentIncome)} />
+          <SummaryRow label="Digital-asset gains" value={fmt(form.digitalAssetGains)} />
+          <SummaryRow label="Digital-asset charges" value={fmt(form.digitalAssetCharges)} />
+          <SummaryRow label="Chargeable gains" value={fmt(form.chargeableGains)} />
           <SummaryRow label="Other Profits" value={fmt(form.otherInvestmentIncome)} />
         </Section>
 
@@ -189,6 +204,7 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
         <div className="border-t border-border" />
 
         <Section title="Deductions">
+          <SummaryRow label="PAYE already suffered" value={fmt(form.payeAlreadySuffered)} />
           <SummaryRow label="Employee Pension" value={fmt(form.employeePension)} />
           <SummaryRow label="National Housing Fund" value={fmt(form.nationalHousingFund)} />
           <SummaryRow label="National Health Insurance" value={fmt(form.nationalHealthInsurance)} />
@@ -196,6 +212,8 @@ const ReviewStep = ({ form, documents, capability, calculation }: ReviewStepProp
           <SummaryRow label="Mortgage principal residence" value={reviewValue(form.mortgagePrincipalResidence)} />
           <SummaryRow label="Qualifying life-insurance / deferred-annuity premiums" value={fmt(form.lifeInsurancePremium)} />
           <SummaryRow label="Life-insurance premium paid year" value={reviewValue(form.lifeInsurancePremiumPaidYear)} />
+          <SummaryRow label="Insurance or annuity beneficiary" value={form.lifeInsuranceBeneficiary || "Not confirmed"} />
+          <SummaryRow label="Premium withdrawn" value={reviewValue(form.lifeInsurancePremiumWithdrawn)} />
           <SummaryRow label="Annual Rent Paid" value={fmt(form.annualRentPaid)} />
           <SummaryRow label="Rent period" value={form.rentPeriodStart || form.rentPeriodEnd ? `${reviewValue(form.rentPeriodStart)} to ${reviewValue(form.rentPeriodEnd)}` : "Not confirmed"} />
           <SummaryRow label="Rent shared with others" value={reviewValue(form.rentSharedWithOthers)} />

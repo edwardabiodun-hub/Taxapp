@@ -52,7 +52,7 @@ describe("calculation service", () => {
 
     expect(result.label).toBe("Generic Nigerian PIT estimate");
     expect(result.ruleProfile.kind).toBe("generic_nigerian_pit");
-    expect(result.ruleProfileVersion).toBe("nta-2025-2026.1");
+    expect(result.ruleProfileVersion).toBe("nta-2025-2026.2");
     expect(result.source).toContain("nass.gov.ng");
     expect(result.tax?.finalTax).toBe(30_000);
   });
@@ -120,17 +120,18 @@ describe("calculation service", () => {
     );
   });
 
-  it("withholds numbers for unsupported facts while preserving a savable preparation", () => {
+  it("keeps the estimate while surfacing review warnings for uncertain facts", () => {
     const result = calculatePreparation({ ...minimumInput, companyVehicleCost: "1000000" }, notSupportedCapability);
-    expect(result.tax).toBeNull();
-    expect(result.missingInputWarnings.join(" ")).toContain("vehicle");
-    expect(result.ruleProfileVersion).toBe("nta-2025-2026.1");
+    expect(result.tax?.finalTax).toBe(30_000);
+    expect(result.tax?.warnings.join(" ")).toContain("vehicle");
+    expect(result.ruleProfileVersion).toBe("nta-2025-2026.2");
   });
 
-  it("explains dividend-only preparations instead of claiming no income was entered", () => {
+  it("keeps a dividend-only preparation as disclosed income without a tax base", () => {
     const result = calculatePreparation({ taxYear: "2026", jurisdictionCode: "NG-LA", nigerianDividends: "100000" }, notSupportedCapability);
-    expect(result.tax).toBeNull();
-    expect(result.missingInputWarnings.join(" ")).toContain("Dividend treatment");
+    expect(result.tax?.grossIncome).toBe(0);
+    expect(result.tax?.excludedInvestmentIncome).toBe(100000);
+    expect(result.tax?.reportedIncome).toBe(100000);
   });
 
   it("never applies the 2026 schedule to historical drafts", () => {

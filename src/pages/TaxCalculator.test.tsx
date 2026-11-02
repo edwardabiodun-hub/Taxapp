@@ -31,7 +31,7 @@ describe("TaxCalculator glossary integration", () => {
     );
 
     expect(screen.getByRole("heading", { level: 1, name: "Nigeria Tax Calculator" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Learn about Personal income tax" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Learn about Personal income tax" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Learn about Chargeable income" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Learn about Eligible deductions" })).toBeInTheDocument();
   });
@@ -74,13 +74,13 @@ describe("TaxCalculator glossary integration", () => {
     expect(screen.getByRole("status")).toHaveTextContent("₦30,000");
   });
 
-  it("explains why an employer vehicle cannot be estimated instead of showing a number", () => {
+  it("shows an estimate with a review note when an employer vehicle is entered", () => {
     render(<TooltipProvider><MemoryRouter><TaxCalculator /></MemoryRouter></TooltipProvider>);
     fireEvent.change(screen.getByRole("textbox", { name: "Annual Salary" }), { target: { value: "1000000" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Company Vehicle Cost" }), { target: { value: "100000" } });
     fireEvent.click(screen.getByRole("button", { name: /Calculate 2026 estimate/ }));
-    expect(screen.getByRole("alert")).toHaveTextContent("Cannot estimate yet");
-    expect(screen.queryAllByText("₦30,000")).toHaveLength(0);
+    expect(screen.getByRole("alert")).toHaveTextContent("Review notes");
+    expect(screen.getByRole("status")).toHaveTextContent("₦30,000");
   });
 
   it("explains that income is required without showing a false estimate", () => {

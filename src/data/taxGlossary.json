@@ -290,7 +290,7 @@
   {
     "id": "business-income",
     "term": "Business income",
-    "aliases": ["Business Income", "Net Business Income", "Business Income (Net)"],
+    "aliases": ["Business Income", "Gross Business Income", "Business Income (Gross)", "Net Business Income", "Business Income (Net)"],
     "definition": "Income from a trade, business, profession, or vocation, with allowable expenses considered when arriving at the relevant profit.",
     "statutoryReference": "Nigeria Tax Act, 2025, sections 22 and 27",
     "sourceUrl": "https://nass.gov.ng/documents/download/11249",

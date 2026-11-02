@@ -22,6 +22,18 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
       </div>
 
       <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Tax already suffered</GlossaryText></p>
+        <div className="space-y-1.5">
+          <label htmlFor="paye-already-suffered" className="text-xs font-semibold">PAYE already suffered</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"><NairaSymbol /></span>
+            <Input id="paye-already-suffered" aria-label="PAYE already suffered" className="pl-8" placeholder="0.00" value={form.payeAlreadySuffered} onChange={(event) => update("payeAlreadySuffered", event.target.value)} />
+          </div>
+          <p className="text-[10px] text-muted-foreground">Enter only PAYE shown as deducted by an employer. Keep payslips and employer evidence.</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Employee Pension</GlossaryText></p>
         <div className="space-y-1.5">
           <div className="text-xs font-semibold"><GlossaryText>Pension Contribution</GlossaryText></div>
@@ -57,7 +69,7 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
             </div>
           </div>
         ))}
-        <p className="text-[10px] text-muted-foreground">For life-insurance or deferred-annuity premiums, enter only an amount that qualifies for this assessment year; the Act refers to premiums paid in the preceding year. Confirm the applicable period and keep your policy and payment records.</p>
+        <p className="text-[10px] text-muted-foreground">For life-insurance or deferred-annuity premiums, enter only premiums paid in the preceding year. Withdrawn premiums do not qualify. Keep the policy, beneficiary and payment records.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label htmlFor="life-insurance-premium-paid-year" className="text-xs font-semibold">Life-insurance premium paid year</label>
@@ -65,6 +77,16 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
               <option value="">Not confirmed</option>
               <option value="2025">2025</option>
             </select>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="life-insurance-premium-withdrawn" className="text-xs font-semibold">Premium withdrawn?</label>
+            <select id="life-insurance-premium-withdrawn" aria-label="Life-insurance premium withdrawn" className="w-full rounded-md border border-input bg-background p-2 text-sm" value={form.lifeInsurancePremiumWithdrawn ?? ""} onChange={(event) => update("lifeInsurancePremiumWithdrawn", event.target.value)}>
+              <option value="">Not confirmed</option><option value="no">No</option><option value="yes">Yes</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="life-insurance-beneficiary" className="text-xs font-semibold">Insurance or annuity beneficiary</label>
+            <Input id="life-insurance-beneficiary" aria-label="Insurance or annuity beneficiary" placeholder="Record beneficiary" value={form.lifeInsuranceBeneficiary ?? ""} onChange={(event) => update("lifeInsuranceBeneficiary", event.target.value)} />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="mortgage-principal-residence" className="text-xs font-semibold">Mortgage is for principal residence</label>
@@ -113,7 +135,7 @@ const DeductionsStep = ({ form, update }: DeductionsStepProps) => {
               <option value="yes">Yes</option>
             </select>
           </div>
-          <p className="text-[10px] text-muted-foreground">These facts are saved for review. A period crossing tax years or shared rent currently prevents a numeric estimate until the attributable amount is confirmed.</p>
+          <p className="text-[10px] text-muted-foreground">These facts are saved for review. Enter the taxpayer-attributable rent for the assessment period; cross-year and shared-tenancy details generate a review note rather than blocking the estimate.</p>
           {rentRelief && (
             <div className="flex items-center gap-2 bg-primary/5 rounded-lg px-3 py-2">
               <span className="text-[10px] text-primary font-semibold">

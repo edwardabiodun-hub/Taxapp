@@ -32,15 +32,55 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
     expect(result.finalTax).toBe(492000);
   });
 
-  it("keeps net business and net rent income without double-subtracting recorded expenses", () => {
-    const result = calculateNigeriaTax(form({ businessIncome: "2000000", businessExpenses: "300000", rentIncome: "1000000", rentExpenses: "200000" }));
-    expect(result.grossIncome).toBe(3000000);
-    expect(result.finalTax).toBe(330000);
+  it("treats business income as gross and deducts documented business expenses", () => {
+    const result = calculateNigeriaTax(form({
+      businessIncome: "5000000",
+      businessLoanInterest: "280000",
+      businessPremisesRent: "600000",
+      businessRepairsMaintenance: "80000",
+      businessEmployeeRemuneration: "1600000",
+      businessBadDebts: "200000",
+      businessProfessionalFees: "300000",
+    }));
+    expect(result.grossIncome).toBe(5000000);
+    expect(result.businessExpenses).toBe(3060000);
+    expect(result.totalDeductions).toBe(3060000);
+    expect(result.taxableIncome).toBe(1940000);
+    expect(result.finalTax).toBe(171000);
   });
 
-  it("exempts confirmed full-year single minimum-wage employment only, not other income", () => {
+  it("uses the progressive bands instead of a separate full-year minimum-wage exclusion", () => {
     const result = calculateNigeriaTax(form({ annualSalary: "840000", minimumWageEmployment: "yes", businessIncome: "1000000" }));
+    expect(result.grossIncome).toBe(1840000);
+    expect(result.finalTax).toBe(156000);
+  });
+
+  it("subtracts PAYE already suffered without calling the result final PAYE", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "3600000", payeAlreadySuffered: "100000" }));
+    expect(result.computedTax).toBe(438000);
+    expect(result.payeCredit).toBe(100000);
+    expect(result.estimatedBalanceAfterCredits).toBe(338000);
+    expect(result.finalTax).toBe(338000);
+  });
+
+  it("includes foreign income with a treaty-review warning", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "1000000", foreignIncome: "1000000" }));
+    expect(result.grossIncome).toBe(2000000);
+    expect(result.finalTax).toBe(180000);
+    expect(result.warnings.join(" ")).toMatch(/foreign income/i);
+  });
+
+  it("includes net digital-asset gains in chargeable income", () => {
+    const result = calculateNigeriaTax(form({ digitalAssetGains: "1200000", digitalAssetCharges: "200000" }));
     expect(result.grossIncome).toBe(1000000);
+    expect(result.finalTax).toBe(30000);
+  });
+
+  it("discloses dividend and interest income without taxing it again when final withholding tax applies", () => {
+    const result = calculateNigeriaTax(form({ annualSalary: "1000000", nigerianDividends: "100000", interestIncome: "50000" }));
+    expect(result.grossIncome).toBe(1000000);
+    expect(result.reportedIncome).toBe(1150000);
+    expect(result.excludedInvestmentIncome).toBe(150000);
     expect(result.finalTax).toBe(30000);
   });
 
@@ -50,11 +90,12 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
 
   it.each([
     { companyVehicleCost: "1000000" }, { rentPaidByEmployer: "100000" },
-    { foreignIncome: "100000" }, { nigerianDividends: "100000" },
     { pensionReceived: "100000" }, { otherInvestmentIncome: "100000" },
     { gratuities: "100000" }, { annuityInsurance: "100000" },
-  ])("withholds estimates for unclassified income or benefit %o", (unsupported) => {
-    expect(() => calculateNigeriaTax(form({ annualSalary: "1000000", ...unsupported }))).toThrow(TaxEstimateUnavailableError);
+  ])("shows a review warning instead of suppressing the supported estimate %o", (unclassified) => {
+    const result = calculateNigeriaTax(form({ annualSalary: "1000000", ...unclassified }));
+    expect(result.finalTax).toBe(30000);
+    expect(result.warnings.length).toBeGreaterThan(0);
   });
 
   it.each(["1abc", "-1", "Infinity", "1.234", "1,00,000"])("rejects malformed amount %s", (amount) => {
@@ -70,26 +111,42 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
     expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", rentPaidBySelf: "1200000" }))).toThrow(TaxEstimateUnavailableError);
   });
 
-  it("requires a confirmed minimum-wage classification in the narrow exemption interval", () => {
-    expect(() => calculateNigeriaTax(form({ annualSalary: "820000" }))).toThrow(TaxEstimateUnavailableError);
+  it("does not require a minimum-wage classification in the narrow exemption interval", () => {
+    expect(calculateNigeriaTax(form({ annualSalary: "820000" })).finalTax).toBe(3000);
   });
 
-  it("withholds an estimate when rent spans years or is shared without allocation review", () => {
-    expect(() => calculateNigeriaTax(form({
+  it("keeps an estimate and warns when rent allocation needs taxpayer review", () => {
+    const crossYear = calculateNigeriaTax(form({
       annualSalary: "3000000", annualRentPaid: "1200000",
       rentPeriodStart: "2025-10-01", rentPeriodEnd: "2026-09-30",
-    }))).toThrow(TaxEstimateUnavailableError);
-    expect(() => calculateNigeriaTax(form({
+    }));
+    expect(crossYear.warnings.join(" ")).toMatch(/rent/i);
+    const shared = calculateNigeriaTax(form({
       annualSalary: "3000000", annualRentPaid: "1200000",
       rentPeriodStart: "2026-01-01", rentPeriodEnd: "2026-12-31",
       rentSharedWithOthers: "yes",
-    }))).toThrow(TaxEstimateUnavailableError);
+    }));
+    expect(shared.warnings.join(" ")).toMatch(/shared/i);
   });
 
-  it("withholds an estimate when insurance timing or mortgage residence is unconfirmed", () => {
-    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000" }))).toThrow(TaxEstimateUnavailableError);
-    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000", lifeInsurancePremiumPaidYear: "2026" }))).toThrow(TaxEstimateUnavailableError);
-    expect(() => calculateNigeriaTax(form({ annualSalary: "3000000", mortgageInterest: "100000" }))).toThrow(TaxEstimateUnavailableError);
+  it("keeps an estimate and warns when review facts are incomplete", () => {
+    const missingInsuranceYear = calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000" }));
+    expect(missingInsuranceYear.finalTax).toBe(330000);
+    expect(missingInsuranceYear.totalDeductions).toBe(0);
+    expect(missingInsuranceYear.warnings.join(" ")).toMatch(/preceding year/i);
+    const wrongInsuranceYear = calculateNigeriaTax(form({ annualSalary: "3000000", lifeInsurancePremium: "100000", lifeInsurancePremiumPaidYear: "2026" }));
+    expect(wrongInsuranceYear.totalDeductions).toBe(0);
+    const mortgage = calculateNigeriaTax(form({ annualSalary: "3000000", mortgageInterest: "100000" }));
+    expect(mortgage.finalTax).toBe(315000);
+    expect(mortgage.warnings.join(" ")).toMatch(/principal residence/i);
+  });
+
+  it("excludes mortgage interest when the property is explicitly not the principal residence", () => {
+    const mortgage = calculateNigeriaTax(form({
+      annualSalary: "3000000", mortgageInterest: "100000", mortgagePrincipalResidence: "no",
+    }));
+    expect(mortgage.finalTax).toBe(330000);
+    expect(mortgage.warnings.join(" ")).toMatch(/excluded/i);
   });
 
   it("preserves the approved calculation when review facts are complete and unambiguous", () => {
@@ -104,10 +161,10 @@ describe("2026 Nigeria Tax Act PIT estimate", () => {
     expect(result.finalTax).toBe(492000);
   });
 
-  it("does not apply the minimum-wage treatment to a part-year employment context", () => {
-    expect(() => calculateNigeriaTax(form({
+  it("does not apply a separate minimum-wage exclusion to a part-year context", () => {
+    expect(calculateNigeriaTax(form({
       annualSalary: "840000", minimumWageEmployment: "yes", employmentPeriod: "part_year",
-    }))).toThrow(TaxEstimateUnavailableError);
+    })).finalTax).toBe(6000);
   });
 
   it("does not apply legacy CRA or minimum tax", () => {

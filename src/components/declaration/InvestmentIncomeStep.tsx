@@ -37,28 +37,35 @@ const InvestmentIncomeStep = ({ form, update }: InvestmentIncomeStepProps) => (
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Dividends</GlossaryText></p>
-      <Field label="Nigerian Company Dividends" hint="Requires classification and withholding-tax evidence before estimating" value={form.nigerianDividends} onChange={(v) => update("nigerianDividends", v)} />
-      <Field label="Other Dividends" hint="Requires classification before estimating" value={form.otherDividends} onChange={(v) => update("otherDividends", v)} />
+      <Field label="Nigerian Company Dividends" hint="Disclose the amount and retain withholding-tax evidence; it is not taxed again where final withholding tax applies" value={form.nigerianDividends} onChange={(v) => update("nigerianDividends", v)} />
+      <Field label="Other Dividends" hint="Disclose and retain the supporting tax evidence for review" value={form.otherDividends} onChange={(v) => update("otherDividends", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Interest & Rent</GlossaryText></p>
-      <Field label="Interest Income" hint="Requires classification before estimating" value={form.interestIncome} onChange={(v) => update("interestIncome", v)} />
+      <Field label="Interest Income" hint="Disclose the amount and source; final withholding-tax treatment requires evidence" value={form.interestIncome} onChange={(v) => update("interestIncome", v)} />
       <div className="space-y-1.5">
         <div className="text-xs font-semibold"><GlossaryText>Interest Sources</GlossaryText></div>
         <Textarea aria-label="Interest Sources" placeholder="List each source and gross income received" className="min-h-[60px] text-sm" value={form.interestSources} onChange={(e) => update("interestSources", e.target.value)} />
       </div>
-      <Field label="Rent Income (Net)" hint="Gross rent minus repair expenses — Taxable" value={form.rentIncome} onChange={(v) => update("rentIncome", v)} />
-      <Field label="Rent Expenses" hint="Repair and maintenance expenses" value={form.rentExpenses} onChange={(v) => update("rentExpenses", v)} />
+      <Field label="Rent Income" hint="Enter the amount applicable to the assessment period" value={form.rentIncome} onChange={(v) => update("rentIncome", v)} />
+      <Field label="Rent Expenses" hint="Record supporting repair and maintenance costs for review" value={form.rentExpenses} onChange={(v) => update("rentExpenses", v)} />
     </div>
 
     <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Other Profits</GlossaryText></p>
-      <Field label="Other Investment Income" hint="Profits from sources not included above — Taxable" value={form.otherInvestmentIncome} onChange={(v) => update("otherInvestmentIncome", v)} />
+      <Field label="Other Investment Income" hint="Disclose the amount; confirm final withholding-tax treatment and retain evidence" value={form.otherInvestmentIncome} onChange={(v) => update("otherInvestmentIncome", v)} />
       <div className="space-y-1.5">
         <div className="text-xs font-semibold"><GlossaryText>Details</GlossaryText></div>
         <Textarea aria-label="Details" placeholder="List details of each source and income" className="min-h-[60px] text-sm" value={form.otherInvestmentDetails} onChange={(e) => update("otherInvestmentDetails", e.target.value)} />
       </div>
+    </div>
+
+    <div className="space-y-3 bg-card rounded-xl p-4 shadow-card">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold"><GlossaryText>Digital assets and chargeable gains</GlossaryText></p>
+      <Field label="Digital-asset gains" hint="Gains before attributable charges" value={form.digitalAssetGains} onChange={(v) => update("digitalAssetGains", v)} />
+      <Field label="Digital-asset attributable charges" value={form.digitalAssetCharges} onChange={(v) => update("digitalAssetCharges", v)} />
+      <Field label="Chargeable gains" hint="Disclose for review; not included in the automated estimate yet" value={form.chargeableGains} onChange={(v) => update("chargeableGains", v)} />
     </div>
   </div>
 );
